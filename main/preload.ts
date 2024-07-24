@@ -1,20 +1,32 @@
-import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron'
+import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
 const handler = {
-  send(channel: string, value: unknown) {
-    ipcRenderer.send(channel, value)
+  hello(...args: any[]) {
+    return ipcRenderer.invoke("hello", ...args);
   },
-  on(channel: string, callback: (...args: unknown[]) => void) {
-    const subscription = (_event: IpcRendererEvent, ...args: unknown[]) =>
-      callback(...args)
-    ipcRenderer.on(channel, subscription)
-
-    return () => {
-      ipcRenderer.removeListener(channel, subscription)
-    }
-  },
+  helloAsync() {
+    return ipcRenderer.invoke("helloAsync");
+  }
 }
 
-contextBridge.exposeInMainWorld('ipc', handler)
+const WindowWrapper: Window = {
+  api: handler,
+}
 
-export type IpcHandler = typeof handler
+!function() {
+  Object.keys(WindowWrapper).forEach(key => {
+    contextBridge.exposeInMainWorld(key, WindowWrapper[key]);
+  });
+  return void 0;
+}();
+
+export type IpcHandler = typeof handler;
+export interface Window {
+  api: {
+    hello: () => Promise<ExpectedHandler["hello"]>;
+  };
+}
+export interface ExpectedHandler {
+  "hello": any[];
+  "helloAsync": string;
+}

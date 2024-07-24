@@ -2,6 +2,7 @@ import path from 'path'
 import { app, ipcMain } from 'electron'
 import serve from 'electron-serve'
 import { createWindow } from './helpers'
+import {RemoteHandler} from './mainHandler'
 
 const isProd = process.env.NODE_ENV === 'production'
 
@@ -12,7 +13,9 @@ if (isProd) {
 }
 
 ;(async () => {
-  await app.whenReady()
+  await app.whenReady();
+
+  RemoteHandler.getInstance().register(ipcMain);
 
   const mainWindow = createWindow('main', {
     width: 1000,
@@ -23,18 +26,20 @@ if (isProd) {
   })
 
   if (isProd) {
-    await mainWindow.loadURL('app://./home')
+    await mainWindow.loadURL('app://./')
   } else {
     const port = process.argv[2]
-    await mainWindow.loadURL(`http://localhost:${port}/home`)
+    await mainWindow.loadURL(`http://localhost:${port}/`)
     mainWindow.webContents.openDevTools()
   }
 })()
 
 app.on('window-all-closed', () => {
-  app.quit()
+  if (process.platform !== 'darwin') {
+    app.quit()
+  }
 })
 
 ipcMain.on('message', async (event, arg) => {
   event.reply('message', `${arg} World!`)
-})
+});

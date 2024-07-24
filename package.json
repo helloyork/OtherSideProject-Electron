@@ -11,8 +11,11 @@
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
+    "@nextui-org/react": "^2.4.6",
+    "clsx": "^2.1.1",
     "electron-serve": "^1.3.0",
-    "electron-store": "^8.2.0"
+    "electron-store": "^8.2.0",
+    "next-themes": "^0.3.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.16",
