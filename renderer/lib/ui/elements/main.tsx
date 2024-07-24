@@ -4,14 +4,16 @@ import clsx from "clsx";
 import { useTheme } from "@lib/ui/providers/theme-mode";
 
 export default function Main({
-    children
+    children,
+    className
 }: {
-    children: React.ReactNode
+    children: React.ReactNode,
+    className?: string;
 }) {
     const { theme } = useTheme();
     return (
         <>
-            <main className={clsx("h-full min-h-screen text-foreground bg-background", theme)}>
+            <main className={clsx("text-foreground bg-background", theme, className)}>
                 {children}
             </main>
         </>

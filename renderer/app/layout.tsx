@@ -7,12 +7,13 @@ import type { Metadata } from 'next/types';
 import '@lib/styles/globals.css'
 import Provider from '@lib/ui/provider';
 import Main from '@lib/ui/elements/main';
+import FrameBar from '@/lib/ui/components/framebar';
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Home - Nextron (with-tailwindcss)",
-  description: "Electron + Next.js + tailwindcss",
+  title: "OtherSideProject",
+  description: "OtherSideProject",
 }
 
 export default function RootLayout({
@@ -22,9 +23,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={clsx("h-full")}>
-      <body className={clsx("h-full min-h-screen bg-background", inter.className)}>
+      <body className={clsx("h-full flex flex-col flex-grow", inter.className)}>
         <Provider>
-          <Main>{children}</Main>
+          <FrameBar />
+          <Main className="flex-grow overflow-auto">{children}</Main>
         </Provider>
       </body>
     </html>

@@ -4,11 +4,22 @@ const handler = {
   hello(...args: any[]) {
     return ipcRenderer.invoke("hello", ...args);
   },
-  helloAsync() {
-    return ipcRenderer.invoke("helloAsync");
+  winFrame: {
+    minimize() {
+      ipcRenderer.send("window:minimize");
+    },
+    maximize() {
+      ipcRenderer.send("window:maximize");
+    },
+    close() {
+      ipcRenderer.send("window:close");
+    },
   }
 }
 
+/**
+ * This is the object that will be exposed to the renderer process.
+ */
 const WindowWrapper: Window = {
   api: handler,
 }
@@ -20,13 +31,28 @@ const WindowWrapper: Window = {
   return void 0;
 }();
 
-export type IpcHandler = typeof handler;
+/**
+ * This is the object that will be exposed to the renderer process.
+ */
 export interface Window {
   api: {
     hello: () => Promise<ExpectedHandler["hello"]>;
+    winFrame: {
+      minimize: () => void;
+      maximize: () => void;
+      close: () => void;
+    };
   };
 }
+/**
+ * after invoking, the return value will be returned to the renderer process.
+ */
 export interface ExpectedHandler {
   "hello": any[];
-  "helloAsync": string;
+}
+
+export interface ExpectedListener {
+  "window:minimize": void;
+  "window:maximize": void;
+  "window:close": void;
 }

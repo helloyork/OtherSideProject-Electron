@@ -2,14 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  body {
-    @apply bg-gray-900 text-white;
-  }
+html, body {
+  height: 100%;
+  margin: 0;
 }
 
-@layer components {
-  .btn-blue {
-    @apply text-white font-bold px-4 py-2 rounded bg-blue-600 hover:bg-blue-500;
-  }
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+#root, .root, .Provider {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+main {
+  flex-grow: 1;
+  overflow: auto; /* Prevents overflow */
 }

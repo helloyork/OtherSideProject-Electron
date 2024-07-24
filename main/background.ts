@@ -2,7 +2,11 @@ import path from 'path'
 import { app, ipcMain } from 'electron'
 import serve from 'electron-serve'
 import { createWindow } from './helpers'
-import {RemoteHandler} from './mainHandler'
+import { RemoteHandler } from './app/mainHandler'
+
+const WIDTH = 1440;
+const HEIGHT = 900;
+const aspectRatio = WIDTH / HEIGHT;
 
 const isProd = process.env.NODE_ENV === 'production'
 
@@ -12,10 +16,8 @@ if (isProd) {
   app.setPath('userData', `${app.getPath('userData')} (development)`)
 }
 
-;(async () => {
+; (async () => {
   await app.whenReady();
-
-  RemoteHandler.getInstance().register(ipcMain);
 
   const mainWindow = createWindow('main', {
     width: 1000,
@@ -23,7 +25,25 @@ if (isProd) {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
-  })
+    frame: false,
+  });
+  mainWindow.setMenu(null);
+  mainWindow.setAspectRatio(aspectRatio);
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
+    mainWindow.setMinimumSize(WIDTH / 2, HEIGHT / 2);
+    zoom();
+  });
+  mainWindow.on('resize', () => {
+    zoom();
+  });
+  function zoom() {
+    let { width, height } = mainWindow.getBounds();
+    let zoomFactor = Math.min(width / WIDTH, height / HEIGHT);
+    mainWindow.webContents.setZoomFactor(zoomFactor);
+  }
+
+  RemoteHandler.getInstance().register(ipcMain, mainWindow);
 
   if (isProd) {
     await mainWindow.loadURL('app://./')
@@ -32,7 +52,7 @@ if (isProd) {
     await mainWindow.loadURL(`http://localhost:${port}/`)
     mainWindow.webContents.openDevTools()
   }
-})()
+})();
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
