@@ -8,6 +8,7 @@ import '@lib/styles/globals.css'
 import Provider from '@lib/ui/provider';
 import Main from '@lib/ui/elements/main';
 import FrameBar from '@/lib/ui/components/framebar';
+import { H } from '@/lib/ui/cons';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -24,10 +25,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={clsx("h-full")}>
       <body className={clsx("h-full", inter.className)}>
-        <div className={clsx("flex flex-col flex-grow min-h-screen h-full")}>
-          <Provider>
-            <FrameBar />
-            <Main className="flex-grow overflow-auto h-[93dvh]">{children}</Main>
+        <div className={clsx("")}>
+          <Provider className={clsx("flex flex-col min-h- screen h-full max-h-screen min-h-screen")}>
+            {/* <FrameBar /> */}
+            <Main className={clsx("flex-grow overflow-auto")}>{children}</Main>
           </Provider>
         </div>
       </body>

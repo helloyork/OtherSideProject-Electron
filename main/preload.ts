@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
-const handler = {
+const api = {
   hello(...args: any[]) {
     return ipcRenderer.invoke("hello", ...args);
   },
@@ -17,11 +17,19 @@ const handler = {
   }
 }
 
+const app = {
+  info: {
+    version: "0.0.1",
+    isProd: process.env.NODE_ENV === "production",
+  }
+}
+
 /**
  * This is the object that will be exposed to the renderer process.
  */
 const WindowWrapper: Window = {
-  api: handler,
+  api: api,
+  app: app,
 }
 
 !function() {
@@ -43,6 +51,12 @@ export interface Window {
       close: () => void;
     };
   };
+  app: {
+    info: {
+      version: string;
+      isProd: boolean;
+    }
+  }
 }
 /**
  * after invoking, the return value will be returned to the renderer process.

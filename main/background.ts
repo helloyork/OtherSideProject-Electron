@@ -1,65 +1,70 @@
-import path from 'path'
-import { app, ipcMain } from 'electron'
-import serve from 'electron-serve'
-import { createWindow } from './helpers'
-import { RemoteHandler } from './app/mainHandler'
+import path from 'path';
+import { app, ipcMain, globalShortcut } from 'electron';
+import serve from 'electron-serve';
+import { createWindow } from './helpers';
+import { RemoteHandler } from './app/mainHandler';
 
-const WIDTH = 1440;
-const HEIGHT = 900;
+const WIDTH = 1920 / 2;
+const HEIGHT = 1080 / 2;
 const aspectRatio = WIDTH / HEIGHT;
 
 const isProd = process.env.NODE_ENV === 'production'
 
 if (isProd) {
-  serve({ directory: 'app' })
+    serve({ directory: 'app' })
 } else {
-  app.setPath('userData', `${app.getPath('userData')} (development)`)
+    app.setPath('userData', `${app.getPath('userData')} (development)`)
 }
 
-; (async () => {
-  await app.whenReady();
-
-  const mainWindow = createWindow('main', {
-    width: 1000,
-    height: 600,
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-    },
-    frame: false,
-  });
-  mainWindow.setMenu(null);
-  mainWindow.setAspectRatio(aspectRatio);
-  mainWindow.once('ready-to-show', () => {
-    mainWindow.show();
-    mainWindow.setMinimumSize(WIDTH / 2, HEIGHT / 2);
-    zoom();
-  });
-  mainWindow.on('resize', () => {
-    zoom();
-  });
-  function zoom() {
+function zoom(mainWindow: Electron.CrossProcessExports.BrowserWindow) {
     let { width, height } = mainWindow.getBounds();
     let zoomFactor = Math.min(width / WIDTH, height / HEIGHT);
     mainWindow.webContents.setZoomFactor(zoomFactor);
-  }
+}
 
-  RemoteHandler.getInstance().register(ipcMain, mainWindow);
+; (async () => {
+    await app.whenReady();
 
-  if (isProd) {
-    await mainWindow.loadURL('app://./')
-  } else {
-    const port = process.argv[2]
-    await mainWindow.loadURL(`http://localhost:${port}/`)
-    mainWindow.webContents.openDevTools()
-  }
+    const mainWindow = createWindow('main', {
+        width: WIDTH,
+        height: HEIGHT,
+        webPreferences: {
+            preload: path.join(__dirname, 'preload.js'),
+        },
+        frame: true,
+    });
+    mainWindow.setMenu(null);
+    mainWindow.setAspectRatio(aspectRatio);
+    mainWindow.once('ready-to-show', () => {
+        mainWindow.show();
+        mainWindow.setMinimumSize(WIDTH / 3, HEIGHT / 3);
+        zoom(mainWindow);
+    });
+    mainWindow.on('resize', () => {
+        zoom(mainWindow);
+    });
+
+    RemoteHandler.getInstance().register(ipcMain, mainWindow);
+    mainWindow.webContents.on('before-input-event', (_, input) => {
+        if (input.key === 'F12') {
+            mainWindow.webContents.openDevTools();
+        }
+    });
+
+    if (isProd) {
+        await mainWindow.loadURL('app://./')
+    } else {
+        const port = process.argv[2]
+        await mainWindow.loadURL(`http://localhost:${port}/`)
+    }
 })();
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
+    if (process.platform !== 'darwin') {
+        app.quit();
+    }
 })
 
 ipcMain.on('message', async (event, arg) => {
-  event.reply('message', `${arg} World!`)
+    event.reply('message', `${arg} World!`)
 });

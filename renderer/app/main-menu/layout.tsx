@@ -1,6 +1,7 @@
 "use client";
 
 import PageTransition from "@/lib/ui/components/page-transition";
+import clsx from "clsx";
 
 export default function Layout({
   children,
@@ -9,7 +10,7 @@ export default function Layout({
 }>) {
   return (
     <>
-      <PageTransition>
+      <PageTransition className={clsx("h-full")}>
         {children}
       </PageTransition>
     </>
