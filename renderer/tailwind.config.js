@@ -14,6 +14,9 @@ module.exports = {
       secondary: '#004c8c',
     },
     extend: {
+      height: {
+        'screen-93': '93vh',
+      },
       transitionProperty: {
         'color': 'color, background-color, border-color, text-decoration-color, fill, stroke',
       }

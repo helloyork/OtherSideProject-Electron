@@ -9,7 +9,7 @@ const SplashScreen = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 1.5 }}
-            className="inset-0 z-50 flex items-center justify-center bg-white"
+            className="inset-0 z-50 flex items-center justify-center bg-white h-[93dvh]"
         >
             <div className="flex items-center justify-center" style={{ height: '50vh', width: '50vw' }}>
                 <Image src={logo} alt="Logo" className="object-contain" />

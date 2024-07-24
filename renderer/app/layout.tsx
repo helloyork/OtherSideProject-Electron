@@ -23,11 +23,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={clsx("h-full")}>
-      <body className={clsx("h-full flex flex-col flex-grow", inter.className)}>
-        <Provider>
-          <FrameBar />
-          <Main className="flex-grow overflow-auto">{children}</Main>
-        </Provider>
+      <body className={clsx("h-full", inter.className)}>
+        <div className={clsx("flex flex-col flex-grow min-h-screen h-full")}>
+          <Provider>
+            <FrameBar />
+            <Main className="flex-grow overflow-auto h-[93dvh]">{children}</Main>
+          </Provider>
+        </div>
       </body>
     </html>
   );
