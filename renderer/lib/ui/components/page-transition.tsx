@@ -15,19 +15,16 @@ const pageVariants = {
     }
 };
 
-const pageTransition = {
-    type: "tween",
-    ease: "anticipate",
-    duration: 0.5
-};
-
 const PageTransition = ({ children, className }) => (
     <motion.div
         initial="initial"
         animate="in"
         exit="out"
         variants={pageVariants}
-        transition={pageTransition}
+        transition={{
+            type: "tween",
+            ease: "easeInOut",
+        }}
         className={clsx(className)}
     >
         {children}

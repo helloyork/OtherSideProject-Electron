@@ -4,8 +4,8 @@ import serve from 'electron-serve';
 import { createWindow } from './helpers';
 import { RemoteHandler } from './app/mainHandler';
 
-const WIDTH = 1920 / 2;
-const HEIGHT = 1080 / 2;
+const WIDTH = 1920 * 0.75;
+const HEIGHT = 1080 * 0.75;
 const aspectRatio = WIDTH / HEIGHT;
 
 const isProd = process.env.NODE_ENV === 'production'
