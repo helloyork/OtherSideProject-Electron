@@ -1,7 +1,7 @@
-import { Character } from "./character";
-import { Scene } from "./scene";
-import { Sentence, Word } from "./sentence";
-import { Story } from "./story";
+import { Character } from "../game/elements/character";
+import { Scene } from "../game/elements/scene";
+import { Sentence, Word } from "../game/elements/sentence";
+import { Story } from "../game/elements/story";
 
 const E = new Character("Eileen");
 const M = new Character("Me");
@@ -12,7 +12,8 @@ const scene1 = new Scene("scene1", {})
     .action([
         M
             .say("Hello, World!")
-            .say("How are you?"),
+            .say("How are you?")
+            .toActions(),
         E
             .say("I'm good, thank you!")
 
@@ -25,10 +26,12 @@ const scene1 = new Scene("scene1", {})
                 "I'm thinking of a number between ",
                 new Word("1 and 10", { color: "#f00" }),
                 ", can you guess it?"
-            ]),
+            ])
+            .toActions(),
 
         M
             .say("What is it?")
+            .toActions()
     ]);
 
 story.action([scene1]);

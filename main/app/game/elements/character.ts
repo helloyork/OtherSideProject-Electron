@@ -1,16 +1,17 @@
-import { Game, LogicNode } from "./game";
-import { ContentNode } from "./save/rollback";
+import { Actionable } from "../constructable";
+import { Game, LogicNode } from "../game";
+import { ContentNode } from "../save/rollback";
 import { Sentence, Word } from "./sentence";
 
 export type CharacterConfig = {}
 
 const { CharacterAction } = LogicNode;
-export class Character {
+export class Character extends Actionable {
     name: string;
     config: CharacterConfig;
-    private actions: LogicNode.CharacterAction<any>[] = [];
 
     constructor(name: string, config: CharacterConfig = {}) {
+        super();
         this.name = name;
         this.config = config;
     }
@@ -31,10 +32,5 @@ export class Character {
         );
         this.actions.push(action);
         return this;
-    }
-    toActions() {
-        let actions = this.actions;
-        this.actions = [];
-        return actions;
     }
 }

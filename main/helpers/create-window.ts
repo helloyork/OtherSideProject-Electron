@@ -14,8 +14,8 @@ export const createWindow = (
   const name = `window-state-${windowName}`
   const store = new Store<Rectangle>({ name })
   const defaultSize = {
-    width: options.width,
-    height: options.height,
+    width: options.width!,
+    height: options.height!,
   }
   let state = {}
 
@@ -32,7 +32,7 @@ export const createWindow = (
     }
   }
 
-  const windowWithinBounds = (windowState, bounds) => {
+  const windowWithinBounds = (windowState: { x: number; y: number; width: any; height: any }, bounds: Electron.Rectangle) => {
     return (
       windowState.x >= bounds.x &&
       windowState.y >= bounds.y &&
@@ -49,7 +49,7 @@ export const createWindow = (
     })
   }
 
-  const ensureVisibleOnSomeDisplay = (windowState) => {
+  const ensureVisibleOnSomeDisplay = (windowState: any) => {
     const visible = screen.getAllDisplays().some((display) => {
       return windowWithinBounds(windowState, display.bounds)
     })

@@ -16,3 +16,10 @@ export type Background = {
     background: string;
 }
 
+export type CommonImage = {
+    height?: number;
+    width?: number;
+    scale?: number;
+    roatetion?: number;
+}
+

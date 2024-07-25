@@ -1,13 +1,16 @@
 import { Character } from "./character";
-import { Color } from "./show";
-import { deepMerge } from "../../util/data";
+import { Color } from "../show";
+import { deepMerge } from "../../../util/data";
 
-export type SentenceConfig = {} & Color;
+export type SentenceConfig = {
+    pause?: boolean | number;
+} & Color;
 export type WordConfig = {} & Color;
 
 export class Sentence {
     static defaultConfig: SentenceConfig = {
-        color: "#fff"
+        color: "#fff",
+        pause: true
     };
     static isSentence(obj: any): obj is Sentence {
         return obj instanceof Sentence;

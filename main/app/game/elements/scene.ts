@@ -1,6 +1,6 @@
-import { Constructable } from "./constructable";
-import { LogicNode } from "./game";
-import { deepMerge } from "../../util/data";
+import { Constructable } from "../constructable";
+import { Game, LogicNode } from "../game";
+import { deepMerge } from "../../../util/data";
 
 export type SceneConfig = {};
 
@@ -9,11 +9,13 @@ export class Scene extends Constructable {
     static defaultConfig: SceneConfig = {};
     static targetAction = SceneAction;
     id: string;
+    name: string;
     config: SceneConfig;
 
-    constructor(id: string, config: SceneConfig = {}) {
+    constructor(name: string, config: SceneConfig = {}) {
         super();
-        this.id = id;
+        this.id = Game.getIdManager().getStringId();
+        this.name = name;
         this.config = deepMerge<SceneConfig>(Scene.defaultConfig, config);
     }
 }

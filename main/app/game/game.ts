@@ -1,9 +1,10 @@
-import { Character } from "./character";
-import { Scene } from "./scene";
-import { Sentence } from "./sentence";
+import { Character } from "./elements/character";
+import { Scene } from "./elements/scene";
+import { Sentence } from "./elements/sentence";
 import { ContentNode, RenderableNode, RootNode } from "./save/rollback";
 import { Singleton } from "../../util/singleton";
-import { Story } from "./story";
+import { Story } from "./elements/story";
+import { Image } from "./elements/image";
 
 export interface RawSaveData {
     name: string;
@@ -12,7 +13,7 @@ export interface RawSaveData {
 export type GameConfig = {};
 
 export namespace LogicNode {
-    export type GameElement = Character | Scene | Sentence;
+    export type GameElement = Character | Scene | Sentence | Image;
     export type Actionlike = Character;
     export type Actions =
         CharacterAction<typeof CharacterAction.ActionTypes[keyof typeof CharacterAction.ActionTypes]>;
@@ -31,7 +32,9 @@ export namespace LogicNode {
             this.type = type;
             this.contentNode = contentNode;
         }
-        public call(): any { }
+        public call(): ContentNode {
+            return this.contentNode;
+        }
     }
     export class CharacterAction<T extends typeof CharacterAction.ActionTypes[keyof typeof CharacterAction.ActionTypes]>
         extends Action {
@@ -39,36 +42,43 @@ export namespace LogicNode {
             say: "character:say",
             action: "character:action",
         }
-        declare callee: Character;
+        callee: Character;
         constructor(callee: Character, type: T, contentNode: ContentNode) {
             super(callee, type, contentNode);
-        }
-        public call(): ContentNode {
-            return this.contentNode;
+            this.callee = callee;
         }
     }
     export class SceneAction extends Action {
         static ActionTypes = {
             action: "scene:action",
         }
-        declare callee: Scene;
+        callee: Scene;
         constructor(callee: Scene, type: string, contentNode: ContentNode) {
             super(callee, type, contentNode);
-        }
-        public call(): ContentNode {
-            return this.contentNode;
+            this.callee = callee;
         }
     }
     export class StoryAction extends Action {
         static ActionTypes = {
             action: "story:action",
         }
-        declare callee: Story;
+        callee: Story;
         constructor(callee: Story, type: string, contentNode: ContentNode) {
             super(callee, type, contentNode);
+            this.callee = callee;
         }
-        public call(): ContentNode {
-            return this.contentNode;
+    }
+    export class ImageAction extends Action {
+        static ActionTypes = {
+            action: "image:action",
+            setSrc: "image:setSrc",
+            show: "image:show",
+            hide: "image:hide",
+        }
+        callee: Image;
+        constructor(callee: Image, type: string, contentNode: ContentNode) {
+            super(callee, type, contentNode);
+            this.callee = callee;
         }
     }
 };
@@ -95,6 +105,13 @@ export class Game {
     }
     public getRootNode() {
         return this.root;
+    }
+}
+
+class LiveGame {
+    game: Game;
+    constructor(game: Game) {
+        this.game = game;
     }
 }
 

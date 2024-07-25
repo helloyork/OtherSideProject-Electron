@@ -34,7 +34,7 @@ const WindowWrapper: Window = {
 
 !function() {
   Object.keys(WindowWrapper).forEach(key => {
-    contextBridge.exposeInMainWorld(key, WindowWrapper[key]);
+    contextBridge.exposeInMainWorld(key, WindowWrapper[key as keyof Window]);
   });
   return void 0;
 }();

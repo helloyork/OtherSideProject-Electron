@@ -7,10 +7,11 @@ export enum NodeType {
 export class Node<C = any> {
     id: string;
     type: string;
-    content: C;
+    content: C | undefined;
     constructor(id: string, type: string) {
         this.id = id;
         this.type = type;
+        this.content = undefined;
     }
     setContent(content: C) {
         this.content = content;
@@ -37,7 +38,7 @@ export class ContentNode<T = any> extends Node<T> {
         this.child = child || null;
         this.parent = parent || null;
     }
-    setParent(parent: RenderableNode) {
+    setParent(parent: RenderableNode | null) {
         if (parent === this) {
             throw new Error('Cannot set parent to itself');
         }
@@ -93,7 +94,7 @@ export class RootNode extends ContentNode {
     constructor() {
         super('root');
     }
-    setParent(_: RenderableNode): this {
+    setParent(_: RenderableNode | null): this {
         throw new Error('Cannot set parent of root node');
     }
     remove(): this {
@@ -114,7 +115,7 @@ export class TreeNode extends Node {
         this.children = children || [];
         this.parent = parent || null;
     }
-    setParent(parent: RenderableNode) {
+    setParent(parent: RenderableNode | null) {
         if (parent === this) {
             throw new Error('Cannot set parent to itself');
         }

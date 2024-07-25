@@ -15,7 +15,7 @@ export class Constructable<T extends typeof Constructable = any> {
             const action = this.actions[i];
             if (i === 0 && parent) {
                 action.contentNode.setParent(parent);
-            } else {
+            } else if (i > 0) {
                 action.contentNode.setParent(this.actions[i - 1].contentNode);
             }
         }
@@ -24,15 +24,13 @@ export class Constructable<T extends typeof Constructable = any> {
     /**
      * Wrap the actions in a new action
      */
-    action(actions: (LogicNode.Actions | LogicNode.Actionlike)[]): LogicNode.Actions {
-        const content = actions.map(action => 
-            LogicNode.Action.isAction(action) ? action : action.toActions()
-        ).flat();
+    action(actions: (LogicNode.Actions | LogicNode.Actions[])[]): LogicNode.Actions {
+        const content = actions.flat();
         this.actions.push(...content);
         const constructed = this.construct();
         const sceneRoot = new ContentNode(
             Game.getIdManager().getStringId(),
-            constructed
+            constructed || void 0
         );
         constructed?.setParent(sceneRoot);
 
@@ -42,5 +40,14 @@ export class Constructable<T extends typeof Constructable = any> {
             thisConstructor.targetAction.ActionTypes.action,
             sceneRoot
         ])
+    }
+}
+
+export class Actionable {
+    protected actions: any[] = [];
+    toActions() {
+        let actions = this.actions;
+        this.actions = [];
+        return actions;
     }
 }
