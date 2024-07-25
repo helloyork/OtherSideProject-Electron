@@ -1,24 +1,39 @@
 
 export enum NodeType {
-
+    TreeNode = "TreeNode",
+    ContentNode = "ContentNode",
 }
 
-export class Node {
+export class Node<C = any> {
     id: string;
     type: string;
+    content: C;
     constructor(id: string, type: string) {
         this.id = id;
         this.type = type;
     }
+    setContent(content: C) {
+        this.content = content;
+        return this;
+    }
+    getContent() {
+        return this.content;
+    }
 }
 
-type RenderableNode = ContentNode | TreeNode;
+export type RenderableNode = ContentNode | TreeNode;
+export type RenderableNodeData = ContentNodeData | TreeNodeData;
 
-export class ContentNode extends Node {
+export type ContentNodeData = {
+    id: string;
+    type: NodeType.ContentNode;
+    parent?: string | null;
+}
+export class ContentNode<T = any> extends Node<T> {
     child: RenderableNode | null;
     parent: RenderableNode | null;
-    constructor(id: string, type: string, child?: RenderableNode, parent?: RenderableNode | null) {
-        super(id, type);
+    constructor(id: string, child?: RenderableNode, parent?: RenderableNode | null) {
+        super(id, NodeType.ContentNode);
         this.child = child || null;
         this.parent = parent || null;
     }
@@ -62,8 +77,35 @@ export class ContentNode extends Node {
         this.parent?.removeChild(this);
         return this;
     }
+    toData(): RenderableNodeData {
+        return {
+            id: this.id,
+            type: NodeType.ContentNode,
+            parent: this.parent ? this.parent.id : null,
+        };
+    }
+    hasChild() {
+        return !!this.child;
+    }
 }
 
+export class RootNode extends ContentNode {
+    constructor() {
+        super('root');
+    }
+    setParent(_: RenderableNode): this {
+        throw new Error('Cannot set parent of root node');
+    }
+    remove(): this {
+        throw new Error('Cannot remove root node');
+    }
+}
+
+export type TreeNodeData = {
+    id: string;
+    type: NodeType.TreeNode;
+    parent?: string | null;
+}
 export class TreeNode extends Node {
     children: RenderableNode[];
     parent: RenderableNode | null;
@@ -105,9 +147,16 @@ export class TreeNode extends Node {
         this.parent?.removeChild(this);
         return this;
     }
+    toData(): RenderableNodeData {
+        return {
+            id: this.id,
+            type: NodeType.TreeNode,
+            parent: this.parent ? this.parent.id : null,
+        };
+    }
+    hasChild() {
+        return this.children.length > 0;
+    }
 }
-
-// @todo: Implement
-export class ForkNode extends TreeNode {}
 
 

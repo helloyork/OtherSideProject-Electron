@@ -10,4 +10,9 @@ export type Color = {
 
 export type CommonText = {
     text: string;
-} & Color
+} & Color;
+
+export type Background = {
+    background: string;
+}
+
