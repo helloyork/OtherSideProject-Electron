@@ -1,5 +1,6 @@
 "use client";
 
+import { Constants } from "@/lib/api/config";
 import PageTransition from "@/lib/ui/components/page-transition";
 import SideMenu, { MenuItem } from "@/lib/ui/components/sidemenu";
 import clsx from "clsx";
@@ -13,23 +14,23 @@ export default function Layout({
   const sideMenuItems: MenuItem[] = [
     {
       title: "开始",
-      href: "/main-menu",
+      href: Constants.routes.HOME,
     },
     {
       title: "存档",
-      href: "/save",
+      href: Constants.routes.SAVE,
     },
     {
       title: "画廊",
-      href: "/gallery",
+      href: Constants.routes.GALLERY,
     },
     {
       title: "设置",
-      href: "/settings",
+      href: Constants.routes.SETTINGS,
     },
     {
       title: "关于",
-      href: "/about",
+      href: Constants.routes.ABOUT,
     }
   ];
   return (

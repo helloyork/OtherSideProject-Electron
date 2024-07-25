@@ -3,6 +3,10 @@ const Constants = {
     routes: {
         HOME: "/",
         MAIN_MENU: "/main-menu",
+        ABOUT: "/about",
+        GALLERY: "/gallery",
+        SAVE: "/save",
+        SETTINGS: "/settings",
     },
     src: {
         images: {
