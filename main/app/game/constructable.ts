@@ -1,7 +1,10 @@
 import { Game, LogicNode } from "./game";
 import { ContentNode, RenderableNode } from "./save/rollback";
+import { HistoryData, Transaction } from "./save/transaction";
 
-export class Constructable<T extends typeof Constructable = any> {
+export class Constructable<
+    T extends typeof Constructable = any,
+> {
     static targetAction = LogicNode.Action;
     actions: LogicNode.Actions[];
     constructor() {
@@ -10,7 +13,7 @@ export class Constructable<T extends typeof Constructable = any> {
     /**
      * Construct the actions into a tree
      */
-    public construct(parent?: RenderableNode): RenderableNode | null{
+    public construct(parent?: RenderableNode): RenderableNode | null {
         for (let i = 0; i < this.actions.length; i++) {
             const action = this.actions[i];
             if (i === 0 && parent) {
@@ -43,11 +46,18 @@ export class Constructable<T extends typeof Constructable = any> {
     }
 }
 
-export class Actionable {
+export class Actionable<
+    TransactionEnum extends Record<string, string> = Record<string, string>
+> {
+    transaction: Transaction<TransactionEnum>;
+    constructor() {
+        this.transaction = new Transaction<TransactionEnum>((history) => this.undo(history));
+    }
     protected actions: any[] = [];
     toActions() {
         let actions = this.actions;
         this.actions = [];
         return actions;
     }
+    undo(history: HistoryData<TransactionEnum>) {}
 }

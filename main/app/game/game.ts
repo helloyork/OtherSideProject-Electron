@@ -5,11 +5,8 @@ import { ContentNode, RenderableNode, RootNode } from "./save/rollback";
 import { Singleton } from "../../util/singleton";
 import { Story } from "./elements/story";
 import { Image } from "./elements/image";
+import { Storable, StorableData } from "./save/store";
 
-export interface RawSaveData {
-    name: string;
-    version: string;
-}
 export type GameConfig = {};
 
 export namespace LogicNode {
@@ -99,6 +96,7 @@ export class Game {
     config: GameConfig;
     root: RootNode;
     characters: Character[] = [];
+    liveGame: LiveGame | null = null;
     constructor(config: GameConfig) {
         this.config = config;
         this.root = new RootNode();
@@ -106,12 +104,30 @@ export class Game {
     public getRootNode() {
         return this.root;
     }
+    createLiveGame() {
+        this.liveGame = new LiveGame(this);
+        return this.liveGame;
+    }
+}
+
+interface SavedGame {
+    name: string;
+    version: string;
+    meta: {
+        created: number;
+        updated: number;
+    },
+    game: {
+        store: { [key: string]: StorableData; };
+    }
 }
 
 class LiveGame {
     game: Game;
+    storable: Storable;
     constructor(game: Game) {
         this.game = game;
+        this.storable = new Storable();
     }
 }
 
