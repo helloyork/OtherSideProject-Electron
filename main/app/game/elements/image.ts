@@ -24,7 +24,7 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
     };
     name: string;
     config: ImageConfig;
-    actions: LogicNode.ImageAction[];
+    actions: LogicNode.ImageAction<any>[];
 
     constructor(name: string, config: DeepPartial<ImageConfig> = {}) {
         super();
@@ -43,7 +43,7 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
                     src
                 ]
             }).commit();
-        const action = new ImageAction(
+        const action = new ImageAction<typeof ImageAction.ActionTypes.setSrc>(
             this,
             ImageAction.ActionTypes.setSrc,
             new ContentNode<string>(
@@ -60,10 +60,10 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
                 type: ImageTransactionTypes.show,
                 data: this.config.display
             }).commit();
-        const action = new ImageAction(
+        const action = new ImageAction<typeof ImageAction.ActionTypes.show>(
             this,
             ImageAction.ActionTypes.show,
-            new ContentNode<string>(
+            new ContentNode(
                 Game.getIdManager().getStringId()
             )
         );
@@ -77,28 +77,28 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
                 type: ImageTransactionTypes.hide,
                 data: this.config.display
             }).commit();
-        const action = new ImageAction(
+        const action = new ImageAction<typeof ImageAction.ActionTypes.hide>(
             this,
             ImageAction.ActionTypes.hide,
-            new ContentNode<string>(
+            new ContentNode(
                 Game.getIdManager().getStringId()
             )
         );
         this.actions.push(action);
         return this;
     }
-    undo(history: HistoryData<typeof ImageTransactionTypes>): LogicNode.ImageAction | void {
+    undo(history: HistoryData<typeof ImageTransactionTypes>): LogicNode.ImageAction<any> | void {
         const hideAction = new ImageAction(
             this,
             ImageAction.ActionTypes.hide,
-            new ContentNode<string>(
+            new ContentNode<void>(
                 Game.getIdManager().getStringId()
             )
         );
         const showAction = new ImageAction(
             this,
             ImageAction.ActionTypes.show,
-            new ContentNode<string>(
+            new ContentNode<void>(
                 Game.getIdManager().getStringId()
             )
         );

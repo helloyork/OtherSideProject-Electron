@@ -8,7 +8,8 @@
   "scripts": {
     "dev": "nextron",
     "build": "nextron build",
-    "postinstall": "electron-builder install-app-deps"
+    "postinstall": "electron-builder install-app-deps",
+    "test": "tsc && node ./main/dist/app/test/test.js"
   },
   "dependencies": {
     "@nextui-org/react": "^2.4.6",

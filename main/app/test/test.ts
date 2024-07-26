@@ -1,9 +1,8 @@
-import { Character } from "../game/elements/character";
+import { Character, Sentence, Word } from "../game/elements/character";
 import { Condition, Lambda } from "../game/elements/condition";
 import { Image } from "../game/elements/image";
 import { Scene } from "../game/elements/scene";
 import { Script } from "../game/elements/script";
-import { Sentence, Word } from "../game/elements/sentence";
 import { Story } from "../game/elements/story";
 import { Game } from "../game/game";
 

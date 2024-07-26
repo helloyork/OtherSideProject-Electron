@@ -5,9 +5,8 @@ import { Storable, StorableData } from "./save/store";
 import { Story } from "./elements/story";
 import { Image } from "./elements/image";
 import { Condition } from "./elements/condition";
-import { Character } from "./elements/character";
+import { Character, Sentence } from "./elements/character";
 import { Scene } from "./elements/scene";
-import { Sentence } from "./elements/sentence";
 
 export type GameConfig = {};
 
@@ -15,12 +14,13 @@ export namespace LogicNode {
     export type GameElement = Character | Scene | Sentence | Image | Condition;
     export type Actionlike = Character;
     export type Actions =
-        CharacterAction<typeof CharacterAction.ActionTypes[keyof typeof CharacterAction.ActionTypes]>
-        | SceneAction
-        | StoryAction
-        | ImageAction
-        | ConditionAction;
-    export class Action {
+        CharacterAction<any>
+        | ConditionAction<any>
+        | ImageAction<any>
+        | SceneAction<any>
+        | ScriptAction<any>
+        | StoryAction<any>;
+    export class Action<ContentNodeType = any> {
         static isAction(action: any): action is Action {
             return action instanceof Action;
         }
@@ -29,8 +29,8 @@ export namespace LogicNode {
         };
         callee: GameElement;
         type: string;
-        contentNode: ContentNode;
-        constructor(callee: GameElement, type: string, contentNode: ContentNode) {
+        contentNode: ContentNode<ContentNodeType>;
+        constructor(callee: GameElement, type: string, contentNode: ContentNode<ContentNodeType>) {
             this.callee = callee;
             this.type = type;
             this.contentNode = contentNode;
@@ -39,60 +39,102 @@ export namespace LogicNode {
             return this.contentNode;
         }
     }
-    export class CharacterAction<T extends typeof CharacterAction.ActionTypes[keyof typeof CharacterAction.ActionTypes]>
-        extends Action {
-        static ActionTypes = {
-            say: "character:say",
-            action: "character:action",
-        }
-        callee: Character;
-        constructor(callee: Character, type: T, contentNode: ContentNode) {
+
+    class TypedAction<
+        ContentType extends Record<string, any>,
+        T extends keyof ContentType & string,
+        Callee extends GameElement
+    > extends Action<ContentType[T]> {
+        callee: Callee;
+        constructor(callee: Callee, type: T, contentNode: ContentNode<ContentType[T]>) {
             super(callee, type, contentNode);
             this.callee = callee;
         }
     }
-    export class SceneAction extends Action {
-        static ActionTypes = {
-            action: "scene:action",
-        }
-        callee: Scene;
-        constructor(callee: Scene, type: string, contentNode: ContentNode) {
-            super(callee, type, contentNode);
-            this.callee = callee;
-        }
+
+    const CharacterActionTypes = {
+        say: "character:say",
+        action: "character:action",
+    } as const;
+    type CharacterActionContentType = {
+        [K in typeof CharacterActionTypes[keyof typeof CharacterActionTypes]]:
+        K extends "character:say" ? Sentence :
+        K extends "character:action" ? any :
+        any;
     }
-    export class StoryAction extends Action {
-        static ActionTypes = {
-            action: "story:action",
-        }
-        callee: Story;
-        constructor(callee: Story, type: string, contentNode: ContentNode) {
-            super(callee, type, contentNode);
-            this.callee = callee;
-        }
+    export class CharacterAction<T extends typeof CharacterActionTypes[keyof typeof CharacterActionTypes]>
+        extends TypedAction<CharacterActionContentType, T, Character> {
+        static ActionTypes = CharacterActionTypes;
     }
-    export class ImageAction extends Action {
-        static ActionTypes = {
-            action: "image:action",
-            setSrc: "image:setSrc",
-            show: "image:show",
-            hide: "image:hide",
-        }
-        callee: Image;
-        constructor(callee: Image, type: string, contentNode: ContentNode) {
-            super(callee, type, contentNode);
-            this.callee = callee;
-        }
+
+    const SceneActionTypes = {
+        action: "scene:action",
+    } as const;
+    type SceneActionContentType = {
+        [K in typeof SceneActionTypes[keyof typeof SceneActionTypes]]:
+        K extends "scene:action" ? any :
+        any;
     }
-    export class ConditionAction extends Action {
-        static ActionTypes = {
-            action: "condition:action",
-        }
-        callee: Condition;
-        constructor(callee: Condition, type: string, contentNode: ContentNode) {
-            super(callee, type, contentNode);
-            this.callee = callee;
-        }
+    export class SceneAction<T extends typeof SceneActionTypes[keyof typeof SceneActionTypes]>
+        extends TypedAction<SceneActionContentType, T, Scene> {
+        static ActionTypes = SceneActionTypes;
+    }
+
+    const StoryActionTypes = {
+        action: "story:action",
+    } as const;
+    type StoryActionContentType = {
+        [K in typeof StoryActionTypes[keyof typeof StoryActionTypes]]:
+        K extends "story:action" ? any :
+        any;
+    }
+    export class StoryAction<T extends typeof StoryActionTypes[keyof typeof StoryActionTypes]>
+        extends TypedAction<StoryActionContentType, T, Story> {
+        static ActionTypes = StoryActionTypes;
+    }
+
+    const ImageActionTypes = {
+        action: "image:action",
+        setSrc: "image:setSrc",
+        show: "image:show",
+        hide: "image:hide",
+    } as const;
+    type ImageActionContentType = {
+        [K in typeof ImageActionTypes[keyof typeof ImageActionTypes]]:
+        K extends "image:setSrc" ? string :
+        K extends "image:show" ? void :
+        K extends "image:hide" ? void :
+        any;
+    }
+    export class ImageAction<T extends typeof ImageActionTypes[keyof typeof ImageActionTypes]>
+        extends TypedAction<ImageActionContentType, T, Image> {
+        static ActionTypes = ImageActionTypes;
+    }
+
+    const ConditionActionTypes = {
+        action: "condition:action",
+    } as const;
+    type ConditionActionContentType = {
+        [K in typeof ConditionActionTypes[keyof typeof ConditionActionTypes]]:
+        K extends "condition:action" ? Condition :
+        any;
+    }
+    export class ConditionAction<T extends typeof ConditionActionTypes[keyof typeof ConditionActionTypes]>
+        extends TypedAction<ConditionActionContentType, T, Condition> {
+        static ActionTypes = ConditionActionTypes;
+    }
+
+    const ScriptActionTypes = {
+        action: "script:action",
+    } as const;
+    type ScriptActionContentType = {
+        [K in typeof ScriptActionTypes[keyof typeof ScriptActionTypes]]:
+        K extends "script:action" ? any :
+        any;
+    }
+    export class ScriptAction<T extends typeof ScriptActionTypes[keyof typeof ScriptActionTypes]>
+        extends TypedAction<ScriptActionContentType, T, any> {
+        static ActionTypes = ScriptActionTypes;
     }
 };
 
@@ -111,7 +153,6 @@ export class Game {
     }
     config: GameConfig;
     root: RootNode;
-    characters: Character[] = [];
     liveGame: LiveGame | null = null;
     constructor(config: GameConfig) {
         this.config = config;

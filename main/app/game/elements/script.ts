@@ -1,4 +1,6 @@
 import { Actionable } from "../constructable";
+import { Game, LogicNode } from "../game";
+import { ContentNode } from "../save/rollback";
 import { HistoryData } from "../save/transaction";
 
 interface ScriptCtx {
@@ -30,6 +32,17 @@ export class Script extends Actionable<typeof ScriptTransactionTypes> {
         if (history.type === ScriptTransactionTypes.Run) {
             this.cleaner?.();
         }
+    }
+    toActions(): LogicNode.Actions[] {
+        return [
+            new LogicNode.ScriptAction(
+                this,
+                LogicNode.ScriptAction.ActionTypes.action,
+                new ContentNode<Script>(
+                    Game.getIdManager().getStringId()
+                ).setContent(this)
+            )
+        ];
     }
 }
 

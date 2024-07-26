@@ -1,6 +1,7 @@
 import { deepMerge } from "../../../util/data";
 import { Actionable } from "../constructable";
-import { LogicNode } from "../game";
+import { Game, LogicNode } from "../game";
+import { ContentNode } from "../save/rollback";
 import { HistoryData } from "../save/transaction";
 import { ScriptCleaner } from "./script";
 
@@ -118,8 +119,10 @@ export class Condition extends Actionable {
             Reflect.construct(LogicNode.ConditionAction, [
                 this,
                 LogicNode.ConditionAction.ActionTypes.action,
-                this.conditions
-            ])
+                new ContentNode<Condition>(
+                    Game.getIdManager().getStringId(),
+                ).setContent(this)
+            ]) as LogicNode.ConditionAction<typeof LogicNode.ConditionAction.ActionTypes.action>
         ]
     }
 }

@@ -7,8 +7,6 @@ import type { Metadata } from 'next/types';
 import '@lib/styles/globals.css'
 import Provider from '@lib/ui/provider';
 import Main from '@lib/ui/elements/main';
-import FrameBar from '@/lib/ui/components/framebar';
-import { H } from '@/lib/ui/cons';
 
 const inter = Inter({ subsets: ["latin"] });
 

@@ -13,16 +13,16 @@ export class Constructable<
     /**
      * Construct the actions into a tree
      */
-    public construct(parent?: RenderableNode): RenderableNode | null {
+    protected construct(parent?: RenderableNode): RenderableNode | null {
         for (let i = 0; i < this.actions.length; i++) {
             const action = this.actions[i];
             if (i === 0 && parent) {
-                action.contentNode.setParent(parent);
+                parent.addChild(action.contentNode);
             } else if (i > 0) {
-                action.contentNode.setParent(this.actions[i - 1].contentNode);
+                (this.actions[i - 1].contentNode)?.addChild(action.contentNode);
             }
         }
-        return (!!this.actions.length) ? this.actions[this.actions.length - 1].contentNode : null;
+        return (!!this.actions.length) ? this.actions[0].contentNode : null;
     }
     /**
      * Wrap the actions in a new action
