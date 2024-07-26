@@ -1,5 +1,4 @@
 import type { Window as IpcWindow } from "@/preload";
-import { Singleton } from "@lib/util/singleton";
 
 type WindowWithAPI = Window & IpcWindow;
 export class ClientAPI {
@@ -12,9 +11,21 @@ export class ClientAPI {
 
     window: WindowWithAPI;
     winFrame: WinFrame;
+    gameAPI: GameAPI;
     private constructor(window: WindowWithAPI) {
         this.window = window;
         this.winFrame = new WinFrame(this);
+        this.gameAPI = new GameAPI(this);
+    }
+}
+
+export class GameAPI {
+    clientAPI: ClientAPI;
+    constructor(clientAPI: ClientAPI) {
+        this.clientAPI = clientAPI;
+    }
+    requestGame() {
+        return this.clientAPI.window.api.game.requestGame();
     }
 }
 

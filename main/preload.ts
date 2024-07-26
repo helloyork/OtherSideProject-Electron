@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
+import { Status, success } from './util/status';
 
 const api = {
   hello(...args: any[]) {
@@ -14,7 +15,13 @@ const api = {
     close() {
       ipcRenderer.send("window:close");
     },
-  }
+  },
+  game: {
+    async requestGame() {
+      const result = await ipcRenderer.invoke("game:requestGame");
+      return success(result);
+    }
+  },
 }
 
 const app = {
@@ -50,6 +57,9 @@ export interface Window {
       maximize: () => void;
       close: () => void;
     };
+    game: {
+      requestGame: () => Promise<ExpectedHandler["game:requestGame"]>;
+    };
   };
   app: {
     info: {
@@ -62,7 +72,8 @@ export interface Window {
  * after invoking, the return value will be returned to the renderer process.
  */
 export interface ExpectedHandler {
-  "hello": any[];
+  "hello": void;
+  "game:requestGame": Status<void>;
 }
 
 export interface ExpectedListener {

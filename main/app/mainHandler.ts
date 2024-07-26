@@ -1,37 +1,22 @@
 import type { ExpectedHandler, ExpectedListener } from "../preload";
 import { Singleton } from "../util/singleton";
+import * as AppHandlers from "./handlers/index";
 
-type Handlers = {
-    [K in keyof ExpectedHandler]: (ctx: {
+export type Handlers<T = ExpectedHandler> = {
+    [K in keyof T]: (ctx: {
         event: Electron.IpcMainInvokeEvent;
         mainWindow: Electron.BrowserWindow;
-    }, ...args: unknown[]) => Promise<ExpectedHandler[K]> | ExpectedHandler[K];
+    }, ...args: unknown[]) => Promise<T[K]> | T[K];
 };
-type Listeners = {
-    [K in keyof ExpectedListener]: (ctx: {
+export type Listeners<T = ExpectedListener> = {
+    [K in keyof T]: (ctx: {
         event: Electron.IpcMainInvokeEvent;
         mainWindow: Electron.BrowserWindow;
-    }, ...args: unknown[]) => void;
+    }, ...args: unknown[]) => Promise<T[K]> | T[K];
 };
 
-const handlers: Handlers = {
-    hello: (...args) => [...args],
-};
-const listeners: Listeners = {
-    "window:minimize": async ({ mainWindow }) => {
-        mainWindow.minimize();
-    },
-    "window:maximize": async ({ mainWindow }) => {
-        if (mainWindow.isMaximized()) {
-            mainWindow.unmaximize();
-        } else {
-            mainWindow.maximize();
-        }
-    },
-    "window:close": async ({ mainWindow }) => {
-        mainWindow.close();
-    }
-};
+const handlers: Handlers = AppHandlers.handlers as Handlers;
+const listeners: Listeners = AppHandlers.listeners as Listeners;
 
 
 export class RemoteHandler extends Singleton<RemoteHandler>() {
