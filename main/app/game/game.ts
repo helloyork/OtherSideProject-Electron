@@ -1,19 +1,25 @@
+import { ContentNode, RootNode } from "./save/rollback";
+import { Singleton } from "../../util/singleton";
+import { Storable, StorableData } from "./save/store";
+
+import { Story } from "./elements/story";
+import { Image } from "./elements/image";
+import { Condition } from "./elements/condition";
 import { Character } from "./elements/character";
 import { Scene } from "./elements/scene";
 import { Sentence } from "./elements/sentence";
-import { ContentNode, RenderableNode, RootNode } from "./save/rollback";
-import { Singleton } from "../../util/singleton";
-import { Story } from "./elements/story";
-import { Image } from "./elements/image";
-import { Storable, StorableData } from "./save/store";
 
 export type GameConfig = {};
 
 export namespace LogicNode {
-    export type GameElement = Character | Scene | Sentence | Image;
+    export type GameElement = Character | Scene | Sentence | Image | Condition;
     export type Actionlike = Character;
     export type Actions =
-        CharacterAction<typeof CharacterAction.ActionTypes[keyof typeof CharacterAction.ActionTypes]>;
+        CharacterAction<typeof CharacterAction.ActionTypes[keyof typeof CharacterAction.ActionTypes]>
+        | SceneAction
+        | StoryAction
+        | ImageAction
+        | ConditionAction;
     export class Action {
         static isAction(action: any): action is Action {
             return action instanceof Action;
@@ -78,6 +84,16 @@ export namespace LogicNode {
             this.callee = callee;
         }
     }
+    export class ConditionAction extends Action {
+        static ActionTypes = {
+            action: "condition:action",
+        }
+        callee: Condition;
+        constructor(callee: Condition, type: string, contentNode: ContentNode) {
+            super(callee, type, contentNode);
+            this.callee = callee;
+        }
+    }
 };
 
 class IdManager extends Singleton<IdManager>() {
@@ -107,6 +123,10 @@ export class Game {
     createLiveGame() {
         this.liveGame = new LiveGame(this);
         return this.liveGame;
+    }
+    registerStory(story: Story) {
+        story.setRoot(this.getRootNode());
+        return this;
     }
 }
 

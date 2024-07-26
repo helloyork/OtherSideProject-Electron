@@ -23,7 +23,7 @@ export class Sentence {
         this.text = this.format(text);
         this.config = deepMerge<SentenceConfig>(Sentence.defaultConfig, config);
     }
-    format(text:  (string | Word)[] | (string | Word)): Word[] {
+    format(text: (string | Word)[] | (string | Word)): Word[] {
         const result: Word[] = [];
         if (Array.isArray(text)) {
             for (let i = 0; i < text.length; i++) {

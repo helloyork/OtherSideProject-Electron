@@ -1,4 +1,5 @@
 import { Character } from "../game/elements/character";
+import { Condition, Lambda } from "../game/elements/condition";
 import { Image } from "../game/elements/image";
 import { Scene } from "../game/elements/scene";
 import { Script } from "../game/elements/script";
@@ -24,7 +25,7 @@ const scene1 = new Scene("scene1", {})
             .say("Hello, World!")
             .say("How are you?")
             .toActions(),
-        
+
         eileenImage
             .show()
             .toActions(),
@@ -46,10 +47,32 @@ const scene1 = new Scene("scene1", {})
                 .set("coin", 0)
                 .commit();
             return () => {
-                if(token) liveGame.storable.getNamespace("player").undo(token);
+                if (token) liveGame.storable.getNamespace("player").undo(token);
             }
         })
             .toActions(),
+            
+        new Condition()
+            .If(
+                new Lambda(
+                    ({
+                        resolve
+                    }) => (resolve(), () => { })
+                ),
+                M.say("It's 5!").toActions()
+            )
+            .ElseIf(
+                new Lambda(
+                    ({
+                        resolve
+                    }) => (resolve(), () => { })
+                ),
+                M.say("It's 7!").toActions()
+            )
+            .Else(
+                M.say("I don't know!").toActions()
+            )
+            .toActions()
     ]);
 
 story.action([scene1]);

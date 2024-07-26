@@ -3,14 +3,22 @@ import { DeepPartial } from "../../../util/type";
 import { Actionable } from "../constructable";
 import { Game, LogicNode } from "../game";
 import { ContentNode } from "../save/rollback";
+import { HistoryData } from "../save/transaction";
 import { CommonImage } from "../show";
 
 export type ImageConfig = {
     src: string;
+    display?: boolean;
 } & CommonImage;
 
+const ImageTransactionTypes = {
+    set: "set",
+    show: "show",
+    hide: "hide",
+} as const;
+
 const { ImageAction } = LogicNode;
-export class Image extends Actionable {
+export class Image extends Actionable<typeof ImageTransactionTypes> {
     static defaultConfig: ImageConfig = {
         src: "",
     };
@@ -25,6 +33,16 @@ export class Image extends Actionable {
         this.actions = [];
     }
     set(src: string): this {
+        const setActions = this.actions.filter(action => action.type === ImageTransactionTypes.set);
+        this.transaction
+            .startTransaction()
+            .push({
+                type: ImageTransactionTypes.set,
+                data: [
+                    setActions[setActions.length - 1]?.contentNode.getContent() || this.config.src,
+                    src
+                ]
+            }).commit();
         const action = new ImageAction(
             this,
             ImageAction.ActionTypes.setSrc,
@@ -36,6 +54,12 @@ export class Image extends Actionable {
         return this;
     }
     show(): this {
+        this.transaction
+            .startTransaction()
+            .push({
+                type: ImageTransactionTypes.show,
+                data: this.config.display
+            }).commit();
         const action = new ImageAction(
             this,
             ImageAction.ActionTypes.show,
@@ -47,6 +71,12 @@ export class Image extends Actionable {
         return this;
     }
     hide(): this {
+        this.transaction
+            .startTransaction()
+            .push({
+                type: ImageTransactionTypes.hide,
+                data: this.config.display
+            }).commit();
         const action = new ImageAction(
             this,
             ImageAction.ActionTypes.hide,
@@ -56,5 +86,36 @@ export class Image extends Actionable {
         );
         this.actions.push(action);
         return this;
+    }
+    undo(history: HistoryData<typeof ImageTransactionTypes>): LogicNode.ImageAction | void {
+        const hideAction = new ImageAction(
+            this,
+            ImageAction.ActionTypes.hide,
+            new ContentNode<string>(
+                Game.getIdManager().getStringId()
+            )
+        );
+        const showAction = new ImageAction(
+            this,
+            ImageAction.ActionTypes.show,
+            new ContentNode<string>(
+                Game.getIdManager().getStringId()
+            )
+        );
+        switch (history.type) {
+            case ImageTransactionTypes.set:
+                this.set(history.data[0]);
+                return void 0;
+            case ImageTransactionTypes.show:
+                if (!history.data) {
+                    return hideAction;
+                }
+                return showAction;
+            case ImageTransactionTypes.hide:
+                if (history.data) {
+                    return showAction;
+                }
+                return hideAction;
+        }
     }
 }

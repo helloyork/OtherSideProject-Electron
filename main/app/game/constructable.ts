@@ -1,5 +1,5 @@
 import { Game, LogicNode } from "./game";
-import { ContentNode, RenderableNode } from "./save/rollback";
+import { ContentNode, RenderableNode, RootNode } from "./save/rollback";
 import { HistoryData, Transaction } from "./save/transaction";
 
 export class Constructable<
@@ -44,6 +44,10 @@ export class Constructable<
             sceneRoot
         ])
     }
+    setRoot(root: RootNode): LogicNode.Action | undefined {
+        this.actions[0]?.contentNode.setParent(root);
+        return this.actions[0];
+    }
 }
 
 export class Actionable<
@@ -53,7 +57,7 @@ export class Actionable<
     constructor() {
         this.transaction = new Transaction<TransactionEnum>((history) => this.undo(history));
     }
-    protected actions: any[] = [];
+    protected actions: LogicNode.Actions[] = [];
     toActions() {
         let actions = this.actions;
         this.actions = [];

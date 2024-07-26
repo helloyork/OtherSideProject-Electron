@@ -60,6 +60,17 @@ export class Transaction<Enum extends Record<string, any>> {
             this.undoHandler(transaction.history[i]);
         }
     }
-
+    /**
+     * Add a history to the current transaction
+     * @param history the history to add
+     */
+    push(history: HistoryData<Enum>): this {
+        if (!this.currentTransaction) {
+            console.warn('No transaction to add history to');
+            return this;
+        }
+        this.currentTransaction.history.push(history);
+        return this;
+    }
 }
 

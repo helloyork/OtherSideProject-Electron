@@ -5,7 +5,7 @@ interface ScriptCtx {
     script: Script;
 };
 type ScriptRun = (ctx: ScriptCtx) => ScriptCleaner;
-type ScriptCleaner = () => void;
+export type ScriptCleaner = () => void;
 
 const ScriptTransactionTypes = {
     Run: 'run'
