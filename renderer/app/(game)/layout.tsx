@@ -1,6 +1,7 @@
 "use client";
 
 import PageTransition from "@/lib/ui/components/page-transition";
+import { GameProvider } from "@/lib/ui/providers/game-state";
 import clsx from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -11,20 +12,15 @@ export default function Layout({
 }>) {
   return (
     <>
-      <AnimatePresence>
-        <PageTransition className={clsx("h-full")}>
-          <div className={clsx("flex bg-cover bg-center h-full")}>
-            <motion.div
-              className={clsx("w-full")}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1 }}
-            >
+      <GameProvider>
+        <AnimatePresence>
+          <PageTransition className={clsx("h-full")}>
+            <div className={clsx("flex bg-cover bg-center h-full")}>
               {children}
-            </motion.div>
-          </div>
-        </PageTransition>
-      </AnimatePresence>
+            </div>
+          </PageTransition>
+        </AnimatePresence>
+      </GameProvider>
     </>
   )
 };

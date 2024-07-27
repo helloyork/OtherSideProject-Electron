@@ -1,6 +1,7 @@
 "use client";
 
 import PageTransition from "@/lib/ui/components/page-transition";
+import QuickMenu from "@/lib/ui/components/player/quick-menu";
 import Isolated from "@/lib/ui/elements/isolated";
 import clsx from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
@@ -14,6 +15,7 @@ export default function Layout({
     <>
       <Isolated>
         <div className="fixed inset-0 w-full h-full flex items-left justify-start bg-gray-100 bg-opacity-75">
+          <QuickMenu />
           {children}
         </div>
       </Isolated>

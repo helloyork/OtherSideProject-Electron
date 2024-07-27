@@ -8,7 +8,6 @@ import { motion } from "framer-motion";
 export default function Page() {
   return (
     <div className="relative">
-      <QuickMenu />
       <h2 className="text-white">Player</h2>
     </div>
   );

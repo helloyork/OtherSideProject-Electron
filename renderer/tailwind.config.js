@@ -10,7 +10,18 @@ module.exports = {
       white: colors.white,
       gray: colors.gray,
       blue: colors.blue,
-      primary: '#1DA1F2',
+      // primary: '#1DA1F2',
+      primary: {
+        100: '#E8F5FD',
+        200: '#C9E8FB',
+        300: '#A9DBF9',
+        400: '#6ABFF5',
+        500: '#1DA1F2', // default
+        600: '#1A91DA',
+        700: '#1271A8',
+        800: '#0D5276',
+        900: '#09364E'
+      },
       secondary: '#004c8c',
     },
     extend: {

@@ -3,14 +3,16 @@
 import { motion, useAnimation } from "framer-motion";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 
-export type MenuItem = {
-  title: string;
+export type MenuItem = ({
   href: string;
 } | {
-  title: string;
   action: () => void;
-}
+}) & {
+  title: string;
+  prefetch?: boolean;
+};
 
 export default function SideMenu({
   menu
@@ -20,6 +22,8 @@ export default function SideMenu({
   const controls = useAnimation();
   const router = useRouter();
   const path = usePathname();
+
+  const requiredPrefetch = menu.filter(item => item.prefetch && item["href"]).map(item => item["href"]);
 
   const isCurrentPage = (href: string) => {
     return (href.endsWith("/") ? href : href + "/") === path;
@@ -38,6 +42,15 @@ export default function SideMenu({
 
     router.push(href);
   };
+  const prefetchAll = (requiredPrefetch: string[]) => {
+    for (const href of requiredPrefetch) {
+      router.prefetch(href);
+    }
+  };
+
+  useEffect(() => {
+    prefetchAll(requiredPrefetch);
+  }, [requiredPrefetch]);
 
   return (
     <>
@@ -70,13 +83,13 @@ export default function SideMenu({
               {menu.map((item, index) => (
                 <Link key={index} href={item["href"]} onClick={() => handleClick(item["href"], item["action"])} className="group">
                   <li className={`p-4 cursor-pointer hover:bg-gray-100 hover:bg-opacity-10 active:bg-opacity-20 transition-all relative ${isCurrentPage(item["href"]) ? '' : ''}`}>
-                    {isCurrentPage(item["href"]) && 
-                    <motion.div
-                      className="absolute left-0 top-1/4 h-1/2 w-1 border-l-4 border-primary"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ duration: 0.2 }}
-                    ></motion.div>
+                    {isCurrentPage(item["href"]) &&
+                      <motion.div
+                        className="absolute left-0 top-1/4 h-1/2 w-1 border-l-4 border-primary"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ duration: 0.2 }}
+                      ></motion.div>
                     }
                     <p className="pl-4 transition-transform group-hover:translate-x-2 group-active:translate-x-1">{item.title}</p>
                   </li>

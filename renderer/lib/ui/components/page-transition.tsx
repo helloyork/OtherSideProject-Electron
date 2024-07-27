@@ -5,13 +5,26 @@ import { motion } from 'framer-motion';
 
 const pageVariants = {
     initial: {
-        opacity: 0,
+        opacity: 1,
+        backgroundColor: "#000",
     },
     in: {
         opacity: 1,
+        backgroundColor: "transparent",
+        transition: {
+            duration: 1,
+            type: "tween",
+            ease: "easeInOut",
+        }
     },
     out: {
-        opacity: 0,
+        opacity: 1,
+        backgroundColor: "#000",
+        transition: {
+            duration: 1,
+            type: "tween",
+            ease: "easeInOut",
+        }
     }
 };
 
@@ -21,11 +34,8 @@ const PageTransition = ({ children, className }) => (
         animate="in"
         exit="out"
         variants={pageVariants}
-        transition={{
-            type: "tween",
-            ease: "easeInOut",
-        }}
         className={clsx(className)}
+        style={{ position: 'absolute', width: '100%', height: '100%' }}
     >
         {children}
     </motion.div>

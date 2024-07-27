@@ -6,20 +6,26 @@ import { createContext, useContext, useState, ReactNode } from "react";
 
 type GameContextType = {
     game: ClientGame;
-    setGame: (game: ClientGame) => void;
+    setGame: (update: (prevGame: ClientGame) => ClientGame) => void;
 };
-
-const DefaultValue = typeof window !== 'undefined' 
-    ? new ClientGame({}, { clientAPI: ClientAPI.getInstance(window) })
-    : null;
 
 const GameContext = createContext<GameContextType | null>(null);
 
 export function GameProvider({ children }: { children: ReactNode }) {
+    "use client";
+    const clientAPI = typeof window !== "undefined" ? ClientAPI.getInstance(window) : null;
+    const DefaultValue = new ClientGame({}, { clientAPI: clientAPI });
     const [game, setGame] = useState<ClientGame>(DefaultValue);
 
+    const updateGame = (update: (prevGame: ClientGame) => ClientGame) => {
+        setGame(prevGame => {
+            const newGame = update(prevGame);
+            return new ClientGame(newGame, { clientAPI: ClientAPI.getInstance(window) });
+        });
+    };
+
     return (
-        <GameContext.Provider value={{ game, setGame }}>
+        <GameContext.Provider value={{ game, setGame: updateGame }}>
             {children}
         </GameContext.Provider>
     );
@@ -28,10 +34,5 @@ export function GameProvider({ children }: { children: ReactNode }) {
 export function useGame(): GameContextType {
     const context = useContext(GameContext);
     if (!context) throw new Error("useGame must be used within a GameProvider");
-    if (!context.game) {
-        context.setGame(DefaultValue);
-    }
     return context;
 }
-
-

@@ -23,6 +23,12 @@ const Constants = {
             name: "OtherSideProject",
             version: "0.0.0"
         }
+    },
+    style: {
+        zIndex: {
+            QUICK_MENU: 100,
+            STAGE: 0,
+        }
     }
 };
 
