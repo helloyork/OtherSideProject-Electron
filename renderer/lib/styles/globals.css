@@ -22,3 +22,15 @@ main {
   flex-grow: 1;
   overflow: auto; /* Prevents overflow */
 }
+
+* {
+  user-select: none;
+}
+
+img {
+  pointer-events: none;
+}
+
+:focus {
+  outline: 2px solid white;
+}

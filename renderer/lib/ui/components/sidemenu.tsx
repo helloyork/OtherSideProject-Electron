@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, useAnimation } from "framer-motion";
+import { PrefetchKind } from "next/dist/client/components/router-reducer/router-reducer-types";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -44,7 +45,9 @@ export default function SideMenu({
   };
   const prefetchAll = (requiredPrefetch: string[]) => {
     for (const href of requiredPrefetch) {
-      router.prefetch(href);
+      router.prefetch(href, {
+        kind: PrefetchKind.AUTO
+      });
     }
   };
 
