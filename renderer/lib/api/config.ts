@@ -1,3 +1,7 @@
+"use client";
+
+import Logo from "@/public/static/images/logo.jpg";
+
 
 const Constants = {
     routes: {
@@ -7,10 +11,11 @@ const Constants = {
         GALLERY: "/gallery",
         SAVE: "/save",
         SETTINGS: "/settings",
+        PLAYER: "/game/player",
     },
     src: {
         images: {
-            LOGO: "/static/images/logo.png",
+            LOGO: Logo,
         }
     },
     info: {

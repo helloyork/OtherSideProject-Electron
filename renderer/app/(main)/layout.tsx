@@ -14,7 +14,7 @@ export default function Layout({
   const sideMenuItems: MenuItem[] = [
     {
       title: "开始",
-      href: Constants.routes.HOME,
+      href: Constants.routes.PLAYER,
     },
     {
       title: "存档",
