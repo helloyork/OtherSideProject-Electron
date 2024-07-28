@@ -23,8 +23,22 @@ export class FileStore {
         const buffer = await this.fs.readFile(path.resolve(this.basePath, _path));
         return msgpack.decode(buffer);
     }
-    getName(_path: string) {
-        return _path + "." + FileStore.fileExt;
+    async isFileExists(_path: string): Promise<boolean> {
+        try {
+            await this.fs.access(path.resolve(this.basePath, _path));
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+    async createFolder(_path: string): Promise<void> {
+        await this.fs.mkdir(path.resolve(this.basePath, _path), { recursive: true });
+    }
+    async getFileNames(_path: string): Promise<string[]> {
+        return (await this.fs.readdir(path.resolve(this.basePath, _path))).filter((name) => name.endsWith(FileStore.fileExt));
+    }
+    getName(_path: string, suffix?: string) {
+        return _path + "." + (suffix ? (suffix + ".") : "") + FileStore.fileExt;
     }
 }
 

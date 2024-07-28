@@ -1,6 +1,6 @@
-import { ContentNode, RootNode } from "./save/rollback";
+import { ContentNode, RenderableNode, RootNode } from "./save/rollback";
 import { Singleton } from "../../util/singleton";
-import { Storable, StorableData } from "./save/store";
+import { Namespace, Storable, StorableData } from "./save/store";
 
 import { Story } from "./elements/story";
 import { Image } from "./elements/image";
@@ -10,9 +10,11 @@ import { Scene } from "./elements/scene";
 import { FileStore } from "./save/storeProvider";
 import { ServerConstants } from "../../config";
 import { deepMerge } from "../../util/data";
+import path from "node:path";
 
 export type GameConfig = {
-    fileStore: FileStore;
+    settingFileStore: FileStore;
+    saveFileStore: FileStore;
 };
 
 export namespace LogicNode {
@@ -151,11 +153,17 @@ class IdManager extends Singleton<IdManager>() {
     public getStringId() {
         return (this.id++).toString();
     }
+    prefix(prefix: string, value: string, separator = ":") {
+        return prefix + separator + value;
+    }
 }
 export type GameSettings = {
     volume: number;
 };
 export class Game {
+    static defaultSettings: GameSettings = {
+        volume: 1,
+    };
     static getIdManager() {
         return IdManager.getInstance();
     }
@@ -166,39 +174,84 @@ export class Game {
     /**
      * Game settings
      */
-    settings: GameSettings = {
-        volume: 1,
-    };
+    settings: GameSettings;
 
     constructor(config: GameConfig) {
         this.config = config;
         this.root = new RootNode();
+        this.settings = deepMerge({}, Game.defaultSettings);
     }
-    async loadSettings() {
-        const settingsFile = await this.config.fileStore.load<GameSettings>(
-            this.config.fileStore.getName(ServerConstants.app.settingFile)
-        );
-        this.settings = deepMerge(this.settings, settingsFile);
+    public async init() {
+        await this.loadSettings();
+        console.log(this.getSettingFileLocation());
     }
-    public getRootNode() {
-        return this.root;
-    }
-    public createLiveGame() {
-        this.liveGame = new LiveGame(this);
-        return this.liveGame;
-    }
+
     public registerStory(story: Story) {
         story.setRoot(this.getRootNode());
         return this;
     }
 
+    /* Tree */
+    public getRootNode() {
+        return this.root;
+    }
+
+    /* Live Game */
+    public getLiveGame() {
+        return this.liveGame;
+    }
+    public createLiveGame() {
+        this.liveGame = new LiveGame(this);
+        return this.liveGame;
+    }
+
     /* Settings */
+    getSettingFileLocation() {
+        return this.config.settingFileStore.getName(
+            path.resolve(this.config.settingFileStore.basePath, ServerConstants.app.settingFile)
+        );
+    }
     public getSetting(key: keyof GameSettings) {
         return this.settings[key];
     }
     public setSetting(key: keyof GameSettings, value: GameSettings[keyof GameSettings]) {
         this.settings[key] = value;
         return this;
+    }
+    async loadSettings() {
+        if (!await this.config.settingFileStore.isFileExists(this.getSettingFileLocation())) {
+            await this.config.settingFileStore.createFolder(this.config.settingFileStore.basePath);
+            await this.config.settingFileStore.save(this.getSettingFileLocation(), Game.defaultSettings);
+        }
+        const settingsFile = await this.config.settingFileStore.load<GameSettings>(
+            this.config.settingFileStore.getName(ServerConstants.app.settingFile)
+        );
+        this.settings = deepMerge(this.settings, settingsFile);
+    }
+    async saveSettings() {
+        await this.config.settingFileStore.save(
+            this.config.settingFileStore.getName(ServerConstants.app.settingFile),
+            this.settings
+        );
+    }
+
+    /* Save */
+    async getSavedFileNames() {
+        const names = (await this.config.saveFileStore.getFileNames(this.config.saveFileStore.basePath))
+            .filter(name => path.parse(name).name.endsWith("." + ServerConstants.app.saveFileSuffix))
+            .map(name => path.parse(name).name.split(".").slice(0, -1).join("."));
+        return names;
+    }
+    async readGame(name: string): Promise<SavedGame> {
+        return await this.config.saveFileStore.load<SavedGame>(
+            this.config.saveFileStore.getName(name, ServerConstants.app.saveFileSuffix)
+        );
+    }
+    async saveGame(name: string, data: SavedGame) {
+        await this.config.saveFileStore.save(
+            this.config.saveFileStore.getName(name, ServerConstants.app.saveFileSuffix),
+            data
+        );
     }
 }
 
@@ -215,11 +268,68 @@ interface SavedGame {
 }
 
 class LiveGame {
+    static DefaultNamespaces = {
+        game: {},
+    }
+
     game: Game;
     storable: Storable;
+
+    currentScene: number | null = null;
+    currentNode: RenderableNode | null = null;
+    currentSavedGame: SavedGame | null = null;
+    story: Story | null = null;
+
     constructor(game: Game) {
         this.game = game;
         this.storable = new Storable();
+
+        this.initNamespaces();
+    }
+
+    getDefaultSavedGame(): SavedGame {
+        return {
+            name: "_",
+            version: ServerConstants.info.version,
+            meta: {
+                created: Date.now(),
+                updated: Date.now(),
+            },
+            game: {
+                store: {},
+            }
+        };
+    }
+
+    /* Store */
+    initNamespaces() {
+        this.storable.addNamespace(new Namespace<StorableData>("game", LiveGame.DefaultNamespaces.game));
+        return this;
+    }
+
+    /* Game */
+    loadStory(story: Story) {
+        this.story = story;
+        return this;
+    }
+    newGame() {
+        this.initNamespaces();
+
+        this.currentScene = 0;
+        this.currentNode = this.story?.actions[0]?.contentNode || null;
+
+        const newGame = this.getDefaultSavedGame();
+        newGame.name = "NewGame-" + Date.now();
+        this.currentSavedGame = newGame;
+
+        return this;
+    }
+    next() {
+        if (this.currentNode) {
+            const currentNode = this.currentNode;
+            this.currentNode = currentNode
+        }
+        return this;
     }
 }
 

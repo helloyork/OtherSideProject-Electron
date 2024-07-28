@@ -5,7 +5,11 @@ import { deepMerge } from "../../../util/data";
 export type SceneConfig = {};
 
 const { SceneAction } = LogicNode;
-export class Scene extends Constructable {
+export class Scene extends Constructable<
+    any,
+    LogicNode.Actions,
+    LogicNode.SceneAction<"scene:action">
+> {
     static defaultConfig: SceneConfig = {};
     static targetAction = SceneAction;
     id: string;

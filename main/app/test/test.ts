@@ -4,7 +4,7 @@ import { Image } from "../game/elements/image";
 import { Scene } from "../game/elements/scene";
 import { Script } from "../game/elements/script";
 import { Story } from "../game/elements/story";
-import { Game } from "../game/game";
+import { Game, LogicNode } from "../game/game";
 
 const E = new Character("Eileen");
 const M = new Character("Me");
@@ -15,8 +15,11 @@ const eileenImage = new Image("Eileen", {
     src: "/static/images/eileen-happy.png"
 });
 
-const game = new Game({});
-const liveGame = game.createLiveGame();
+// const game = new Game({});
+// const liveGame = game.createLiveGame();
+
+const scene2 = new Scene("scene2", {})
+    .action([]);
 
 const scene1 = new Scene("scene1", {})
     .action([
@@ -40,16 +43,16 @@ const scene1 = new Scene("scene1", {})
         M
             .say("What is it?")
             .toActions(),
-        new Script(function (ctx) {
-            const token = liveGame.storable.getNamespace("player")
-                .startTransaction()
-                .set("coin", 0)
-                .commit();
-            return () => {
-                if (token) liveGame.storable.getNamespace("player").undo(token);
-            }
-        })
-            .toActions(),
+        // new Script(function (ctx) {
+        //     const token = liveGame.storable.getNamespace("player")
+        //         .startTransaction()
+        //         .set("coin", 0)
+        //         .commit();
+        //     return () => {
+        //         if (token) liveGame.storable.getNamespace("player").undo(token);
+        //     }
+        // })
+        //     .toActions(),
             
         new Condition()
             .If(
@@ -71,7 +74,8 @@ const scene1 = new Scene("scene1", {})
             .Else(
                 M.say("I don't know!").toActions()
             )
-            .toActions()
+            .toActions(),
+        scene2
     ]);
 
 story.action([scene1]);

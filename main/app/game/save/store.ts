@@ -24,13 +24,11 @@ export class Namespace<T extends StorableData<string>> {
     key: string;
     content: T;
     private history: Transaction[] = [];
-    private defaultContent: T;
     private currentTransaction: Transaction | null = null;
     constructor(name: string, initContent: T, key?: string) {
         this.name = name;
         this.key = key || name;
         this.content = initContent;
-        this.defaultContent = initContent;
     }
     startTransaction(): this {
         if (this.currentTransaction) {

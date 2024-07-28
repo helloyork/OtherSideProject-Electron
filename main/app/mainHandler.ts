@@ -22,8 +22,11 @@ const listeners: Listeners = AppHandlers.listeners as Listeners;
 export class RemoteHandler extends Singleton<RemoteHandler>() {
     register(ipcMain: Electron.IpcMain, mainWindow: Electron.BrowserWindow) {
         for (const [key, handler] of Object.entries(handlers)) {
-            ipcMain.handle(key, async (_, ...args: unknown[]) =>
-                (handler as (...args: unknown[]) => unknown)(...args)
+            ipcMain.handle(key, async (event, ...args: unknown[]) =>
+                (handler as (...args: unknown[]) => unknown)({
+                    event,
+                    mainWindow: mainWindow
+                }, ...args)
             );
         }
         for (const [key, listener] of Object.entries(listeners)) {

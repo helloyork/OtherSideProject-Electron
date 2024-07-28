@@ -13,7 +13,10 @@ export function success<T>(data: T extends void ? void : T): Status<T>;
 export function success<T>(data?: T): Status<T | void> {
     return { status: true, data };
 }
-export function failure<U>(data: U): Status<void, U> {
+export function failure<U>(data: U): {
+    status: false;
+    data: U;
+} {
     return { status: false, data };
 }
 

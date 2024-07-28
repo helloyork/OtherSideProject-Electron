@@ -4,9 +4,11 @@ import { HistoryData, Transaction } from "./save/transaction";
 
 export class Constructable<
     T extends typeof Constructable = any,
+    TAction extends LogicNode.Action = LogicNode.Actions,
+    CAction extends LogicNode.Action = LogicNode.Actions
 > {
     static targetAction = LogicNode.Action;
-    actions: LogicNode.Actions[];
+    actions: TAction[];
     constructor() {
         this.actions = [];
     }
@@ -27,8 +29,8 @@ export class Constructable<
     /**
      * Wrap the actions in a new action
      */
-    action(actions: (LogicNode.Actions | LogicNode.Actions[])[]): LogicNode.Actions {
-        const content = actions.flat();
+    action(actions: (TAction | TAction[])[]): CAction {
+        const content = actions.flat(2) as TAction[];
         this.actions.push(...content);
         const constructed = this.construct();
         const sceneRoot = new ContentNode(
