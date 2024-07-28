@@ -7,8 +7,13 @@ import { Image } from "./elements/image";
 import { Condition } from "./elements/condition";
 import { Character, Sentence } from "./elements/character";
 import { Scene } from "./elements/scene";
+import { FileStore } from "./save/storeProvider";
+import { ServerConstants } from "../../config";
+import { deepMerge } from "../../util/data";
 
-export type GameConfig = {};
+export type GameConfig = {
+    fileStore: FileStore;
+};
 
 export namespace LogicNode {
     export type GameElement = Character | Scene | Sentence | Image | Condition;
@@ -147,6 +152,9 @@ class IdManager extends Singleton<IdManager>() {
         return (this.id++).toString();
     }
 }
+export type GameSettings = {
+    volume: number;
+};
 export class Game {
     static getIdManager() {
         return IdManager.getInstance();
@@ -154,19 +162,42 @@ export class Game {
     config: GameConfig;
     root: RootNode;
     liveGame: LiveGame | null = null;
+
+    /**
+     * Game settings
+     */
+    settings: GameSettings = {
+        volume: 1,
+    };
+
     constructor(config: GameConfig) {
         this.config = config;
         this.root = new RootNode();
     }
+    async loadSettings() {
+        const settingsFile = await this.config.fileStore.load<GameSettings>(
+            this.config.fileStore.getName(ServerConstants.app.settingFile)
+        );
+        this.settings = deepMerge(this.settings, settingsFile);
+    }
     public getRootNode() {
         return this.root;
     }
-    createLiveGame() {
+    public createLiveGame() {
         this.liveGame = new LiveGame(this);
         return this.liveGame;
     }
-    registerStory(story: Story) {
+    public registerStory(story: Story) {
         story.setRoot(this.getRootNode());
+        return this;
+    }
+
+    /* Settings */
+    public getSetting(key: keyof GameSettings) {
+        return this.settings[key];
+    }
+    public setSetting(key: keyof GameSettings, value: GameSettings[keyof GameSettings]) {
+        this.settings[key] = value;
         return this;
     }
 }

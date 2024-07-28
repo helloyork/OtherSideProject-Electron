@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 import { Status, success } from './util/status';
+import { GameSettings } from './app/game/game';
 
 const api = {
   hello(...args: any[]) {
@@ -20,7 +21,15 @@ const api = {
     async requestGame() {
       const result = await ipcRenderer.invoke("game:requestGame");
       return success(result);
-    }
+    },
+    async setSettings<T extends keyof GameSettings>(key: T, settings: GameSettings[T]) {
+      const result = await ipcRenderer.invoke("game:settings.set", key, settings);
+      return success(result);
+    },
+    async getSettings<T extends keyof GameSettings>(key: keyof T): Promise<Status<GameSettings[T]>> {
+      const result = await ipcRenderer.invoke("game:settings.get", key);
+      return success(result);
+    },
   },
 }
 
@@ -59,6 +68,8 @@ export interface Window {
     };
     game: {
       requestGame: () => Promise<ExpectedHandler["game:requestGame"]>;
+      setSettings: <T extends keyof GameSettings>(key: T, settings: GameSettings[T]) => Promise<ExpectedHandler["game:settings.set"]>;
+      getSettings: <T extends keyof GameSettings>(key: keyof T) => Promise<ExpectedHandler["game:settings.get"]>;
     };
   };
   app: {
@@ -74,6 +85,8 @@ export interface Window {
 export interface ExpectedHandler {
   "hello": void;
   "game:requestGame": Status<void>;
+  "game:settings.set": Status<void>;
+  "game:settings.get": Status<any>;
 }
 
 export interface ExpectedListener {
