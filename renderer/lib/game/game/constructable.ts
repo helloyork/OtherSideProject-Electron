@@ -1,8 +1,9 @@
+import { Values } from "@/lib/util/data";
 import { ClientActionProto } from "./dgame";
 import { Scene } from "./elements/scene";
 import { Game, LogicNode } from "./game";
 import { ContentNode, RenderableNode, RootNode } from "./save/rollback";
-import { HistoryData, Transaction } from "./save/transaction";
+import { HistoryData, Transaction, TransactionType } from "./save/transaction";
 
 export class Constructable<
     T extends typeof Constructable = any,
@@ -61,11 +62,12 @@ export class Constructable<
 }
 
 export class Actionable<
-    TransactionEnum extends Record<string, string> = Record<string, string>
+    TransactionEnum extends Record<string, string> = Record<string, string>,
+    Types extends TransactionType<TransactionEnum> = TransactionType<TransactionEnum>
 > {
     transaction: Transaction<TransactionEnum>;
     constructor() {
-        this.transaction = new Transaction<TransactionEnum>((history) => this.undo(history));
+        this.transaction = new Transaction<TransactionEnum, Types>((history) => this.undo(history));
     }
     protected actions: LogicNode.Actions[] = [];
     toActions() {
@@ -73,7 +75,7 @@ export class Actionable<
         this.actions = [];
         return actions;
     }
-    undo(history: HistoryData<TransactionEnum>) {}
+    undo(history: HistoryData<TransactionEnum, Types>) {}
     call(action: LogicNode.Actions): ClientActionProto<any> {
         return {
             type: action.type,

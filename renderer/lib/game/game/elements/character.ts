@@ -4,9 +4,11 @@ import { ContentNode } from "../save/rollback";
 import { Color } from "../show";
 import { deepMerge } from "@lib/util/data";
 import { ClientActionProto } from "../dgame";
+import { HistoryData } from "../save/transaction";
 
 export type SentenceConfig = {
     pause?: boolean | number;
+    display?: boolean;
 } & Color;
 export type WordConfig = {} & Color;
 
@@ -23,7 +25,8 @@ type UnSentencePrompt = (string | Word)[] | (string | Word);
 export class Sentence {
     static defaultConfig: SentenceConfig = {
         color: "#fff",
-        pause: true
+        pause: true,
+        display: true
     };
     static isSentence(obj: any): obj is Sentence {
         return obj instanceof Sentence;
@@ -61,6 +64,9 @@ export class Sentence {
             character: this.character
         }
     }
+    toString() {
+        return this.text.map(word => word.text).join("");
+    }
 }
 
 export class Word {
@@ -85,9 +91,19 @@ export class Word {
 }
 
 export type CharacterConfig = {}
+const CharacterActionTransaction = {
+    say: "transaction:character.say",
+    hide: "transaction:character.hide",
+} as const;
+type CharacterTransactionDataTypes = {
+    [K in typeof CharacterActionTransaction[keyof typeof CharacterActionTransaction]]:
+    K extends typeof CharacterActionTransaction.say ? Sentence :
+    K extends typeof CharacterActionTransaction.hide ? Sentence :
+    any;
+}
 
 const { CharacterAction } = LogicNode;
-export class Character extends Actionable {
+export class Character extends Actionable<typeof CharacterActionTransaction, CharacterTransactionDataTypes> {
     name: string;
     config: CharacterConfig;
 
@@ -96,10 +112,10 @@ export class Character extends Actionable {
         this.name = name;
         this.config = config;
     }
-    say(content: string): Character;
-    say(content: Sentence): Character;
-    say(content: (string | Word)[]): Character;
-    say(content: string | Sentence | (string | Word)[]): Character {
+    public say(content: string): Character;
+    public say(content: Sentence): Character;
+    public say(content: (string | Word)[]): Character;
+    public say(content: string | Sentence | (string | Word)[]): Character {
         const sentence: Sentence =
             Array.isArray(content) ?
                 new Sentence(this, content, {}) :
@@ -111,8 +127,29 @@ export class Character extends Actionable {
                 Game.getIdManager().getStringId(),
             ).setContent(sentence)
         );
+        this.transaction.commitWith<typeof CharacterActionTransaction.say>({
+            type: CharacterActionTransaction.say,
+            data: sentence
+        });
         this.actions.push(action);
         return this;
+    }
+
+    public $hideSay(sentence: Sentence): Character {
+        sentence.config.display = false;
+        this.transaction.commitWith<typeof CharacterActionTransaction.hide>({
+            type: CharacterActionTransaction.hide,
+            data: sentence
+        });
+        return this;
+    }
+
+    undo(history: HistoryData<typeof CharacterActionTransaction, CharacterTransactionDataTypes>): void {
+        if (history.type === CharacterActionTransaction.say) {
+            history.data.config.display = false;
+        } else if (history.type === CharacterActionTransaction.hide) {
+            history.data.config.display = true;
+        }
     }
 
     call(action: LogicNode.CharacterAction<any>): ClientActionProto<SentenceDataRaw> {

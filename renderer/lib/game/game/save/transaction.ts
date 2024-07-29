@@ -1,19 +1,35 @@
 
-export type HistoryData<Enum extends Record<string, any>> = {
-    type: Enum[keyof Enum];
-    data: any;
-};
+export type HistoryData<
+    Enum extends Record<string, any>,
+    Types extends TransactionType<Enum> = TransactionType<Enum>
+> = {
+    [K in keyof Enum]: {
+        type: Enum[K];
+        data: Types[Enum[K]];
+    }
+}[keyof Enum];
+
 type TransactionData<Enum extends Record<string, any>> = {
     history: HistoryData<Enum>[];
 };
-type TransactionHandler<Enum extends Record<string, any>> = (data: HistoryData<Enum>) => void;
+type TransactionHandler<
+    Enum extends Record<string, any>,
+    Types extends TransactionType<Enum> = TransactionType<Enum>
+> =
+    (data: HistoryData<Enum, Types>) => void;
+export type TransactionType<Enum extends Record<string, any>> = {
+    [K in Enum[keyof Enum]]: any;
+};
 
-export class Transaction<Enum extends Record<string, any>> {
+export class Transaction<
+    Enum extends Record<string, any>,
+    Types extends TransactionType<Enum> = TransactionType<Enum>
+> {
     private history: TransactionData<Enum>[] = [];
     private currentTransaction: TransactionData<Enum> | null = null;
     undoHandler: TransactionHandler<Enum>;
 
-    constructor(undoHandler: TransactionHandler<Enum>) {
+    constructor(undoHandler: TransactionHandler<Enum, Types>) {
         this.undoHandler = undoHandler;
     }
 
@@ -34,37 +50,45 @@ export class Transaction<Enum extends Record<string, any>> {
      * Commit the current transaction
      * @returns the token of the transaction
      */
-    commit(): number | null {
+    commit(): TransactionData<Enum> | null {
         if (!this.currentTransaction) {
             console.warn('No transaction to commit');
             return null;
         }
         this.history.push(this.currentTransaction);
         this.currentTransaction = null;
-        return this.history.length - 1;
+        return this.history[this.history.length - 1]!;
+    }
+    commitWith<T extends Enum[keyof Enum]>(history: {
+        type: T;
+        data: Types[Enum[T]];
+    }): this {
+        this.startTransaction()
+            .push(history)
+            .commit();
+        return this;
     }
     /**
      * Undo a transaction
      * @param token the token of the transaction to undo
      */
-    undo(token?: number) {
-        if (token === undefined) {
-            token = this.history.length - 1;
-        }
-        if (token < 0 || token >= this.history.length || !this.history[token]) {
-            console.error('Invalid token');
-            return;
-        }
-        const transaction = this.history[token];
+    undo(token?: TransactionData<Enum>) {
+        const transaction = token || this.history.pop();
         for (let i = transaction.history.length - 1; i >= 0; i--) {
             this.undoHandler(transaction.history[i]);
+        }
+        if (token) {
+            this.history = this.history.filter(t => t !== token);
         }
     }
     /**
      * Add a history to the current transaction
      * @param history the history to add
      */
-    push(history: HistoryData<Enum>): this {
+    push<T extends Enum[keyof Enum]>(history: {
+        type: T;
+        data: Types[Enum[T]];
+    }): this {
         if (!this.currentTransaction) {
             console.warn('No transaction to add history to');
             return this;

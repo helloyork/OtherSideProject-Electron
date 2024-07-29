@@ -1,18 +1,18 @@
-import { ContentNode, NodeType, RenderableNode, RootNode } from "./save/rollback";
-import { Singleton } from "../../util/singleton";
-import { Namespace, Storable, StorableData } from "./save/store";
+import type { CalledActionResult, GameConfig, GameSettings, SavedGame } from "./dgame";
 
+import { ContentNode, RenderableNode, RootNode } from "./save/rollback";
+import { Awaitable, deepMerge, safeClone, Values } from "../../util/data";
+import { Namespace, Storable, StorableData } from "./save/store";
+import { Singleton } from "../../util/singleton";
+import { Constants } from "@/lib/api/config";
+import { ClientGame } from "../game";
+
+import { Character, Sentence } from "./elements/character";
+import { Condition } from "./elements/condition";
+import { Script } from "./elements/script";
 import { Story } from "./elements/story";
 import { Image } from "./elements/image";
-import { Condition } from "./elements/condition";
-import { Character, Sentence } from "./elements/character";
 import { Scene } from "./elements/scene";
-import { Constants } from "@/lib/api/config";
-import { Awaitable, deepMerge, safeClone } from "../../util/data";
-import path from "node:path";
-import { CalledActionResult, GameConfig, GameSettings, SavedGame } from "./dgame";
-import { ClientGame } from "../game";
-import { Script } from "./elements/script";
 import { Menu } from "./elements/menu";
 
 export namespace LogicNode {
@@ -27,6 +27,23 @@ export namespace LogicNode {
         | StoryAction<any>
         | TypedAction<any, any, any>
         | MenuAction<any>;
+    export type ActionTypes = 
+        Values<typeof CharacterActionTypes>
+        | Values<typeof ConditionActionTypes>
+        | Values<typeof ImageActionTypes>
+        | Values<typeof SceneActionTypes>
+        | Values<typeof ScriptActionTypes>
+        | Values<typeof StoryActionTypes>
+        | Values<typeof MenuActionTypes>;
+    export type ActionContents = 
+        CharacterActionContentType
+        & ConditionActionContentType
+        & ImageActionContentType
+        & SceneActionContentType
+        & ScriptActionContentType
+        & StoryActionContentType
+        & MenuActionContentType;
+
     export class Action<ContentNodeType = any> {
         static isAction(action: any): action is Action {
             return action instanceof Action;
@@ -42,13 +59,10 @@ export namespace LogicNode {
             this.type = type;
             this.contentNode = contentNode;
         }
-        public call(clientGame: ClientGame): {
-            node: ContentNode<ContentNodeType>;
-            type: string;
-        } | Awaitable<CalledActionResult, any> {
+        public call(clientGame: ClientGame): CalledActionResult | Awaitable<CalledActionResult, any> {
             return {
+                type: this.type as any,
                 node: this.contentNode,
-                type: this.type,
             };
         }
         toData() {
@@ -153,7 +167,7 @@ export namespace LogicNode {
         call(_: ClientGame) {
             const node = this.contentNode.getContent().evaluate()[0]?.contentNode;
             return {
-                type: this.type,
+                type: this.type as any,
                 node
             };
         }
@@ -174,7 +188,7 @@ export namespace LogicNode {
         public call(_: ClientGame) {
             this.contentNode.getContent().execute();
             return {
-                type: this.type,
+                type: this.type as any,
                 node: this.contentNode,
             };
         }
@@ -250,6 +264,9 @@ export class Game {
 
     /* Live Game */
     public getLiveGame() {
+        if (!this.liveGame) {
+            this.createLiveGame();
+        }
         return this.liveGame;
     }
     public createLiveGame() {
@@ -344,7 +361,7 @@ class LiveGame {
         this.currentNode = node;
         return this;
     }
-    next() {
+    next(): CalledActionResult | Awaitable<unknown, unknown> | null {
         if (!this.story?.actions[this.currentSceneNumber]) {
             console.log("No story or scene number");
             return null; // Congrats, you've reached the end of the story
@@ -367,7 +384,6 @@ class LiveGame {
             return null; // Congrats, you've reached the end of the story
         }
 
-        console.log("Current action", this.currentAction);
         const next = this.currentAction.call(this.game.config.clientGame);
 
         if (Awaitable.isAwaitable(next)) {

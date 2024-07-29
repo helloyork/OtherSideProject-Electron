@@ -1,5 +1,7 @@
 
 import { ClientGame } from "../game";
+import { LogicNode } from "./game";
+import { ContentNode } from "./save/rollback";
 import { StorableData } from "./save/store";
 import { FileStore, RemoteFileStoreClient } from "./save/storeProvider";
 
@@ -35,10 +37,12 @@ export type ClientActionProto<T> = {
 export type ClientResponseProto<T> = {
     content: T;
 };
-export type CalledActionResult = {
-    type: string;
-    node: ContentNode<any>;
-};
+export type CalledActionResult<T extends keyof LogicNode.ActionContents = undefined> = {
+    [K in keyof LogicNode.ActionContents]: {
+        type: T extends undefined ? K : T;
+        node: ContentNode<LogicNode.ActionContents[T extends undefined ? K : T]>;
+    }
+}[keyof LogicNode.ActionContents];
 
 
 
