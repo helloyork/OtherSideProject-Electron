@@ -5,10 +5,12 @@ import { getAlive, setAlive } from "../../helpers/alive";
 import { ExpectedHandler, ExpectedListener } from "../../preload";
 import { failure, Status, success } from "../../util/status";
 import { Prefix } from "../../util/type";
-import { Game, GameSettings } from "../game/game";
+import { Game } from "../game/game";
+import { GameSettings } from "../game/dgame";
 import { FileStore } from "../game/save/storeProvider";
 import { Handlers, Listeners } from "../mainHandler";
 import { ServerConstants } from "../../config";
+import * as test from "../test/test";
 
 type GAME_KEY = "game";
 const GAME_KEY = "game" as const;
@@ -26,11 +28,12 @@ export const handlers: Handlers<Prefix<ExpectedHandler, GAME_KEY>> = {
             ),
         });
         game.createLiveGame();
+        game.registerStory(test.story);
 
         await game.init();
 
         setAlive(GAME_KEY, game);
-        return success();
+        return success(test.story.toData());
     },
     "game:settings.get": async () => {
         const game = getAlive<Game>(GAME_KEY);

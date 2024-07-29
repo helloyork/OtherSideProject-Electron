@@ -22,5 +22,13 @@ export class Scene extends Constructable<
         this.name = name;
         this.config = deepMerge<SceneConfig>(Scene.defaultConfig, config);
     }
+    toData() {
+        return {
+            id: this.id,
+            name: this.name,
+            config: this.config,
+            actions: this.actions.map(action => action.toData())
+        }
+    }
 }
 

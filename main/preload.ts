@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 import { Status, success } from './util/status';
-import { GameSettings } from './app/game/game';
+import { GameSettings } from "./app/game/dgame";
 import { ServerConstants } from './config';
 
 const api = {
@@ -82,7 +82,7 @@ export interface Window {
  */
 export interface ExpectedHandler {
     "hello": void;
-    "game:requestGame": Status<void>;
+    "game:requestGame": Status<any>;
     "game:settings.set": Status<void, Error>;
     "game:settings.get": Status<any, Error>;
     "game:settings.all": Status<GameSettings, Error>;

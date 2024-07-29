@@ -1,6 +1,7 @@
 import { Character, Sentence, Word } from "../game/elements/character";
 import { Condition, Lambda } from "../game/elements/condition";
 import { Image } from "../game/elements/image";
+import { Menu } from "../game/elements/menu";
 import { Scene } from "../game/elements/scene";
 import { Script } from "../game/elements/script";
 import { Story } from "../game/elements/story";
@@ -75,8 +76,16 @@ const scene1 = new Scene("scene1", {})
                 M.say("I don't know!").toActions()
             )
             .toActions(),
-        scene2
+        scene2,
+        new Menu("hello")
+            .choose({
+                prompt: "Hello",
+                action: []
+            })
+            .toActions()
     ]);
 
 story.action([scene1]);
 console.log(story);
+
+export { story };

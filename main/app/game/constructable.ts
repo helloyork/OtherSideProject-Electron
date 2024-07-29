@@ -1,3 +1,4 @@
+import { ClientActionProto } from "./dgame";
 import { Game, LogicNode } from "./game";
 import { ContentNode, RenderableNode, RootNode } from "./save/rollback";
 import { HistoryData, Transaction } from "./save/transaction";
@@ -66,4 +67,16 @@ export class Actionable<
         return actions;
     }
     undo(history: HistoryData<TransactionEnum>) {}
+    call(action: LogicNode.Actions): ClientActionProto<any> {
+        return {
+            type: action.type,
+            id: action.contentNode.id,
+            content: action.contentNode.getContent()
+        };
+    }
+    toData() {
+        return {
+            actions: this.actions.map(v => v.toData()),
+        };
+    }
 }

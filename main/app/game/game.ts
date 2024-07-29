@@ -1,4 +1,4 @@
-import { ContentNode, RenderableNode, RootNode } from "./save/rollback";
+import { ContentNode, NodeType, RenderableNode, RootNode } from "./save/rollback";
 import { Singleton } from "../../util/singleton";
 import { Namespace, Storable, StorableData } from "./save/store";
 
@@ -7,15 +7,10 @@ import { Image } from "./elements/image";
 import { Condition } from "./elements/condition";
 import { Character, Sentence } from "./elements/character";
 import { Scene } from "./elements/scene";
-import { FileStore } from "./save/storeProvider";
 import { ServerConstants } from "../../config";
 import { deepMerge } from "../../util/data";
 import path from "node:path";
-
-export type GameConfig = {
-    settingFileStore: FileStore;
-    saveFileStore: FileStore;
-};
+import { GameConfig, GameSettings, SavedGame } from "./dgame";
 
 export namespace LogicNode {
     export type GameElement = Character | Scene | Sentence | Image | Condition;
@@ -45,6 +40,12 @@ export namespace LogicNode {
         public call(): ContentNode {
             return this.contentNode;
         }
+        toData() {
+            return {
+                type: this.type,
+                content: this.contentNode.toData(),
+            }
+        }
     }
 
     class TypedAction<
@@ -59,6 +60,7 @@ export namespace LogicNode {
         }
     }
 
+    /* Character */
     const CharacterActionTypes = {
         say: "character:say",
         action: "character:action",
@@ -74,6 +76,7 @@ export namespace LogicNode {
         static ActionTypes = CharacterActionTypes;
     }
 
+    /* Scene */
     const SceneActionTypes = {
         action: "scene:action",
     } as const;
@@ -87,6 +90,7 @@ export namespace LogicNode {
         static ActionTypes = SceneActionTypes;
     }
 
+    /* Story */
     const StoryActionTypes = {
         action: "story:action",
     } as const;
@@ -100,6 +104,7 @@ export namespace LogicNode {
         static ActionTypes = StoryActionTypes;
     }
 
+    /* Image */
     const ImageActionTypes = {
         action: "image:action",
         setSrc: "image:setSrc",
@@ -118,6 +123,7 @@ export namespace LogicNode {
         static ActionTypes = ImageActionTypes;
     }
 
+    /* Condition */
     const ConditionActionTypes = {
         action: "condition:action",
     } as const;
@@ -131,6 +137,7 @@ export namespace LogicNode {
         static ActionTypes = ConditionActionTypes;
     }
 
+    /* Script */
     const ScriptActionTypes = {
         action: "script:action",
     } as const;
@@ -142,6 +149,20 @@ export namespace LogicNode {
     export class ScriptAction<T extends typeof ScriptActionTypes[keyof typeof ScriptActionTypes]>
         extends TypedAction<ScriptActionContentType, T, any> {
         static ActionTypes = ScriptActionTypes;
+    }
+
+    /* Menu */
+    const MenuActionTypes = {
+        action: "menu:action",
+    } as const;
+    type MenuActionContentType = {
+        [K in typeof MenuActionTypes[keyof typeof MenuActionTypes]]:
+        K extends "menu:action" ? any :
+        any;
+    }
+    export class MenuAction<T extends typeof MenuActionTypes[keyof typeof MenuActionTypes]>
+        extends TypedAction<MenuActionContentType, T, any> {
+        static ActionTypes = MenuActionTypes;
     }
 };
 
@@ -157,9 +178,7 @@ class IdManager extends Singleton<IdManager>() {
         return prefix + separator + value;
     }
 }
-export type GameSettings = {
-    volume: number;
-};
+
 export class Game {
     static defaultSettings: GameSettings = {
         volume: 1,
@@ -255,18 +274,6 @@ export class Game {
     }
 }
 
-interface SavedGame {
-    name: string;
-    version: string;
-    meta: {
-        created: number;
-        updated: number;
-    },
-    game: {
-        store: { [key: string]: StorableData; };
-    }
-}
-
 class LiveGame {
     static DefaultNamespaces = {
         game: {},
@@ -279,6 +286,11 @@ class LiveGame {
     currentNode: RenderableNode | null = null;
     currentSavedGame: SavedGame | null = null;
     story: Story | null = null;
+
+    /**
+     * Possible future nodes
+     */
+    future: RenderableNode[] = [];
 
     constructor(game: Game) {
         this.game = game;
@@ -324,12 +336,19 @@ class LiveGame {
 
         return this;
     }
-    next() {
-        if (this.currentNode) {
-            const currentNode = this.currentNode;
-            this.currentNode = currentNode
-        }
+    setCurrentNode(node: RenderableNode) {
+        this.currentNode = node;
         return this;
+    }
+    getPossibleFutureNodes() {
+        if (!this.currentScene || !this.story?.actions[this.currentScene]) {
+            return null; // Congrats, you've reached the end of the story
+        }
+
+        const possible: LogicNode.Actions[] = [];
+    }
+    _get() {
+        return this.story;
     }
 }
 

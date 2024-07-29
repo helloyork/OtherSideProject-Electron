@@ -3,12 +3,23 @@ import { Game, LogicNode } from "../game";
 import { ContentNode } from "../save/rollback";
 import { Color } from "../show";
 import { deepMerge } from "../../../util/data";
+import { ClientActionProto } from "../dgame";
 
 export type SentenceConfig = {
     pause?: boolean | number;
 } & Color;
 export type WordConfig = {} & Color;
 
+export type SentenceDataRaw = {
+    text: {
+        text: string;
+        config: Color;
+    }[];
+    config: SentenceConfig;
+    character: Character | null;
+};
+
+type UnSentencePrompt = (string | Word)[] | (string | Word);
 export class Sentence {
     static defaultConfig: SentenceConfig = {
         color: "#fff",
@@ -16,6 +27,9 @@ export class Sentence {
     };
     static isSentence(obj: any): obj is Sentence {
         return obj instanceof Sentence;
+    }
+    static toSentence(prompt: UnSentencePrompt | Sentence): Sentence {
+        return Sentence.isSentence(prompt) ? prompt : new Sentence(null, prompt);
     }
     character: Character | null;
     text: Word[];
@@ -40,6 +54,13 @@ export class Sentence {
         }
         return result;
     }
+    toData(): SentenceDataRaw {
+        return {
+            text: this.text.map(word => word.toData()),
+            config: this.config,
+            character: this.character
+        }
+    }
 }
 
 export class Word {
@@ -54,6 +75,12 @@ export class Word {
     constructor(text: string, config: Partial<WordConfig> = {}) {
         this.text = text;
         this.config = deepMerge<WordConfig>(Word.defaultConfig, config);
+    }
+    toData() {
+        return {
+            text: this.text,
+            config: this.config
+        }
     }
 }
 
@@ -86,5 +113,22 @@ export class Character extends Actionable {
         );
         this.actions.push(action);
         return this;
+    }
+
+    call(action: LogicNode.CharacterAction<any>): ClientActionProto<SentenceDataRaw> {
+        const value: {
+            type: string;
+            id: string;
+            content: any;
+        } = {
+            type: action.type,
+            id: action.contentNode.id,
+            content: void 0
+        };
+        if (action.type === CharacterAction.ActionTypes.say) {
+            value.content = (action as LogicNode.CharacterAction<"character:say">)
+                .contentNode.getContent()?.toData();
+        }
+        return value;
     }
 }

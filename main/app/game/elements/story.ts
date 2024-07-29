@@ -22,5 +22,13 @@ export class Story extends Constructable<
         this.name = name;
         this.config = deepMerge<StoryConfig>(Story.defaultConfig, config);
     }
+    toData() {
+        return {
+            id: this.id,
+            name: this.name,
+            config: this.config,
+            actions: this.actions.map(action => action.toData())
+        }
+    }
 }
 
