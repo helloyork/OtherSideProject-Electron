@@ -32,6 +32,10 @@ export type ClientActionProto<T> = {
 export type ClientResponseProto<T> = {
     content: T;
 };
+export type CalledActionResult = {
+    type: string;
+    node: ContentNode<any>;
+};
 
 
 

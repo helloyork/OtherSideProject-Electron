@@ -11,7 +11,7 @@ export type MenuChoice = {
 };
 
 type UnSentencePrompt = (string | Word)[] | (string | Word);
-type Choice = {
+export type Choice = {
     action: LogicNode.Actions[];
     prompt: Sentence;
 };

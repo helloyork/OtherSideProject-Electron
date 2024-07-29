@@ -60,5 +60,7 @@ export class ClientGame extends BaseGame {
         this.game.getLiveGame().loadStory(_test.story);
         return this;
     }
+    
+    public async choose() {} // @TODO: Implement this
 }
 

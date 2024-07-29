@@ -8,13 +8,15 @@ import { Condition } from "./elements/condition";
 import { Character, Sentence } from "./elements/character";
 import { Scene } from "./elements/scene";
 import { Constants } from "@/lib/api/config";
-import { deepMerge } from "../../util/data";
+import { Awaitable, deepMerge } from "../../util/data";
 import path from "node:path";
-import { GameConfig, GameSettings, SavedGame } from "./dgame";
+import { CalledActionResult, GameConfig, GameSettings, SavedGame } from "./dgame";
 import { ClientGame } from "../game";
+import { Script } from "./elements/script";
+import { Menu } from "./elements/menu";
 
 export namespace LogicNode {
-    export type GameElement = Character | Scene | Sentence | Image | Condition;
+    export type GameElement = Character | Scene | Sentence | Image | Condition | Script | Menu;
     export type Actionlike = Character;
     export type Actions =
         CharacterAction<any>
@@ -22,7 +24,9 @@ export namespace LogicNode {
         | ImageAction<any>
         | SceneAction<any>
         | ScriptAction<any>
-        | StoryAction<any>;
+        | StoryAction<any>
+        | TypedAction<any, any, any>
+        | MenuAction<any>;
     export class Action<ContentNodeType = any> {
         static isAction(action: any): action is Action {
             return action instanceof Action;
@@ -41,7 +45,7 @@ export namespace LogicNode {
         public call(clientGame: ClientGame): {
             node: ContentNode<ContentNodeType>;
             type: string;
-        } {
+        } | Awaitable<CalledActionResult, any> {
             return {
                 node: this.contentNode,
                 type: this.type,
@@ -52,6 +56,9 @@ export namespace LogicNode {
                 type: this.type,
                 content: this.contentNode.toData(),
             }
+        }
+        undo() {
+            this.contentNode.callee.undo();
         }
     }
 
@@ -143,10 +150,11 @@ export namespace LogicNode {
     export class ConditionAction<T extends typeof ConditionActionTypes[keyof typeof ConditionActionTypes]>
         extends TypedAction<ConditionActionContentType, T, Condition> {
         static ActionTypes = ConditionActionTypes;
-        call(clientGame: ClientGame) {
+        call(_: ClientGame) {
+            const node = this.contentNode.getContent().evaluate()[0]?.contentNode;
             return {
                 type: this.type,
-                node: this.contentNode
+                node
             };
         }
     }
@@ -157,12 +165,19 @@ export namespace LogicNode {
     } as const;
     type ScriptActionContentType = {
         [K in typeof ScriptActionTypes[keyof typeof ScriptActionTypes]]:
-        K extends "script:action" ? any :
+        K extends "script:action" ? Script :
         any;
     }
     export class ScriptAction<T extends typeof ScriptActionTypes[keyof typeof ScriptActionTypes]>
-        extends TypedAction<ScriptActionContentType, T, any> {
+        extends TypedAction<ScriptActionContentType, T, Script> {
         static ActionTypes = ScriptActionTypes;
+        public call(_: ClientGame) {
+            this.contentNode.getContent().execute();
+            return {
+                type: this.type,
+                node: this.contentNode,
+            };
+        }
     }
 
     /* Menu */
@@ -175,8 +190,14 @@ export namespace LogicNode {
         any;
     }
     export class MenuAction<T extends typeof MenuActionTypes[keyof typeof MenuActionTypes]>
-        extends TypedAction<MenuActionContentType, T, any> {
+        extends TypedAction<MenuActionContentType, T, Menu> {
         static ActionTypes = MenuActionTypes;
+        public call(clientGame: ClientGame): Awaitable<CalledActionResult, any> {
+            const awaitable = new Awaitable<CalledActionResult, any>(v => v); // @TODO: Implement this
+            clientGame.choose()
+                .then(v => awaitable.resolve(v));
+            return awaitable;
+        }
     }
 };
 
@@ -254,6 +275,7 @@ class LiveGame {
     currentAction: LogicNode.Actions | null = null;
     currentSavedGame: SavedGame | null = null;
     story: Story | null = null;
+    lockedAwaiting: Awaitable<CalledActionResult, any> | null = null;
 
     /**
      * Possible future nodes
@@ -313,17 +335,34 @@ class LiveGame {
             console.log("No story or scene number");
             return null; // Congrats, you've reached the end of the story
         }
-    
+
+        if (this.lockedAwaiting) {
+            if (!this.lockedAwaiting.solved) {
+                console.log("Locked awaiting");
+                return this.lockedAwaiting;
+            }
+            const next = this.lockedAwaiting.result;
+            this.currentAction = next.node.child?.callee;
+            this.lockedAwaiting = null;
+            return next;
+        }
+
         this.currentAction = this.currentAction || this.story.actions[++this.currentSceneNumber];
         if (!this.currentAction) {
             console.log("No current action");
             return null; // Congrats, you've reached the end of the story
         }
-    
+
         console.log("Current action", this.currentAction);
         const next = this.currentAction.call(this.game.config.clientGame);
+
+        if (Awaitable.isAwaitable(next)) {
+            this.lockedAwaiting = next;
+            return next;
+        }
+
         this.currentAction = next.node.child?.callee;
-    
+
         return next;
     }
     _get() {

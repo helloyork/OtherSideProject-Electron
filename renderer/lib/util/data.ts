@@ -32,5 +32,31 @@ export type DeepPartial<T> = {
     [P in keyof T]?: DeepPartial<T[P]>;
 };
 
+export class Awaitable<T, U> {
+    static isAwaitable(obj: any): obj is Awaitable<any, any> {
+        return obj instanceof Awaitable;
+    }
+    reciever: (value: U) => T;
+    result: T;
+    solved = false;
+    listeners: ((value: T) => void)[] = [];
+    constructor(reciever: (value: U) => T) {
+        this.reciever = reciever;
+    }
+    resolve(value: U) {
+        this.result = this.reciever(value);
+        this.solved = true;
+        for (const listener of this.listeners) {
+            listener(this.result);
+        }
+    }
+    then(callback: (value: T) => void) {
+        if (this.result) {
+            callback(this.result);
+        } else {
+            this.listeners.push(callback);
+        }
+    }
+}
 
 
