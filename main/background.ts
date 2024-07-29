@@ -8,7 +8,7 @@ const WIDTH = 1920 * 0.75;
 const HEIGHT = 1080 * 0.75;
 const aspectRatio = WIDTH / HEIGHT;
 
-const isProd = process.env.NODE_ENV === 'production'
+const isProd = process.env.NODE_ENV === 'production';
 
 if (isProd) {
     serve({ directory: 'app' })
@@ -45,11 +45,14 @@ function zoom(mainWindow: Electron.CrossProcessExports.BrowserWindow) {
     });
 
     RemoteHandler.getInstance().register(ipcMain, mainWindow);
-    mainWindow.webContents.on('before-input-event', (_, input) => {
-        if (input.key === 'F12') {
-            mainWindow.webContents.openDevTools();
-        }
-    });
+    
+    if (!isProd) {
+        mainWindow.webContents.on('before-input-event', (_, input) => {
+            if (input.key === 'F12') {
+                mainWindow.webContents.openDevTools();
+            }
+        });
+    }
 
     if (isProd) {
         await mainWindow.loadURL('app://./')

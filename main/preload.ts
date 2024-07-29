@@ -28,6 +28,17 @@ const api = {
         async getSettings<T extends keyof GameSettings>(key: keyof T): Promise<Status<GameSettings[T]>> {
             return await ipcRenderer.invoke("game:settings.get", key);
         },
+        store: {
+            async write(name: string, data: Record<string, any>) {
+                return await ipcRenderer.invoke("game:store.write", name, data);
+            },
+            async read(name: string) {
+                return await ipcRenderer.invoke("game:store.read", name);
+            },
+            async list() {
+                return await ipcRenderer.invoke("game:store.list");
+            }
+        }
     },
 }
 
@@ -58,6 +69,9 @@ const WindowWrapper: Window = {
  */
 export interface Window {
     api: {
+        /**
+         * @deprecated
+         */
         hello: () => Promise<ExpectedHandler["hello"]>;
         winFrame: {
             minimize: () => void;
@@ -68,6 +82,11 @@ export interface Window {
             requestGame: () => Promise<ExpectedHandler["game:requestGame"]>;
             setSettings: <T extends keyof GameSettings>(key: T, settings: GameSettings[T]) => Promise<ExpectedHandler["game:settings.set"]>;
             getSettings: <T extends keyof GameSettings>(key: keyof T) => Promise<ExpectedHandler["game:settings.get"]>;
+            store: {
+                write: (name: string, data: Record<string, any>) => Promise<ExpectedHandler["game:store.write"]>;
+                read: (name: string) => Promise<ExpectedHandler["game:store.read"]>;
+                list: () => Promise<ExpectedHandler["game:store.list"]>;
+            }
         };
     };
     app: {
@@ -86,6 +105,9 @@ export interface ExpectedHandler {
     "game:settings.set": Status<void, Error>;
     "game:settings.get": Status<any, Error>;
     "game:settings.all": Status<GameSettings, Error>;
+    "game:store.write": Status<void, Error>;
+    "game:store.read": Status<Record<string, any>, Error>;
+    "game:store.list": Status<string[], Error>;
 }
 
 export interface ExpectedListener {

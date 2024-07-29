@@ -1,4 +1,26 @@
 
+export class RemoteFileStoreClient {
+    static fileExt = "msgpack";
+    constructor() {}
+    async init() {}
+    async save(_path: string, data: Record<string, any>): Promise<void> {
+    }
+    async load<T = Record<string, any>>(_path: string): Promise<T> {
+        return null as any;
+    }
+    async isFileExists(_path: string): Promise<boolean> {
+        return null as any;
+    }
+    async createFolder(_path: string): Promise<void> {
+        return null as any;
+    }
+    async getFileNames(_path: string): Promise<string[]> {
+        return null as any;
+    }
+    getName(_path: string, suffix?: string) {
+        return _path + "." + (suffix ? (suffix + ".") : "") + RemoteFileStoreClient.fileExt;
+    }
+}
 
 type SafeFileSystem = typeof import("node:fs/promises");
 export class FileStore {

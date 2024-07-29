@@ -29,6 +29,11 @@ const Constants = {
             QUICK_MENU: 100,
             STAGE: 0,
         }
+    },
+    app: {
+        store: {
+            saveFileSuffix: ".save",
+        }
     }
 };
 

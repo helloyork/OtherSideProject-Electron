@@ -1,6 +1,6 @@
 
 import { StorableData } from "./save/store";
-import { FileStore } from "./save/storeProvider";
+import { FileStore } from "../../util/storeProvider";
 
 
 export interface SavedGame {
