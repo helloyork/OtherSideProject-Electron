@@ -1,7 +1,8 @@
 import { ClientAPI } from "../api/ipc";
 import { deepMerge } from "../util/data";
 import { Game } from "./game/game";
-import { FileStore } from "./game/save/storeProvider";
+import { FileStore, RemoteFileStoreClient } from "./game/save/storeProvider";
+import { Window as IpcWindow } from "../../../main/preload";
 import * as _test from "./test/test";
 
 export type ClientGameConfig = {};
@@ -41,18 +42,11 @@ export class ClientGame extends BaseGame {
             },
         };
     }
-    init() {
+    init(window: IpcWindow) {
         // @TODO: Implement this
         this.game = new Game({
-            settingFileStore: new FileStore(
-                null as any,
-                null as any
-            ),
-            saveFileStore: new FileStore(
-                null as any,
-                null as any
-            ),
-            clientGame: this
+            clientGame: this,
+            remoteStore: new RemoteFileStoreClient(window)
         });
         this.game.init();
         this.game.registerStory(_test.story);

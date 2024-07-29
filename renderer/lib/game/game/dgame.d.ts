@@ -1,7 +1,7 @@
 
 import { ClientGame } from "../game";
 import { StorableData } from "./save/store";
-import { FileStore } from "./save/storeProvider";
+import { FileStore, RemoteFileStoreClient } from "./save/storeProvider";
 
 
 export interface SavedGame {
@@ -17,9 +17,12 @@ export interface SavedGame {
 };
 
 export type GameConfig = {
-    settingFileStore: FileStore;
-    saveFileStore: FileStore;
+    /**@deprecated */
+    settingFileStore?: FileStore;
+    /**@deprecated */
+    saveFileStore?: FileStore;
     clientGame: ClientGame;
+    remoteStore: RemoteFileStoreClient;
 };
 export type GameSettings = {
     volume: number;

@@ -32,7 +32,8 @@ const Constants = {
     },
     app: {
         store: {
-            saveFileSuffix: ".save",
+            saveFileSuffix: "save",
+            settingFileSuffix: "setting",
         }
     }
 };

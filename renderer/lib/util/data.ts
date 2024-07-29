@@ -59,4 +59,38 @@ export class Awaitable<T, U> {
     }
 }
 
+export function safeClone<T>(obj: T): T {
+    const seen = new WeakSet();
+
+    function clone<T>(obj: T): T {
+        if (obj === null || typeof obj !== 'object') {
+            return obj;
+        }
+
+        if (seen.has(obj)) {
+            return undefined as any;
+        }
+
+        seen.add(obj);
+
+        if (Array.isArray(obj)) {
+            const arrCopy = [] as any[];
+            for (const item of obj) {
+                arrCopy.push(clone(item));
+            }
+            return arrCopy as any;
+        }
+
+        const objCopy = {} as any;
+        for (const key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                objCopy[key] = clone((obj as any)[key]);
+            }
+        }
+        return objCopy;
+    }
+
+    return clone(obj);
+}
+
 

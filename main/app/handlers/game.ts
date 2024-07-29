@@ -59,6 +59,11 @@ export const handlers: Handlers<Prefix<ExpectedHandler, GAME_KEY>> = {
     "game:store.list": async () => {
         const fileStore = new FileStore(fs, app.getPath("userData"));
         return success(await fileStore.getFileNames(ServerConstants.app.appDataPrefix));
+    },
+    "game:store.isExists": async (_, name) => {
+        if (typeof name !== "string") return failure(new Error("Invalid arguments"));
+        const fileStore = new FileStore(fs, path.resolve(app.getPath("userData"), ServerConstants.app.appDataPrefix));
+        return success(await fileStore.isFileExists(name as string));
     }
 };
 export const listeners: Listeners<Prefix<ExpectedListener, GAME_KEY>> = {};

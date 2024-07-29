@@ -37,6 +37,9 @@ const api = {
             },
             async list() {
                 return await ipcRenderer.invoke("game:store.list");
+            },
+            async isExists(name: string) {
+                return await ipcRenderer.invoke("game:store.isExists", name);
             }
         }
     },
@@ -79,13 +82,17 @@ export interface Window {
             close: () => void;
         };
         game: {
+            /**@deprecated */
             requestGame: () => Promise<ExpectedHandler["game:requestGame"]>;
+            /**@deprecated */
             setSettings: <T extends keyof GameSettings>(key: T, settings: GameSettings[T]) => Promise<ExpectedHandler["game:settings.set"]>;
+            /**@deprecated */
             getSettings: <T extends keyof GameSettings>(key: keyof T) => Promise<ExpectedHandler["game:settings.get"]>;
             store: {
                 write: (name: string, data: Record<string, any>) => Promise<ExpectedHandler["game:store.write"]>;
                 read: (name: string) => Promise<ExpectedHandler["game:store.read"]>;
                 list: () => Promise<ExpectedHandler["game:store.list"]>;
+                isExists: (name: string) => Promise<ExpectedHandler["game:store.isExists"]>;
             }
         };
     };
@@ -108,6 +115,7 @@ export interface ExpectedHandler {
     "game:store.write": Status<void, Error>;
     "game:store.read": Status<Record<string, any>, Error>;
     "game:store.list": Status<string[], Error>;
+    "game:store.isExists": Status<boolean, Error>;
 }
 
 export interface ExpectedListener {

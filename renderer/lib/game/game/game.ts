@@ -8,7 +8,7 @@ import { Condition } from "./elements/condition";
 import { Character, Sentence } from "./elements/character";
 import { Scene } from "./elements/scene";
 import { Constants } from "@/lib/api/config";
-import { Awaitable, deepMerge } from "../../util/data";
+import { Awaitable, deepMerge, safeClone } from "../../util/data";
 import path from "node:path";
 import { CalledActionResult, GameConfig, GameSettings, SavedGame } from "./dgame";
 import { ClientGame } from "../game";
@@ -220,7 +220,7 @@ export class Game {
     };
     static getIdManager() {
         return IdManager.getInstance();
-    }
+    };
     config: GameConfig;
     root: RootNode;
     liveGame: LiveGame | null = null;
@@ -258,6 +258,20 @@ export class Game {
     }
 
     /* Settings */
+    getSettingName() {
+        return this.config.remoteStore.getName("settings", Constants.app.store.settingFileSuffix);
+    }
+    public async readSettings() {
+        if (!await this.config.remoteStore.isFileExists(this.getSettingName())) {
+            return await this.saveSettings();
+        }
+        return await this.config.remoteStore.load<GameSettings>(this.getSettingName());
+    }
+    public async saveSettings() {
+        const settings = safeClone(this.settings);
+        await this.config.remoteStore.save(this.getSettingName(), settings);
+        return settings;
+    }
 
     /* Save */
 }
