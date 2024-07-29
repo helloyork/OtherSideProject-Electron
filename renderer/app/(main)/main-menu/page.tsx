@@ -1,8 +1,6 @@
 "use client";
 
 import { Constants } from "@/lib/api/config";
-import clsx from "clsx";
-import { motion } from "framer-motion";
 import Image from "next/image";
 
 export default function Page() {

@@ -1,5 +1,8 @@
 import { ClientAPI } from "../api/ipc";
 import { deepMerge } from "../util/data";
+import { Game } from "./game/game";
+import { FileStore } from "./game/save/storeProvider";
+import * as _test from "./test/test";
 
 export type ClientGameConfig = {};
 export type ClientRequirement = {
@@ -22,6 +25,7 @@ export class ClientGame extends BaseGame {
     config: ClientGameConfig;
     clientAPI: ClientAPI;
     preference: ClientGamePreference & ClientGamePreferenceHelper;
+    game: Game;
     
     constructor(config: ClientGameConfig = {}, requirement: ClientRequirement) {
         super();
@@ -37,6 +41,24 @@ export class ClientGame extends BaseGame {
             },
         };
     }
-    async init() {}
+    init() {
+        // @TODO: Implement this
+        this.game = new Game({
+            settingFileStore: new FileStore(
+                null as any,
+                null as any
+            ),
+            saveFileStore: new FileStore(
+                null as any,
+                null as any
+            ),
+            clientGame: this
+        });
+        this.game.init();
+        this.game.registerStory(_test.story);
+        this.game.createLiveGame();
+        this.game.getLiveGame().loadStory(_test.story);
+        return this;
+    }
 }
 

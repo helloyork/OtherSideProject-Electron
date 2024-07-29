@@ -14,7 +14,7 @@ const GameContext = createContext<GameContextType | null>(null);
 export function GameProvider({ children }: { children: ReactNode }) {
     "use client";
     const clientAPI = typeof window !== "undefined" ? ClientAPI.getInstance(window) : null;
-    const DefaultValue = new ClientGame({}, { clientAPI: clientAPI });
+    const DefaultValue = new ClientGame({}, { clientAPI: clientAPI }).init();
     const [game, setGame] = useState<ClientGame>(DefaultValue);
 
     const updateGame = (update: (prevGame: ClientGame) => ClientGame) => {

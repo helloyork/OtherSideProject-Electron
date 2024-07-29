@@ -28,5 +28,9 @@ export function deepMerge<T = Record<string, any>>(obj1: Record<string, any>, ob
     return result as T;
 }
 
+export type DeepPartial<T> = {
+    [P in keyof T]?: DeepPartial<T[P]>;
+};
+
 
 
