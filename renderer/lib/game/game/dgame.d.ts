@@ -29,6 +29,7 @@ export type GameConfig = {
 export type GameSettings = {
     volume: number;
 };
+/**@deprecated */
 export type ClientActionProto<T> = {
     type: string;
     id: string;

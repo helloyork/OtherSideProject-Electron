@@ -14,7 +14,7 @@ export default function Layout({
   return (
     <>
       <Isolated>
-        <div className="fixed inset-0 w-full h-full flex items-left justify-start bg-gray-100 bg-opacity-75">
+        <div className="fixed inset-0 w-full h-full flex items-left justify-start bg-gray-200 bg-opacity-75">
           <QuickMenu />
           {children}
         </div>

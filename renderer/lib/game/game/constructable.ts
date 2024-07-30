@@ -63,7 +63,8 @@ export class Constructable<
 
 export class Actionable<
     TransactionEnum extends Record<string, string> = Record<string, string>,
-    Types extends TransactionType<TransactionEnum> = TransactionType<TransactionEnum>
+    Types extends TransactionType<TransactionEnum> = TransactionType<TransactionEnum>,
+    StateData extends Record<string, any> = Record<string, any>
 > {
     transaction: Transaction<TransactionEnum>;
     constructor() {
@@ -76,6 +77,7 @@ export class Actionable<
         return actions;
     }
     undo(history: HistoryData<TransactionEnum, Types>) {}
+    /**@deprecated */
     call(action: LogicNode.Actions): ClientActionProto<any> {
         return {
             type: action.type,
@@ -83,9 +85,10 @@ export class Actionable<
             content: action.contentNode.getContent()
         };
     }
-    toData() {
-        return {
-            actions: this.actions.map(v => v.toData()),
-        };
+    public toData(actions: any[]): StateData {
+        return {} as StateData;
+    }
+    public fromData(data: StateData): this {
+        return this;
     }
 }

@@ -2,13 +2,12 @@ import { Actionable } from "../constructable";
 import { Game, LogicNode } from "../game";
 import { ContentNode } from "../save/rollback";
 import { Color } from "../show";
-import { deepMerge } from "@lib/util/data";
-import { ClientActionProto } from "../dgame";
+import { deepMerge, safeClone } from "@lib/util/data";
 import { HistoryData } from "../save/transaction";
+import { CalledActionResult } from "../dgame";
 
 export type SentenceConfig = {
     pause?: boolean | number;
-    display?: boolean;
 } & Color;
 export type WordConfig = {} & Color;
 
@@ -20,13 +19,15 @@ export type SentenceDataRaw = {
     config: SentenceConfig;
     character: Character | null;
 };
+export type SentenceState = {
+    display: boolean;
+};
 
 type UnSentencePrompt = (string | Word)[] | (string | Word);
 export class Sentence {
     static defaultConfig: SentenceConfig = {
         color: "#fff",
         pause: true,
-        display: true
     };
     static isSentence(obj: any): obj is Sentence {
         return obj instanceof Sentence;
@@ -37,6 +38,9 @@ export class Sentence {
     character: Character | null;
     text: Word[];
     config: SentenceConfig;
+    state: SentenceState = {
+        display: true
+    };
     constructor(character: Character | null, text: (string | Word)[] | (string | Word), config: Partial<SentenceConfig> = {}) {
         this.character = character;
         this.text = this.format(text);
@@ -57,12 +61,12 @@ export class Sentence {
         }
         return result;
     }
-    toData(): SentenceDataRaw {
-        return {
-            text: this.text.map(word => word.toData()),
-            config: this.config,
-            character: this.character
-        }
+    toData(): SentenceState {
+        return safeClone(this.state);
+    }
+    fromData(data: SentenceState) {
+        this.state = data;
+        return this;
     }
     toString() {
         return this.text.map(word => word.text).join("");
@@ -71,7 +75,7 @@ export class Sentence {
 
 export class Word {
     static defaultConfig: WordConfig = {
-        color: "#fff"
+        color: "#000"
     };
     static isWord(obj: any): obj is Word {
         return obj instanceof Word;
@@ -100,10 +104,17 @@ type CharacterTransactionDataTypes = {
     K extends typeof CharacterActionTransaction.say ? Sentence :
     K extends typeof CharacterActionTransaction.hide ? Sentence :
     any;
-}
+};
+export type CharacterStateData = {
+    sentences: SentenceState[];
+};
 
 const { CharacterAction } = LogicNode;
-export class Character extends Actionable<typeof CharacterActionTransaction, CharacterTransactionDataTypes> {
+export class Character extends Actionable<
+    typeof CharacterActionTransaction,
+    CharacterTransactionDataTypes,
+    CharacterStateData
+> {
     name: string;
     config: CharacterConfig;
 
@@ -135,8 +146,12 @@ export class Character extends Actionable<typeof CharacterActionTransaction, Cha
         return this;
     }
 
-    public $hideSay(sentence: Sentence): Character {
-        sentence.config.display = false;
+    /**
+     * @internal
+     * DO NOT USE IN USER SCRIPTS
+     */
+    $hideSay(sentence: Sentence): Character {
+        sentence.state.display = false;
         this.transaction.commitWith<typeof CharacterActionTransaction.hide>({
             type: CharacterActionTransaction.hide,
             data: sentence
@@ -146,26 +161,21 @@ export class Character extends Actionable<typeof CharacterActionTransaction, Cha
 
     undo(history: HistoryData<typeof CharacterActionTransaction, CharacterTransactionDataTypes>): void {
         if (history.type === CharacterActionTransaction.say) {
-            history.data.config.display = false;
+            history.data.state.display = false;
         } else if (history.type === CharacterActionTransaction.hide) {
-            history.data.config.display = true;
+            history.data.state.display = true;
         }
     }
-
-    call(action: LogicNode.CharacterAction<any>): ClientActionProto<SentenceDataRaw> {
-        const value: {
-            type: string;
-            id: string;
-            content: any;
-        } = {
-            type: action.type,
-            id: action.contentNode.id,
-            content: void 0
+    public toData(actions: 
+        CalledActionResult<typeof LogicNode.CharacterAction["ActionTypes"][keyof typeof LogicNode.CharacterAction["ActionTypes"]]>[]
+    ): CharacterStateData {
+        return {
+            sentences: actions.map(action => action.node.getContent().toData())
         };
-        if (action.type === CharacterAction.ActionTypes.say) {
-            value.content = (action as LogicNode.CharacterAction<"character:say">)
-                .contentNode.getContent()?.toData();
-        }
-        return value;
+    }
+    public fromData(
+        data: CharacterStateData
+    ): this {
+        return this;
     }
 }

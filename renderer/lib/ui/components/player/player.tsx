@@ -84,7 +84,7 @@ export default function Player({ story }: Readonly<{
     <>
       <button onClick={next}>Say</button>
       {
-        state.state.say.filter(a => a.node.getContent().config.display).map((action) => {
+        state.state.say.filter(a => a.node.getContent().state.display).map((action) => {
           return (
             <Say key={action.node.id} action={action} onClick={handleSayClick} />
           )
