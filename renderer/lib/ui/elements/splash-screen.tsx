@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import logo from '@/public/static/images/logo.jpg';
+import logo from '@/public/static/images/mewbaka.png';
 
 const SplashScreen = () => {
     return (

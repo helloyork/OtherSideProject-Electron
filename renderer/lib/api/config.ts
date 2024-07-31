@@ -1,6 +1,6 @@
 "use client";
 
-import Logo from "@/public/static/images/logo.jpg";
+import Logo from "@/public/static/images/mewbaka.png";
 
 
 const Constants = {
