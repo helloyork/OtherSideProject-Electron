@@ -1,13 +1,15 @@
 import { deepMerge } from "@lib/util/data";
 import { Actionable } from "../constructable";
 import { Game, LogicNode } from "../game";
-import { ContentNode } from "../save/rollback";
+import { ContentNode, RenderableNode } from "../save/rollback";
 import { HistoryData } from "../save/transaction";
 import { ScriptCleaner } from "./script";
+import { GameState } from "@/lib/ui/components/player/player";
 
 export type ConditionConfig = {};
 
 interface LambdaCtx {
+    gameState: GameState;
     resolve: (value?: any) => void;
 };
 type LambdaHandler = (ctx: LambdaCtx) => ScriptCleaner;
@@ -17,20 +19,21 @@ export class Lambda {
     constructor(handler: LambdaHandler) {
         this.handler = handler;
     }
-    evaluate(): {
+    evaluate({ gameState }: { gameState: GameState }): {
         value: any;
         cleaner: ScriptCleaner;
     } {
         let value: any;
-        let cleaner = this.handler(this.getCtx((v) => value = v));
+        let cleaner = this.handler(this.getCtx((v) => value = v, { gameState }));
         return {
             value,
             cleaner
         };
     }
-    getCtx(resolve: (value: any) => void): LambdaCtx {
+    getCtx(resolve: (value: any) => void, { gameState }: { gameState: GameState }): LambdaCtx {
         return {
-            resolve
+            resolve,
+            gameState
         };
     }
 }
@@ -69,24 +72,25 @@ export class Condition extends Actionable {
     }
     If(condition: Lambda, action: LogicNode.Actions | LogicNode.Actions[]): this {
         this.conditions.If.condition = condition;
-        this.conditions.If.action = Array.isArray(action) ? action : [action];
+        this.conditions.If.action = this.construct(Array.isArray(action) ? action : [action]);
         return this;
     }
     ElseIf(condition: Lambda, action: (LogicNode.Actions | LogicNode.Actions[])): this {
         this.conditions.ElseIf.push({
             condition,
-            action: Array.isArray(action) ? action : [action]
+            action: this.construct(Array.isArray(action) ? action : [action])
         });
         return this;
     }
     Else(action: (LogicNode.Actions | LogicNode.Actions[])): this {
-        this.conditions.Else.action = Array.isArray(action) ? action : [action];
+        this.conditions.Else.action = this.construct(Array.isArray(action) ? action : [action]);
         return this;
     }
-    evaluate(): LogicNode.Actions[] | null {
+    evaluate({ gameState }: { gameState: GameState }): LogicNode.Actions[] | null {
+        const ctx = { gameState };
         this.transaction.startTransaction();
 
-        const _if = this.conditions.If.condition?.evaluate();
+        const _if = this.conditions.If.condition?.evaluate(ctx);
         if (_if?.value) {
             this.transaction.push({
                 type: '',
@@ -94,9 +98,9 @@ export class Condition extends Actionable {
             }).commit();
             return this.conditions.If.action || null;
         }
-    
+
         for (const elseIf of this.conditions.ElseIf) {
-            const _elseIf = elseIf.condition?.evaluate();
+            const _elseIf = elseIf.condition?.evaluate(ctx);
             if (_elseIf?.value) {
                 this.transaction.push({
                     type: '',
@@ -105,7 +109,7 @@ export class Condition extends Actionable {
                 return elseIf.action || null;
             }
         }
-    
+
         this.transaction.commit();
         return this.conditions.Else.action || null;
     }
@@ -124,5 +128,21 @@ export class Condition extends Actionable {
                 ).setContent(this)
             ]) as LogicNode.ConditionAction<typeof LogicNode.ConditionAction.ActionTypes.action>
         ]
+    }
+    construct(actions: LogicNode.Actions[], lastChild?: RenderableNode, parentChild?: RenderableNode): LogicNode.Actions[] {
+        for (let i = 0; i < actions.length; i++) {
+            let node = actions[i].contentNode;
+            let child = actions[i + 1]?.contentNode;
+            if (child) {
+                node.addChild(child);
+            }
+            if (i === actions.length - 1 && lastChild) {
+                node.addChild(lastChild);
+            }
+            if (i === 0 && parentChild) {
+                parentChild.addChild(node);
+            }
+        }
+        return actions;
     }
 }

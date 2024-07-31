@@ -2,6 +2,7 @@ import clsx from "clsx"
 import { NextUIProviders } from "./providers/nextui"
 import { StrictProvider } from "./providers/strict-mode"
 import { ThemeProvider } from "./providers/theme-mode"
+import { AspectRatioProvider } from "./providers/ratio";
 
 export default function Provider({ children, className }: {
   children: React.ReactNode,
@@ -12,7 +13,9 @@ export default function Provider({ children, className }: {
       <StrictProvider>
         <ThemeProvider>
           <NextUIProviders className={className}>
-            {children}
+            <AspectRatioProvider>
+              {children}
+            </AspectRatioProvider>
           </NextUIProviders>
         </ThemeProvider>
       </StrictProvider>

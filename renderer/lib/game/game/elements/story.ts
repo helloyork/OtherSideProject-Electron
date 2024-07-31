@@ -1,7 +1,6 @@
 import { Constructable } from "../constructable";
 import { Game, LogicNode } from "../game";
 import { deepMerge } from "@lib/util/data";
-import { Scene } from "./scene";
 
 export type StoryConfig = {};
 

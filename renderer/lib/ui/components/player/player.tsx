@@ -1,16 +1,21 @@
 "use client";
 
-import { ReactNode, useEffect, useReducer } from "react";
+import { useEffect, useReducer } from "react";
 import { useGame } from "../../providers/game-state";
 import { ClientGame } from "@/lib/game/game";
 import { CalledActionResult } from "@/lib/game/game/dgame";
 import { Awaitable } from "@/lib/util/data";
-import { Story } from "@/lib/game/game/elements/story";
+
 import Say from "./elements/say";
+import Menu from "./elements/menu";
+import {
+    default as StageScene
+} from "./elements/scene";
+
 import { Character, Sentence } from "@/lib/game/game/elements/text";
 import { Choice } from "@/lib/game/game/elements/menu";
-import Menu from "./elements/menu";
-import { LogicNode } from "@/lib/game/game/game";
+import { Story } from "@/lib/game/game/elements/story";
+import { Scene } from "@/lib/game/game/elements/scene";
 
 type Clickable<T, U = undefined> = {
     action: T;
@@ -27,8 +32,9 @@ export type PlayerState = {
         prompt: Sentence;
         choices: Choice[];
     }, Choice>[];
+    scene: Scene | null;
     history: CalledActionResult[];
-}; // live game state
+};
 type PlayerAction = CalledActionResult;
 interface StageUtils {
     forceUpdate: () => void;
@@ -38,6 +44,7 @@ export class GameState {
     state: PlayerState = {
         say: [],
         menu: [],
+        scene: null,
         history: [],
     };
     currentHandling: CalledActionResult | null = null;
@@ -54,7 +61,8 @@ export class GameState {
         this.state.history.push(action);
 
         switch (action.type) {
-            case "character:say":
+            case "condition:action":
+                
                 break;
         }
         this.stage.forceUpdate();
@@ -88,6 +96,10 @@ export class GameState {
             prompt,
             choices
         }, afterChoose);
+    }
+    setScene(scene: Scene) {
+        this.state.scene = scene;
+        this.stage.forceUpdate();
     }
 }
 
@@ -127,6 +139,9 @@ export default function Player({ story }: Readonly<{
 
     return (
         <>
+            {state.state.scene && (
+                <StageScene scene={state.state.scene} />
+            )}
             {
                 state.state.say.filter(a => a.action.sentence.state.display).map((action) => {
                     return (

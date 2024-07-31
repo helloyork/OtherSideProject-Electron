@@ -1,11 +1,23 @@
 
+export type color = string | {
+    r: number;
+    g: number;
+    b: number;
+    a?: number;
+}
+
+export type RGBColor = {
+    r: number;
+    g: number;
+    b: number;
+}
+
+export type RGBAColor = RGBColor & {
+    a: number;
+}
+
 export type Color = {
-    color: string | {
-        r: number;
-        g: number;
-        b: number;
-        a: number;
-    }
+    color: color;
 }
 
 export type CommonText = {
@@ -13,7 +25,9 @@ export type CommonText = {
 } & Color;
 
 export type Background = {
-    background: string;
+    background: {
+        url: string;
+    } | color | null | undefined;
 }
 
 export type CommonImage = {

@@ -49,8 +49,8 @@ export class Menu extends Actionable {
         return this;
     }
 
-    construct(actions: LogicNode.Actions[], lastChild?: RenderableNode): LogicNode.Actions[] {
-        for (let i = 0; i < this.choices.length; i++) {
+    construct(actions: LogicNode.Actions[], lastChild?: RenderableNode, parentChild?: RenderableNode): LogicNode.Actions[] {
+        for (let i = 0; i < actions.length; i++) {
             let node = actions[i].contentNode;
             let child = actions[i + 1]?.contentNode;
             if (child) {
@@ -58,6 +58,9 @@ export class Menu extends Actionable {
             }
             if (i === this.choices.length - 1 && lastChild) {
                 node.addChild(lastChild);
+            }
+            if (i === 0 && parentChild) {
+                parentChild.addChild(node);
             }
         }
         return actions;

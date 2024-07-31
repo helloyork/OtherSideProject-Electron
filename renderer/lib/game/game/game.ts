@@ -17,7 +17,7 @@ import { Menu } from "./elements/menu";
 import { GameState } from "@/lib/ui/components/player/player";
 
 export namespace LogicNode {
-    export type GameElement = Character | Scene | Sentence | Image | Condition | Script | Menu;
+    export type GameElement = Character | Scene | Story | Sentence | Image | Condition | Script | Menu;
     export type Actionlike = Character;
     export type Actions =
         CharacterAction<any>
@@ -132,6 +132,10 @@ export namespace LogicNode {
     export class SceneAction<T extends typeof SceneActionTypes[keyof typeof SceneActionTypes]>
         extends TypedAction<SceneActionContentType, T, Scene> {
         static ActionTypes = SceneActionTypes;
+        public executeAction(state: GameState): CalledActionResult | Awaitable<CalledActionResult, any> {
+            state.setScene((this.contentNode as ContentNode<SceneActionContentType["scene:action"]>).getContent());
+            return super.executeAction(state);
+        }
     }
 
     /* Story */
@@ -179,11 +183,18 @@ export namespace LogicNode {
     export class ConditionAction<T extends typeof ConditionActionTypes[keyof typeof ConditionActionTypes]>
         extends TypedAction<ConditionActionContentType, T, Condition> {
         static ActionTypes = ConditionActionTypes;
-        executeAction(_: GameState) {
-            const node = this.contentNode.getContent().evaluate()[0]?.contentNode;
+        executeAction(gameState: GameState) {
+            const nodes = this.contentNode.getContent().evaluate({
+                gameState
+            });
+            // nodes.addChild(this.contentNode.child);
+            nodes?.[nodes.length - 1]?.contentNode.addChild(this.contentNode.child);
+            this.contentNode.addChild(nodes[0]?.contentNode || null);
+            // nodes?.[nodes.length - 1]?.contentNode.addChild(this.contentNode.child);
+            // this.contentNode.addChild(nodes?.[0]?.contentNode);
             return {
                 type: this.type as any,
-                node
+                node: this.contentNode,
             };
         }
     }
@@ -200,8 +211,10 @@ export namespace LogicNode {
     export class ScriptAction<T extends typeof ScriptActionTypes[keyof typeof ScriptActionTypes]>
         extends TypedAction<ScriptActionContentType, T, Script> {
         static ActionTypes = ScriptActionTypes;
-        public executeAction(_: GameState) {
-            this.contentNode.getContent().execute();
+        public executeAction(gameState: GameState) {
+            this.contentNode.getContent().execute({
+                gameState,
+            });
             return {
                 type: this.type as any,
                 node: this.contentNode,
@@ -318,10 +331,13 @@ export class Game {
     /* Save */
 }
 
-class LiveGame {
+export class LiveGame {
     static DefaultNamespaces = {
         game: {},
-    }
+    };
+    static GameSpacesKey = {
+        game: "game",
+    } as const;
 
     game: Game;
     storable: Storable;
@@ -361,7 +377,7 @@ class LiveGame {
 
     /* Store */
     initNamespaces() {
-        this.storable.addNamespace(new Namespace<StorableData>("game", LiveGame.DefaultNamespaces.game));
+        this.storable.addNamespace(new Namespace<StorableData>(LiveGame.GameSpacesKey.game, LiveGame.DefaultNamespaces.game));
         return this;
     }
 
@@ -387,11 +403,6 @@ class LiveGame {
         return this;
     }
     next(state: GameState): CalledActionResult | Awaitable<unknown, CalledActionResult> | null {
-        if (!this.story?.actions[this.currentSceneNumber]) {
-            console.log("No story or scene number");
-            return null; // Congrats, you've reached the end of the story
-        }
-
         if (this.lockedAwaiting) {
             if (!this.lockedAwaiting.solved) {
                 console.log("Locked awaiting");
@@ -405,7 +416,7 @@ class LiveGame {
 
         this.currentAction = this.currentAction || this.story.actions[++this.currentSceneNumber];
         if (!this.currentAction) {
-            console.log("No current action");
+            console.log("No current action"); // Congrats, you've reached the end of the story
             return null;
         }
 

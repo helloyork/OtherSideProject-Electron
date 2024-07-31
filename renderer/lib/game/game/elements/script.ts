@@ -1,10 +1,13 @@
+import { GameState } from "@/lib/ui/components/player/player";
+import { ClientGame } from "../../game";
 import { Actionable } from "../constructable";
 import { Game, LogicNode } from "../game";
 import { ContentNode } from "../save/rollback";
 import { HistoryData } from "../save/transaction";
 
-interface ScriptCtx {
+export interface ScriptCtx {
     script: Script;
+    gameState: GameState;
 };
 type ScriptRun = (ctx: ScriptCtx) => ScriptCleaner;
 export type ScriptCleaner = () => void;
@@ -20,12 +23,15 @@ export class Script extends Actionable<typeof ScriptTransactionTypes> {
         super();
         this.handler = handler;
     }
-    execute(): void {
-        this.cleaner = this.handler(this.getCtx());
+    execute({ gameState }: { gameState: GameState }): void {
+        this.cleaner = this.handler(this.getCtx({
+            gameState
+        }));
     }
-    getCtx(): ScriptCtx {
+    getCtx({ gameState }: { gameState: GameState }): ScriptCtx {
         return {
-            script: this
+            script: this,
+            gameState
         };
     }
     undo(history: HistoryData<typeof ScriptTransactionTypes>): void {

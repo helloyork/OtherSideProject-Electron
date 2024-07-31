@@ -3,6 +3,7 @@
 import clsx from "clsx";
 import { useTheme } from "@lib/ui/providers/theme-mode";
 import { useEffect, useState } from "react";
+import { useAspectRatio } from "../providers/ratio";
 
 export default function Main({
     children,
@@ -13,6 +14,7 @@ export default function Main({
 }) {
     const { theme } = useTheme();
     const [style, setStyle] = useState({});
+    const { setRatio } = useAspectRatio();
 
     useEffect(() => {
         let resizeTimeout: NodeJS.Timeout;
@@ -24,7 +26,7 @@ export default function Main({
                 const containerHeight = container.clientHeight;
                 const aspectRatio = 16 / 9;
 
-                let width, height;
+                let width: number, height: number;
                 if (containerWidth / containerHeight > aspectRatio) {
                     width = containerHeight * aspectRatio;
                     height = containerHeight;
@@ -43,6 +45,7 @@ export default function Main({
                     left: "0",
                     right: "0"
                 });
+                setRatio({ w: width, h: height });
             }
         };
 
