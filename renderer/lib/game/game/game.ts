@@ -7,13 +7,14 @@ import { Singleton } from "../../util/singleton";
 import { Constants } from "@/lib/api/config";
 import { ClientGame } from "../game";
 
-import { Character, Sentence } from "./elements/character";
+import { Character, Sentence } from "./elements/text";
 import { Condition } from "./elements/condition";
 import { Script } from "./elements/script";
 import { Story } from "./elements/story";
 import { Image } from "./elements/image";
 import { Scene } from "./elements/scene";
 import { Menu } from "./elements/menu";
+import { GameState } from "@/lib/ui/components/player/player";
 
 export namespace LogicNode {
     export type GameElement = Character | Scene | Sentence | Image | Condition | Script | Menu;
@@ -59,7 +60,7 @@ export namespace LogicNode {
             this.type = type;
             this.contentNode = contentNode;
         }
-        public call(clientGame: ClientGame): CalledActionResult | Awaitable<CalledActionResult, any> {
+        public executeAction(state: GameState): CalledActionResult | Awaitable<CalledActionResult, any> {
             return {
                 type: this.type as any,
                 node: this.contentNode,
@@ -164,7 +165,7 @@ export namespace LogicNode {
     export class ConditionAction<T extends typeof ConditionActionTypes[keyof typeof ConditionActionTypes]>
         extends TypedAction<ConditionActionContentType, T, Condition> {
         static ActionTypes = ConditionActionTypes;
-        call(_: ClientGame) {
+        executeAction(_: GameState) {
             const node = this.contentNode.getContent().evaluate()[0]?.contentNode;
             return {
                 type: this.type as any,
@@ -185,7 +186,7 @@ export namespace LogicNode {
     export class ScriptAction<T extends typeof ScriptActionTypes[keyof typeof ScriptActionTypes]>
         extends TypedAction<ScriptActionContentType, T, Script> {
         static ActionTypes = ScriptActionTypes;
-        public call(_: ClientGame) {
+        public executeAction(_: GameState) {
             this.contentNode.getContent().execute();
             return {
                 type: this.type as any,
@@ -206,10 +207,20 @@ export namespace LogicNode {
     export class MenuAction<T extends typeof MenuActionTypes[keyof typeof MenuActionTypes]>
         extends TypedAction<MenuActionContentType, T, Menu> {
         static ActionTypes = MenuActionTypes;
-        public call(clientGame: ClientGame): Awaitable<CalledActionResult, any> {
-            const awaitable = new Awaitable<CalledActionResult, any>(v => v); // @TODO: Implement this
-            clientGame.choose()
-                .then(v => awaitable.resolve(v));
+        public executeAction(state: GameState): Awaitable<CalledActionResult, any> {
+            const awaitable = new Awaitable<CalledActionResult, CalledActionResult>(v => v);
+            const menu = this.contentNode.getContent() as Menu;
+
+            state.createMenu(menu.prompt, menu.$constructChoices(state), v => {
+                let lastChild = state.clientGame.game.getLiveGame().currentAction.contentNode.child;
+                if (lastChild) {
+                    v.action[v.action.length - 1]?.contentNode.addChild(lastChild);
+                }
+                awaitable.resolve({
+                    type: this.type as any,
+                    node: v.action[0].contentNode
+                });
+            })
             return awaitable;
         }
     }
@@ -361,7 +372,7 @@ class LiveGame {
         this.currentNode = node;
         return this;
     }
-    next(): CalledActionResult | Awaitable<unknown, unknown> | null {
+    next(state: GameState): CalledActionResult | Awaitable<unknown, CalledActionResult> | null {
         if (!this.story?.actions[this.currentSceneNumber]) {
             console.log("No story or scene number");
             return null; // Congrats, you've reached the end of the story
@@ -373,7 +384,7 @@ class LiveGame {
                 return this.lockedAwaiting;
             }
             const next = this.lockedAwaiting.result;
-            this.currentAction = next.node.child?.callee;
+            this.currentAction = next.node.callee;
             this.lockedAwaiting = null;
             return next;
         }
@@ -381,19 +392,17 @@ class LiveGame {
         this.currentAction = this.currentAction || this.story.actions[++this.currentSceneNumber];
         if (!this.currentAction) {
             console.log("No current action");
-            return null; // Congrats, you've reached the end of the story
+            return null;
         }
 
-        const next = this.currentAction.call(this.game.config.clientGame);
-
-        if (Awaitable.isAwaitable(next)) {
-            this.lockedAwaiting = next;
-            return next;
+        const nextAction = this.currentAction.executeAction(state);
+        if (Awaitable.isAwaitable(nextAction)) {
+            this.lockedAwaiting = nextAction;
+            return nextAction;
         }
 
-        this.currentAction = next.node.child?.callee;
-
-        return next;
+        this.currentAction = nextAction.node.child?.callee;
+        return nextAction;
     }
     _get() {
         return this.story;

@@ -1,4 +1,4 @@
-import { Character, Sentence, Word } from "../game/elements/character";
+import { Character, Sentence, Word } from "../game/elements/text";
 import { Condition, Lambda } from "../game/elements/condition";
 import { Image } from "../game/elements/image";
 import { Menu } from "../game/elements/menu";

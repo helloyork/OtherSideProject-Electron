@@ -6,11 +6,9 @@ import React, { useState } from "react";
 
 export default function Say({
   action,
-  key,
   onClick,
 }: Readonly<{
   action: CalledActionResult<"character:say">;
-  key: any;
   onClick?: () => void;
 }>) {
   const { node } = action;
@@ -33,7 +31,7 @@ export default function Say({
   }
 
   return (
-    <Isolated key={key}>
+    <Isolated>
       {node.getContent().state.display &&
         <div className="fixed bottom-0 w-[calc(100%-40px)] h-[calc(33%-40px)] bg-white m-4 box-border rounded-md shadow-md flex items-center justify-center" onClick={onElementClick}>
           <div className="absolute top-0 left-0 p-1.25 rounded-br-md m-4">
@@ -52,7 +50,7 @@ export default function Say({
                 if (index > currentWordIndex) return null;
                 return (
                   <span key={index} style={{
-                    color: typeof word.config.color === "string" ? word.config.color : toHex(word.config.color)
+                    color: toHex(word.config.color)
                   }}>
                     <TypingEffect text={word.text} onComplete={index === currentWordIndex ? handleComplete : undefined} speed={50} />
                   </span>

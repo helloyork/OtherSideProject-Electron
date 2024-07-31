@@ -43,15 +43,12 @@ export class ClientGame extends BaseGame {
         };
     }
     init(window: IpcWindow) {
-        // @TODO: Implement this
         this.game = new Game({
             clientGame: this,
             remoteStore: new RemoteFileStoreClient(window)
         });
         this.game.init();
-        this.game.registerStory(_test.story);
         this.game.createLiveGame();
-        this.game.getLiveGame().loadStory(_test.story);
         return this;
     }
     

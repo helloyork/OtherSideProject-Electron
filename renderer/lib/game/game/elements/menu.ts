@@ -1,8 +1,9 @@
 import { Actionable, Constructable } from "../constructable";
 import { Game, LogicNode } from "../game";
 import { deepMerge } from "@lib/util/data";
-import { Sentence, Word } from "./character";
-import { ContentNode } from "../save/rollback";
+import { Sentence, Word } from "./text";
+import { ContentNode, RenderableNode } from "../save/rollback";
+import { GameState } from "@/lib/ui/components/player/player";
 
 export type MenuConfig = {};
 export type MenuChoice = {
@@ -34,10 +35,10 @@ export class Menu extends Actionable {
         this.config = deepMerge<MenuConfig>(Menu.defaultConfig, config);
     }
 
-    choose(choice: MenuChoice): this;
-    choose(prompt: Sentence, action: (LogicNode.Actions | LogicNode.Actions[])[]): this;
-    choose(prompt: UnSentencePrompt, action: (LogicNode.Actions | LogicNode.Actions[])[]): this;
-    choose(choice: Sentence | MenuChoice | UnSentencePrompt, action?: (LogicNode.Actions | LogicNode.Actions[])[]): this {
+    public choose(choice: MenuChoice): this;
+    public choose(prompt: Sentence, action: (LogicNode.Actions | LogicNode.Actions[])[]): this;
+    public choose(prompt: UnSentencePrompt, action: (LogicNode.Actions | LogicNode.Actions[])[]): this;
+    public choose(choice: Sentence | MenuChoice | UnSentencePrompt, action?: (LogicNode.Actions | LogicNode.Actions[])[]): this {
         if (Sentence.isSentence(choice) && action) {
             this.choices.push({ prompt: Sentence.toSentence(choice), action: action.flat(2)  });
         } else if ((Word.isWord(choice) || Array.isArray(choice)) && action) {
@@ -45,6 +46,27 @@ export class Menu extends Actionable {
         } else if (typeof choice === "object" && "prompt" in choice && "action" in choice) {
             this.choices.push({ prompt: Sentence.toSentence(choice.prompt), action: choice.action.flat(2) });
         }
+        return this;
+    }
+
+    construct(actions: LogicNode.Actions[], lastChild?: RenderableNode): LogicNode.Actions[] {
+        for (let i = 0; i < this.choices.length; i++) {
+            let node = actions[i].contentNode;
+            let child = actions[i + 1]?.contentNode;
+            if (child) {
+                node.addChild(child);
+            }
+            if (i === this.choices.length - 1 && lastChild) {
+                node.addChild(lastChild);
+            }
+        }
+        return actions;
+    }
+
+    $setChild(child: RenderableNode): this {
+        this.choices.forEach(choice => {
+            choice.action[choice.action.length - 1].contentNode.addChild(child);
+        });
         return this;
     }
 
@@ -60,8 +82,13 @@ export class Menu extends Actionable {
         ];
     }
 
-    getChoices(): Choice[] {
-        return this.choices;
+    $constructChoices(state: GameState): Choice[] {
+        return this.choices.map(choice => {
+            return {
+                action: this.construct(choice.action),
+                prompt: choice.prompt
+            };
+        });
     }
 }
 

@@ -95,8 +95,11 @@ export function safeClone<T>(obj: T): T {
 
 export type Values<T> = T[keyof T];
 
-export function toHex({ r, g, b, a }: { r: number; g: number; b: number; a: number }) {
-    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}${a.toString(16).padStart(2, '0')}`;
+export function toHex(hex: { r: number; g: number; b: number; a?: number } | string): string {
+    if (typeof hex === 'string') {
+        return hex;
+    }
+    return `#${(hex.r || 0).toString(16).padStart(2, '0')}${(hex.g || 0).toString(16).padStart(2, '0')}${(hex.b || 0).toString(16).padStart(2, '0')}${(hex.a !== undefined ? hex.a.toString(16).padStart(2, '0') : '')}`;
 }
 
 

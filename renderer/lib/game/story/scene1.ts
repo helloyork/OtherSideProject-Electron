@@ -1,6 +1,7 @@
-import { Character, Word } from "../game/elements/character";
+import { Character, Sentence, Word } from "../game/elements/text";
 import { Scene } from "../game/elements/scene";
 import { Story } from "../game/elements/story";
+import { Menu } from "../game/elements/menu";
 
 const story = new Story("test");
 const c1 = new Character("c1");
@@ -9,6 +10,24 @@ const scene1 = new Scene("scene1").action([
     c1
         .say("Hello, world!")
         .say("How are you?")
+        .toActions(),
+    new Menu("menu1")
+        .choose({
+            action: 
+                c2.say("I'm good, thank you!")
+                    .say("so please continue to play a game!")
+                    .toActions()
+            ,
+            prompt: "1"
+        })
+        .choose({
+            action: 
+                c2.say("you choose to play a game!")
+                    .say("2")
+                    .toActions()
+            ,
+            prompt: "2"
+        })
         .toActions(),
     c2
         .say("I'm good, thank you!")

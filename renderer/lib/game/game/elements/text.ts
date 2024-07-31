@@ -4,7 +4,6 @@ import { ContentNode } from "../save/rollback";
 import { Color } from "../show";
 import { deepMerge, safeClone } from "@lib/util/data";
 import { HistoryData } from "../save/transaction";
-import { CalledActionResult } from "../dgame";
 
 export type SentenceConfig = {
     pause?: boolean | number;
@@ -12,12 +11,8 @@ export type SentenceConfig = {
 export type WordConfig = {} & Color;
 
 export type SentenceDataRaw = {
-    text: {
-        text: string;
-        config: Color;
-    }[];
-    config: SentenceConfig;
-    character: Character | null;
+    state: SentenceState;
+    character: CharacterStateData;
 };
 export type SentenceState = {
     display: boolean;
@@ -61,11 +56,15 @@ export class Sentence {
         }
         return result;
     }
-    toData(): SentenceState {
-        return safeClone(this.state);
+    toData(): SentenceDataRaw {
+        return {
+            state: safeClone(this.state),
+            character: safeClone(this.character.toData())
+        };
     }
-    fromData(data: SentenceState) {
-        this.state = data;
+    fromData(data: SentenceDataRaw) {
+        this.state = deepMerge<SentenceState>(this.state, data);
+        this.character.fromData(data.character);
         return this;
     }
     toString() {
@@ -105,9 +104,7 @@ type CharacterTransactionDataTypes = {
     K extends typeof CharacterActionTransaction.hide ? Sentence :
     any;
 };
-export type CharacterStateData = {
-    sentences: SentenceState[];
-};
+export type CharacterStateData = {};
 
 const { CharacterAction } = LogicNode;
 export class Character extends Actionable<
@@ -166,16 +163,10 @@ export class Character extends Actionable<
             history.data.state.display = true;
         }
     }
-    public toData(actions: 
-        CalledActionResult<typeof LogicNode.CharacterAction["ActionTypes"][keyof typeof LogicNode.CharacterAction["ActionTypes"]]>[]
-    ): CharacterStateData {
-        return {
-            sentences: actions.map(action => action.node.getContent().toData())
-        };
+    public toData(): CharacterStateData {
+        return {};
     }
-    public fromData(
-        data: CharacterStateData
-    ): this {
+    public fromData(_: CharacterStateData): this {
         return this;
     }
 }
