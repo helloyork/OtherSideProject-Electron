@@ -7,20 +7,17 @@ module.exports = {
   ],
   theme: {
     colors: {
-      white: colors.white,
-      gray: colors.gray,
-      blue: colors.blue,
-      // primary: '#1DA1F2',
+      ...colors,
       primary: {
-        100: '#E8F5FD',
-        200: '#C9E8FB',
-        300: '#A9DBF9',
-        400: '#6ABFF5',
-        500: '#1DA1F2', // default
-        600: '#1A91DA',
-        700: '#1271A8',
-        800: '#0D5276',
-        900: '#09364E'
+        100: "#d2ecfc",
+        200: "#a5d9fa",
+        300: "#77c7f7",
+        400: "#4ab4f5",
+        500: "#1da1f2",
+        600: "#1781c2",
+        700: "#116191",
+        800: "#0c4061",
+        900: "#062030"
       },
       secondary: '#004c8c',
     },
@@ -33,5 +30,7 @@ module.exports = {
       }
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/aspect-ratio'),
+  ],
 }

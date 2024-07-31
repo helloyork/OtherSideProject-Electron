@@ -1,9 +1,14 @@
+import clsx from "clsx";
 import { ReactNode } from "react";
 
-export default function Isolated({ children, key }: Readonly<{ children: ReactNode, key?: any }>) {
+export default function Isolated(
+  { children, key, className }: Readonly<{ children: ReactNode, key?: any, className?: string }>
+) {
   return (
     <>
-      <div className="fixed inset-0 w-full h-full flex items-center justify-center bg-opacity-75" key={key}>
+      <div className={
+        clsx("fixed inset-0 w-full h-full flex items-center justify-center", className)
+      } key={key}>
         {children}
       </div>
     </>

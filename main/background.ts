@@ -32,9 +32,10 @@ function zoom(mainWindow: Electron.CrossProcessExports.BrowserWindow) {
             preload: path.join(__dirname, 'preload.js'),
         },
         frame: true,
+        useContentSize: true,
     });
     mainWindow.setMenu(null);
-    mainWindow.setAspectRatio(aspectRatio);
+    // mainWindow.setAspectRatio(aspectRatio);
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();
         mainWindow.setMinimumSize(WIDTH / 3, HEIGHT / 3);
