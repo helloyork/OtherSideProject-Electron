@@ -1,23 +1,31 @@
 import { CalledActionResult } from "@/lib/game/game/dgame";
+import { Character, Sentence } from "@/lib/game/game/elements/text";
 import Isolated from "@/lib/ui/elements/isolated";
 import TypingEffect from "@/lib/ui/elements/player/typeing-effect";
 import { toHex } from "@/lib/util/data";
+import clsx from "clsx";
 import React, { useState } from "react";
 
 export default function Say({
   action,
   onClick,
+  useTypeEffect = true,
+  className,
 }: Readonly<{
-  action: CalledActionResult<"character:say">;
+  action: {
+    sentence: Sentence;
+  };
   onClick?: () => void;
+  useTypeEffect?: boolean;
+  className?: string;
 }>) {
-  const { node } = action;
+  const { sentence } = action;
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
 
   const handleComplete = () => {
     setCurrentWordIndex((prevIndex) => prevIndex + 1);
-    if (currentWordIndex === node.getContent().text.length - 1) {
+    if (currentWordIndex === sentence.text.length - 1) {
       setIsFinished(true);
     }
   };
@@ -32,14 +40,16 @@ export default function Say({
 
   return (
     <Isolated>
-      {node.getContent().state.display &&
-        <div className="fixed bottom-0 w-[calc(100%-40px)] h-[calc(33%-40px)] bg-white m-4 box-border rounded-md shadow-md flex items-center justify-center" onClick={onElementClick}>
+      {sentence.state.display &&
+        <div className={
+          clsx("fixed bottom-0 w-[calc(100%-40px)] h-[calc(33%-40px)] bg-white m-4 box-border rounded-md shadow-md flex items-center justify-center", className)
+        } onClick={onElementClick}>
           <div className="absolute top-0 left-0 p-1.25 rounded-br-md m-4">
-            {node.getContent().character.name}
+            {sentence.character?.name || ""}
           </div>
           <div className="text-center max-w-[80%] mx-auto">
             {
-              node.getContent().text.map((word, index) => {
+              sentence.text.map((word, index) => {
                 if (isFinished) return (
                   <span key={index} style={{
                     color: typeof word.config.color === "string" ? word.config.color : toHex(word.config.color)
@@ -52,7 +62,11 @@ export default function Say({
                   <span key={index} style={{
                     color: toHex(word.config.color)
                   }}>
-                    <TypingEffect text={word.text} onComplete={index === currentWordIndex ? handleComplete : undefined} speed={50} />
+                    {
+                      useTypeEffect ?
+                        <TypingEffect text={word.text} onComplete={index === currentWordIndex ? handleComplete : undefined} speed={50} /> :
+                        word.text
+                    }
                   </span>
                 );
               })

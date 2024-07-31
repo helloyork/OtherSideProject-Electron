@@ -104,6 +104,20 @@ export namespace LogicNode {
     export class CharacterAction<T extends typeof CharacterActionTypes[keyof typeof CharacterActionTypes]>
         extends TypedAction<CharacterActionContentType, T, Character> {
         static ActionTypes = CharacterActionTypes;
+        public executeAction(state: GameState): CalledActionResult | Awaitable<CalledActionResult, any> {
+            if (this.type === CharacterActionTypes.say) {
+                const awaitable = new Awaitable<CalledActionResult, any>(v => v);
+                const sentence = (this.contentNode as ContentNode<Sentence>).getContent();
+                state.createSay(this.contentNode.id, sentence, () => {
+                    awaitable.resolve({
+                        type: this.type as any,
+                        node: this.contentNode.child
+                    });
+                });
+                return awaitable;
+            }
+            return super.executeAction(state);
+        }
     }
 
     /* Scene */
@@ -384,7 +398,7 @@ class LiveGame {
                 return this.lockedAwaiting;
             }
             const next = this.lockedAwaiting.result;
-            this.currentAction = next.node.callee;
+            this.currentAction = next.node?.callee || null;
             this.lockedAwaiting = null;
             return next;
         }
