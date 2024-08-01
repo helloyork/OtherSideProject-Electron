@@ -1,15 +1,24 @@
+import type { Align, CommonImage, CommonImagePosition, Coord2D } from "../show";
+import type { DeepPartial } from "@lib/util/data";
+
 import { deepMerge } from "@lib/util/data";
-import { DeepPartial } from "@lib/util/data";
 import { Actionable } from "../constructable";
-import { Game, LogicNode } from "../game";
 import { ContentNode } from "../save/rollback";
 import { HistoryData } from "../save/transaction";
-import { CommonImage } from "../show";
+import { Game, LogicNode } from "../game";
 
 export type ImageConfig = {
     src: string;
-    display?: boolean;
+    display: boolean;
 } & CommonImage;
+
+export const ImagePosition: {
+    [K in CommonImagePosition]: K;
+} = {
+    center: "center",
+    left: "left",
+    right: "right"
+} as const;
 
 const ImageTransactionTypes = {
     set: "set",
@@ -21,18 +30,44 @@ const { ImageAction } = LogicNode;
 export class Image extends Actionable<typeof ImageTransactionTypes> {
     static defaultConfig: ImageConfig = {
         src: "",
+        display: false,
+        position: ImagePosition.center,
+        scale: 1,
+        rotation: 0,
     };
     name: string;
     config: ImageConfig;
+    state: ImageConfig;
     declare actions: LogicNode.ImageAction<any>[];
+    id: null | number | string;
 
     constructor(name: string, config: DeepPartial<ImageConfig> = {}) {
         super();
         this.name = name;
         this.config = deepMerge<ImageConfig>(Image.defaultConfig, config);
+        this.state = deepMerge<ImageConfig>({}, this.config);
         this.actions = [];
+        this.id = null;
+
+        this.checkConfig();
     }
-    set(src: string): this {
+    checkConfig() {
+        if (!this.config.src) {
+            throw new Error("Image src is required");
+        }
+        if (!this.isCommonImagePosition(this.config.position as any)
+            && !this.isAlign(this.config.position as any)
+            && !this.isCoord2D(this.config.position as any)) {
+            throw new Error("Invalid position\nPosition must be one of CommonImagePosition, Align, Coord2D");
+        }
+        return this;
+    }
+    /**@internal */
+    setId(id: number | string): this {
+        this.id = id;
+        return this;
+    }
+    public setSrc(src: string): this {
         const setActions = this.actions.filter(action => action.type === ImageTransactionTypes.set);
         this.transaction
             .startTransaction()
@@ -53,7 +88,7 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
         this.actions.push(action);
         return this;
     }
-    show(): this {
+    public show(): this {
         this.transaction
             .startTransaction()
             .push({
@@ -70,7 +105,7 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
         this.actions.push(action);
         return this;
     }
-    hide(): this {
+    public hide(): this {
         this.transaction
             .startTransaction()
             .push({
@@ -104,7 +139,7 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
         );
         switch (history.type) {
             case ImageTransactionTypes.set:
-                this.set(history.data[0]);
+                this.setSrc(history.data[0]);
                 return void 0;
             case ImageTransactionTypes.show:
                 if (!history.data) {
@@ -117,5 +152,19 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
                 }
                 return hideAction;
         }
+    }
+    isAlign(align: any): align is Align {
+        const { xalign, yalign } = align;
+        return typeof xalign === "number" && typeof yalign === "number" &&
+            xalign >= 0 && xalign <= 1 &&
+            yalign >= 0 && yalign <= 1;
+    }
+    isCommonImagePosition(position: any): position is CommonImagePosition {
+        return Object.values(ImagePosition).includes(position);
+    }
+    isCoord2D(coord: any): coord is Coord2D {
+        const coordRegex = /-?\d+%/;
+        return (typeof coord.x === "number" || coordRegex.test(coord.x))
+            && (typeof coord.y === "number" || coordRegex.test(coord.y));
     }
 }

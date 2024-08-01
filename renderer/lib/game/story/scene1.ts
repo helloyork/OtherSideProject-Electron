@@ -6,11 +6,17 @@ import { Script, ScriptCtx } from "../game/elements/script";
 import { LiveGame } from "../game/game";
 import { Condition, Lambda } from "../game/elements/condition";
 import { GameState } from "@/lib/ui/components/player/player";
+import { Image } from "../game/elements/image";
 
 
 const story = new Story("test");
 const c1 = new Character("还没有名字");
 const c2 = new Character("我");
+const i1 = new Image("i1", {
+    src: "/static/images/sensei.png",
+    position: "left",
+    scale: 0.7
+});
 
 const createConditionIsNumberCorrect = (n: number) => new Condition()
     .If(new Lambda(({ gameState, resolve }) => {
@@ -35,6 +41,7 @@ const scene1Actions = scene1.action([
         .say("你好！")
         .say("你最近过的怎么样？")
         .toActions(),
+    i1.show().toActions(),
     new Menu("我最近过的怎么样？")
         .choose({
             action:
@@ -53,7 +60,7 @@ const scene1Actions = scene1.action([
             prompt: "还不错吧"
         })
         .toActions(),
-    scene1.setSceneBackground("red").toActions(),
+    scene1.setSceneBackground("blue").toActions(),
     c2
         .say("那你愿不愿意陪我玩一个游戏？")
         .say("听好游戏规则")

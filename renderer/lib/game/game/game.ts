@@ -176,6 +176,22 @@ export namespace LogicNode {
     export class ImageAction<T extends typeof ImageActionTypes[keyof typeof ImageActionTypes]>
         extends TypedAction<ImageActionContentType, T, Image> {
         static ActionTypes = ImageActionTypes;
+        public executeAction(state: GameState): CalledActionResult | Awaitable<CalledActionResult, any> {
+            if (this.callee.id === null) {
+                this.callee.setId(state.clientGame.game.getLiveGame().idManager.getStringId());
+                state.addImage(this.callee);
+            }
+            if (this.type === ImageActionTypes.setSrc) {
+                this.callee.state.src = (this.contentNode as ContentNode<ImageActionContentType["image:setSrc"]>).getContent();
+                return super.executeAction(state);
+            } else if (this.type === ImageActionTypes.show) {
+                this.callee.state.display = true;
+                return super.executeAction(state);
+            } else if (this.type === ImageActionTypes.hide) {
+                this.callee.state.display = false;
+                return super.executeAction(state);
+            }
+        }
     }
 
     /* Condition */
@@ -258,6 +274,18 @@ export namespace LogicNode {
 };
 
 class IdManager extends Singleton<IdManager>() {
+    private id = 0;
+    public getId() {
+        return this.id++;
+    }
+    public getStringId() {
+        return (this.id++).toString();
+    }
+    prefix(prefix: string, value: string, separator = ":") {
+        return prefix + separator + value;
+    }
+}
+class GameIdManager {
     private id = 0;
     public getId() {
         return this.id++;
@@ -352,6 +380,7 @@ export class LiveGame {
     currentSavedGame: SavedGame | null = null;
     story: Story | null = null;
     lockedAwaiting: Awaitable<CalledActionResult, any> | null = null;
+    idManager: GameIdManager;
 
     /**
      * Possible future nodes
@@ -363,6 +392,7 @@ export class LiveGame {
         this.storable = new Storable();
 
         this.initNamespaces();
+        this.idManager = new GameIdManager();
     }
 
     getDefaultSavedGame(): SavedGame {

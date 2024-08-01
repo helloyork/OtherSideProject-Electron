@@ -16,6 +16,16 @@ export type RGBAColor = RGBColor & {
     a: number;
 }
 
+export type Coord2D = {
+    x: number | `${'-' | ''}${number}%`;
+    y: number | `${'-' | ''}${number}%`;
+}
+
+export type Align = {
+    xalign: number;
+    yalign: number;
+};
+
 export type Color = {
     color: color;
 }
@@ -30,10 +40,12 @@ export type Background = {
     } | color | null | undefined;
 }
 
+export type CommonImagePosition = "left" | "center" | "right";
 export type CommonImage = {
     height?: number;
     width?: number;
     scale?: number;
-    roatetion?: number;
+    rotation?: number;
+    position?: CommonImagePosition | Coord2D | Align;
 }
 

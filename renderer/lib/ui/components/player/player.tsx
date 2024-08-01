@@ -11,11 +11,15 @@ import Menu from "./elements/menu";
 import {
     default as StageScene
 } from "./elements/scene";
+import {
+    default as StageImage
+} from "./elements/image";
 
 import { Character, Sentence } from "@/lib/game/game/elements/text";
 import { Choice } from "@/lib/game/game/elements/menu";
 import { Story } from "@/lib/game/game/elements/story";
 import { Scene, SceneConfig } from "@/lib/game/game/elements/scene";
+import { Image } from "@/lib/game/game/elements/image";
 
 type Clickable<T, U = undefined> = {
     action: T;
@@ -32,6 +36,7 @@ export type PlayerState = {
         prompt: Sentence;
         choices: Choice[];
     }, Choice>[];
+    images: Image[];
     scene: Scene | null;
     history: CalledActionResult[];
 };
@@ -44,6 +49,7 @@ export class GameState {
     state: PlayerState = {
         say: [],
         menu: [],
+        images: [],
         scene: null,
         history: [],
     };
@@ -97,6 +103,10 @@ export class GameState {
             choices
         }, afterChoose);
     }
+    addImage(image: Image) {
+        this.state.images.push(image);
+        this.stage.forceUpdate();
+    }
     setScene(scene: Scene) {
         this.state.scene = scene;
         this.stage.forceUpdate();
@@ -149,6 +159,13 @@ export default function Player({ story }: Readonly<{
             {state.state.scene && (
                 <StageScene scene={state.state.scene} />
             )}
+            {
+                state.state.images.filter(v => v.state.display).map((image) => {
+                    return (
+                        <StageImage key={image.id} image={image} />
+                    )
+                })
+            }
             {
                 state.state.say.filter(a => a.action.sentence.state.display).map((action) => {
                     return (
