@@ -26,7 +26,8 @@ const createConditionIsNumberCorrect = (n: number) => new Condition()
 
 const scene1 = new Scene("scene1", {
     background: "#3f3f3f"
-}).action([
+})
+const scene1Actions = scene1.action([
     new Character(null)
         .say("简体中文，繁體中文, 日本語, 한국어, ไทย, Tiếng Việt, हिन्दी, বাংলা, తెలుగు, मराठी, 1234567890!@#$%^&*()QWERTYUIOPASDFGHJKLZCVN{}|:\"<>?~`, A quick brown fox jumps over the lazy dog.")
         .toActions(),
@@ -52,6 +53,7 @@ const scene1 = new Scene("scene1", {
             prompt: "还不错吧"
         })
         .toActions(),
+    scene1.setSceneBackground("red").toActions(),
     c2
         .say("那你愿不愿意陪我玩一个游戏？")
         .say("听好游戏规则")
@@ -113,7 +115,7 @@ function c2Say_You_Are_Correct() {
 }
 
 story.action([
-    scene1
+    scene1Actions
 ]);
 
 export {

@@ -15,7 +15,7 @@ import {
 import { Character, Sentence } from "@/lib/game/game/elements/text";
 import { Choice } from "@/lib/game/game/elements/menu";
 import { Story } from "@/lib/game/game/elements/story";
-import { Scene } from "@/lib/game/game/elements/scene";
+import { Scene, SceneConfig } from "@/lib/game/game/elements/scene";
 
 type Clickable<T, U = undefined> = {
     action: T;
@@ -101,6 +101,12 @@ export class GameState {
         this.state.scene = scene;
         this.stage.forceUpdate();
     }
+    setSceneBackground(background: SceneConfig["background"]) {
+        if (this.state.scene) {
+            this.state.scene.state.background = background;
+            this.stage.forceUpdate();
+        }
+    }
 }
 
 function handleAction(state: GameState, action: PlayerAction) {
@@ -117,13 +123,14 @@ export default function Player({ story }: Readonly<{
     }));
 
     function next() {
-        const exited = false;
+        let exited = false;
         while (!exited) {
             const next = game.game.getLiveGame().next(state);
             if (!next) {
                 break;
             }
             if (Awaitable.isAwaitable(next)) {
+                exited = true;
                 break;
             }
             dispatch(next);

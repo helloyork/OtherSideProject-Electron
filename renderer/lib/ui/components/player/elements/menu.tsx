@@ -18,7 +18,7 @@ export default function Menu({
     }
     return (
         <Isolated>
-            <div className=" absolute flex flex-col items-center justify-center min-w-full w-full">
+            <div className="absolute flex flex-col items-center justify-center min-w-full w-full h-full">
             {prompt && <Say action={{ sentence: prompt }} useTypeEffect={false} className="z-10" />}
                 <div className="p-4 rounded-lg w-full z-20">
                     <div className="flex flex-col items-center mt-4 w-full">
