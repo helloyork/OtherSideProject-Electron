@@ -42,7 +42,7 @@ export default function Say({
     <Isolated>
       {sentence.state.display &&
         <div className={
-          clsx("fixed bottom-0 w-[calc(100%-40px)] h-[calc(33%-40px)] bg-white m-4 box-border rounded-md shadow-md flex items-center justify-center", className)
+          clsx("absolute bottom-0 w-[calc(100%-40px)] h-[calc(33%-40px)] bg-white m-4 box-border rounded-md shadow-md flex items-center justify-center", className)
         } onClick={onElementClick}>
           <div className="absolute top-0 left-0 p-1.25 rounded-br-md m-4">
             {sentence.character?.name || ""}

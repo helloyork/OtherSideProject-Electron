@@ -13,8 +13,7 @@ export default function Isolated(
       } key={key} style={{
         width: '100vw',
         height: '100vh',
-        position: 'fixed',
-        pointerEvents: 'none'
+        position: 'fixed'
       }}>
         <div style={{
           width: `${ratio.w}px`,
