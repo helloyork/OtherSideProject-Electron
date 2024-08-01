@@ -13,8 +13,8 @@ export default function Layout({
 }>) {
   return (
     <>
-      <Isolated>
-        <div className="fixed inset-0 w-full h-full flex items-left justify-start bg-gray-200 bg-opacity-75">
+      <Isolated className="relative">
+        <div className="absolute inset-0 w-full h-full flex items-left justify-start bg-gray-200 bg-opacity-75">
           <QuickMenu />
           {children}
         </div>

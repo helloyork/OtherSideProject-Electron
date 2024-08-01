@@ -5,15 +5,25 @@ import { useAspectRatio } from "../providers/ratio";
 export default function Isolated(
   { children, key, className }: Readonly<{ children: ReactNode, key?: any, className?: string }>
 ) {
-  const { ratio, setRatio } = useAspectRatio();
+  const { ratio } = useAspectRatio();
   return (
     <>
       <div className={
-        clsx("fixed inset-0 w-full h-full flex items-center justify-center", className)
-      } key={key}>
-        {children}
+        clsx("fixed inset-0 flex items-center justify-center", className)
+      } key={key} style={{
+        width: '100vw',
+        height: '100vh',
+        position: 'fixed',
+        pointerEvents: 'none'
+      }}>
+        <div style={{
+          width: `${ratio.w}px`,
+          height: `${ratio.h}px`,
+          position: 'relative'
+        }}>
+          {children}
+        </div>
       </div>
     </>
   )
 }
-
