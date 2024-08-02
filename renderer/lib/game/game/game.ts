@@ -12,7 +12,7 @@ import { Condition } from "./elements/condition";
 import { Script } from "./elements/script";
 import { Story } from "./elements/story";
 import { Image } from "./elements/image";
-import { Scene } from "./elements/scene";
+import { Scene, SceneConfig } from "./elements/scene";
 import { Menu } from "./elements/menu";
 import { GameState } from "@/lib/ui/components/player/player";
 
@@ -28,7 +28,7 @@ export namespace LogicNode {
         | StoryAction<any>
         | TypedAction<any, any, any>
         | MenuAction<any>;
-    export type ActionTypes = 
+    export type ActionTypes =
         Values<typeof CharacterActionTypes>
         | Values<typeof ConditionActionTypes>
         | Values<typeof ImageActionTypes>
@@ -36,7 +36,7 @@ export namespace LogicNode {
         | Values<typeof ScriptActionTypes>
         | Values<typeof StoryActionTypes>
         | Values<typeof MenuActionTypes>;
-    export type ActionContents = 
+    export type ActionContents =
         CharacterActionContentType
         & ConditionActionContentType
         & ImageActionContentType
@@ -121,20 +121,27 @@ export namespace LogicNode {
     }
 
     /* Scene */
-    const SceneActionTypes = {
+    export const SceneActionTypes = {
         action: "scene:action",
+        setBackground: "scene:setBackground",
     } as const;
     type SceneActionContentType = {
         [K in typeof SceneActionTypes[keyof typeof SceneActionTypes]]:
-        K extends "scene:action" ? Scene :
+        K extends typeof SceneActionTypes["action"] ? Scene :
+        K extends typeof SceneActionTypes["setBackground"] ? SceneConfig["background"] :
         any;
     }
     export class SceneAction<T extends typeof SceneActionTypes[keyof typeof SceneActionTypes]>
         extends TypedAction<SceneActionContentType, T, Scene> {
         static ActionTypes = SceneActionTypes;
         public executeAction(state: GameState): CalledActionResult | Awaitable<CalledActionResult, any> {
-            state.setScene((this.contentNode as ContentNode<SceneActionContentType["scene:action"]>).getContent());
-            return super.executeAction(state);
+            if (this.type === SceneActionTypes.action) {
+                state.setScene((this.contentNode as ContentNode<SceneActionContentType[typeof SceneActionTypes["action"]]>).getContent());
+                return super.executeAction(state);
+            } else if (this.type === SceneActionTypes.setBackground) {
+                state.setSceneBackground((this.contentNode as ContentNode<SceneActionContentType[typeof SceneActionTypes["setBackground"]]>).getContent());
+                return super.executeAction(state);
+            }
         }
     }
 
@@ -169,6 +176,22 @@ export namespace LogicNode {
     export class ImageAction<T extends typeof ImageActionTypes[keyof typeof ImageActionTypes]>
         extends TypedAction<ImageActionContentType, T, Image> {
         static ActionTypes = ImageActionTypes;
+        public executeAction(state: GameState): CalledActionResult | Awaitable<CalledActionResult, any> {
+            if (this.callee.id === null) {
+                this.callee.setId(state.clientGame.game.getLiveGame().idManager.getStringId());
+                state.addImage(this.callee);
+            }
+            if (this.type === ImageActionTypes.setSrc) {
+                this.callee.state.src = (this.contentNode as ContentNode<ImageActionContentType["image:setSrc"]>).getContent();
+                return super.executeAction(state);
+            } else if (this.type === ImageActionTypes.show) {
+                this.callee.state.display = true;
+                return super.executeAction(state);
+            } else if (this.type === ImageActionTypes.hide) {
+                this.callee.state.display = false;
+                return super.executeAction(state);
+            }
+        }
     }
 
     /* Condition */
@@ -187,11 +210,8 @@ export namespace LogicNode {
             const nodes = this.contentNode.getContent().evaluate({
                 gameState
             });
-            // nodes.addChild(this.contentNode.child);
             nodes?.[nodes.length - 1]?.contentNode.addChild(this.contentNode.child);
             this.contentNode.addChild(nodes[0]?.contentNode || null);
-            // nodes?.[nodes.length - 1]?.contentNode.addChild(this.contentNode.child);
-            // this.contentNode.addChild(nodes?.[0]?.contentNode);
             return {
                 type: this.type as any,
                 node: this.contentNode,
@@ -254,6 +274,18 @@ export namespace LogicNode {
 };
 
 class IdManager extends Singleton<IdManager>() {
+    private id = 0;
+    public getId() {
+        return this.id++;
+    }
+    public getStringId() {
+        return (this.id++).toString();
+    }
+    prefix(prefix: string, value: string, separator = ":") {
+        return prefix + separator + value;
+    }
+}
+class GameIdManager {
     private id = 0;
     public getId() {
         return this.id++;
@@ -348,6 +380,7 @@ export class LiveGame {
     currentSavedGame: SavedGame | null = null;
     story: Story | null = null;
     lockedAwaiting: Awaitable<CalledActionResult, any> | null = null;
+    idManager: GameIdManager;
 
     /**
      * Possible future nodes
@@ -359,6 +392,7 @@ export class LiveGame {
         this.storable = new Storable();
 
         this.initNamespaces();
+        this.idManager = new GameIdManager();
     }
 
     getDefaultSavedGame(): SavedGame {

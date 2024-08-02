@@ -7,21 +7,34 @@
  * deepMerge(defaultConfig, config);
  */
 export function deepMerge<T = Record<string, any>>(obj1: Record<string, any>, obj2: Record<string, any>): T {
+    const hasOwnProperty = (obj: Record<string, any>, key: string) => Object.prototype.hasOwnProperty.call(obj, key);
     const result: Record<string, any> = {};
 
+    const mergeValue = (key: string, value1: any, value2: any) => {
+        if (typeof value1 === 'object' && value1 !== null && !Array.isArray(value1) &&
+            typeof value2 === 'object' && value2 !== null && !Array.isArray(value2)) {
+            return deepMerge(value1, value2);
+        } else if (Array.isArray(value1) && Array.isArray(value2)) {
+            return value1.map((item, index) => {
+                if (typeof item === 'object' && item !== null && !Array.isArray(item) && value2[index]) {
+                    return deepMerge(item, value2[index]);
+                }
+                return item;
+            });
+        } else {
+            return value2 !== undefined ? value2 : value1;
+        }
+    };
+
     for (const key in obj1) {
-        if (obj1.hasOwnProperty(key)) {
-            if (typeof obj1[key] === 'object' && obj1[key] !== null && !Array.isArray(obj1[key]) && obj2.hasOwnProperty(key) && typeof obj2[key] === 'object' && obj2[key] !== null && !Array.isArray(obj2[key])) {
-                result[key] = deepMerge(obj1[key], obj2[key]);
-            } else {
-                result[key] = obj1[key];
-            }
+        if (hasOwnProperty(obj1, key)) {
+            result[key] = mergeValue(key, obj1[key], obj2[key]);
         }
     }
 
     for (const key in obj2) {
-        if (obj2.hasOwnProperty(key)) {
-            result[key] = obj2[key];
+        if (hasOwnProperty(obj2, key) && !hasOwnProperty(result, key)) {
+            result[key] = mergeValue(key, obj1[key], obj2[key]);
         }
     }
 
