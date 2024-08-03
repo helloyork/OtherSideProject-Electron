@@ -1,7 +1,8 @@
 import {Game} from "./game";
 import {ContentNode, RenderableNode, RootNode} from "./save/rollback";
 import {LogicAction} from "@lib/game/game/logicAction";
-import {Action} from "@lib/game/game/actions";
+
+import {Action} from "@lib/game/game/action";
 
 export class Constructable<
     T extends typeof Constructable = any,

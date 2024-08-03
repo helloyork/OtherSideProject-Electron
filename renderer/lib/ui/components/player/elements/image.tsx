@@ -1,85 +1,91 @@
-import { Image as GameImage, ImagePosition } from "@/lib/game/game/elements/image";
-import { useAspectRatio } from "@/lib/ui/providers/ratio";
+import {Image as GameImage} from "@/lib/game/game/elements/image";
+import {useAspectRatio} from "@/lib/ui/providers/ratio";
 import clsx from "clsx";
-import {Transform, TransformNameSpace} from "@lib/game/game/elements/transformNameSpace";
-import { useEffect } from "react";
-import { GameState } from "../player";
-import { useAnimate } from "framer-motion";
+import {Transform} from "@lib/game/game/elements/transform";
+import {useEffect} from "react";
+import {GameState} from "../player";
+import {useAnimate} from "framer-motion";
 
 export default function Image({
-  image,
-  state
-}: Readonly<{
-  image: GameImage;
-  state: GameState;
+                                  image,
+                                  state,
+                                  onAnimationEnd
+                              }: Readonly<{
+    image: GameImage;
+    state: GameState;
+    onAnimationEnd?: () => any;
 }>) {
-  const { ratio } = useAspectRatio();
-  const [scope, animate] = useAnimate();
+    const {ratio} = useAspectRatio();
+    const [scope, animate] = useAnimate();
 
-  const {
-    src,
-    position,
-    height,
-    width,
-    scale,
-    rotation,
-  } = image.config;
+    const {
+        src,
+        position,
+        height,
+        width,
+        scale,
+        rotation,
+    } = image.config;
 
-  const { left, top } = Transform.positionToCSS(position);
+    const {left, top} = Transform.positionToCSS(position);
 
-  const transform = `translate(-50%, -50%) scale(${scale}) rotate(${rotation}deg)`;
+    const transform = `translate(-50%, -50%) scale(${scale}) rotate(${rotation}deg)`;
 
-  useEffect(() => {
-    const listening = [
-      GameState.EventTypes["event:image.show"],
-      GameState.EventTypes["event:image.hide"]
-    ];
-    console.log("listening to", listening)
-    const fc = listening.map((type) => {
-      return state.events.on(type, async (target, transform) => {
-        if (target !== image) return;
-        if (type === GameState.EventTypes["event:image.show"]) {
-          scope.current.style.opacity = "0";
-        } // @TODO: add more cases
-        await transform.animate(scope, animate);
-        return true;
-      });
-    });
-    return () => {
-      fc.forEach((fc) => {
-        state.events.off(GameState.EventTypes["event:image.show"], fc);
-      });
-    };
-  }, []);
+    useEffect(() => {
+        Object.assign(scope.current.style, image.toTransform().getProps());
 
-  return (
-    <div className={
-      clsx("fixed inset-0 flex items-center justify-center z-0")
-    } style={{
-      width: '100vw',
-      height: '100vh',
-      position: 'fixed'
-    }}>
-      <div style={{
-        width: `${ratio.w}px`,
-        height: `${ratio.h}px`,
-        position: 'relative'
-      }}>
+        const listening = [
+            GameImage.EventTypes["event:image.show"],
+            GameImage.EventTypes["event:image.hide"]
+        ];
 
-        <img
-          className=""
-          src={src}
-          width={width}
-          height={height}
-          style={{
-            transform,
-            left,
-            top,
-            position: 'absolute'
-          }}
-          ref={scope}
-        />
-      </div>
-    </div>
-  );
+        const fc = listening.map((type) => {
+            return {
+                fc: image.events.on(type, async (transform) => {
+                    await transform.animate(scope, animate);
+                    if (onAnimationEnd) {
+                        onAnimationEnd();
+                    }
+                    return true;
+                }),
+                type,
+            };
+        });
+        return () => {
+            fc.forEach((fc) => {
+                image.events.off(fc.type, fc.fc);
+            });
+        };
+    }, []);
+
+    return (
+        <div className={
+            clsx("fixed inset-0 flex items-center justify-center z-0")
+        } style={{
+            width: '100vw',
+            height: '100vh',
+            position: 'fixed'
+        }}>
+            <div style={{
+                width: `${ratio.w}px`,
+                height: `${ratio.h}px`,
+                position: 'relative'
+            }}>
+
+                <img
+                    className=""
+                    src={src}
+                    width={width}
+                    height={height}
+                    style={{
+                        transform,
+                        left,
+                        top,
+                        position: 'absolute'
+                    }}
+                    ref={scope}
+                />
+            </div>
+        </div>
+    );
 };

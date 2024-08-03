@@ -3,7 +3,7 @@
 import {useEffect, useReducer} from "react";
 import {useGame} from "../../providers/game-state";
 import {ClientGame} from "@/lib/game/game";
-import {CalledActionResult} from "@/lib/game/game/dgame";
+import {CalledActionResult} from "@lib/game/game/gamTypes";
 import {Awaitable, EventDispatcher} from "@/lib/util/data";
 
 import Say from "./elements/say";
@@ -14,9 +14,8 @@ import {default as StageImage} from "./elements/image";
 import {Character, Sentence} from "@/lib/game/game/elements/text";
 import {Choice} from "@/lib/game/game/elements/menu";
 import {Story} from "@/lib/game/game/elements/story";
-import {Scene, SceneConfig} from "@/lib/game/game/elements/scene";
-import {Image} from "@/lib/game/game/elements/image";
-import {Transform, TransformNameSpace} from "@lib/game/game/elements/transformNameSpace";
+import {Scene, SceneConfig, SceneEventTypes} from "@/lib/game/game/elements/scene";
+import {Image, ImageEventTypes} from "@/lib/game/game/elements/image";
 
 type Clickable<T, U = undefined> = {
     action: T;
@@ -41,12 +40,10 @@ type PlayerAction = CalledActionResult;
 
 interface StageUtils {
     forceUpdate: () => void;
+    next: () => void;
 }
 
-type GameStateEvents = {
-    "event:image.show": [Image, Transform<TransformNameSpace.ImageTransformProps>];
-    "event:image.hide": [Image, Transform<TransformNameSpace.ImageTransformProps>];
-};
+type GameStateEvents = {};
 
 export class GameState {
     static EventTypes: { [K in keyof GameStateEvents]: K } = {
@@ -78,28 +75,10 @@ export class GameState {
 
         switch (action.type) {
             case "condition:action":
-
                 break;
         }
         this.stage.forceUpdate();
         return this;
-    }
-
-    private createWaitableAction(target: any[], action: Record<string, any>, after?: (...args: unknown[]) => void) {
-        let resolve: any = null;
-        const item = {
-            action,
-            onClick: (...args: unknown[]) => {
-                target.splice(target.indexOf(item), 1);
-                if (after) after(...args);
-                resolve();
-            }
-        };
-        target.push(item);
-        this.stage.forceUpdate();
-        return new Promise<void>((r) => {
-            resolve = r;
-        });
     }
 
     createSay(id: string, sentence: Sentence, afterClick?: () => void) {
@@ -133,6 +112,41 @@ export class GameState {
             this.stage.forceUpdate();
         }
     }
+
+    animateImage<T extends keyof ImageEventTypes>(type: T, target: Image, args: ImageEventTypes[T], onEnd: () => void) {
+        return this.anyEvent(type, target, onEnd, ...args);
+    }
+
+    animateScene<T extends keyof SceneEventTypes>(type: T, target: Scene, args: SceneEventTypes[T], onEnd: () => void) {
+        return this.anyEvent(type, target, onEnd, ...args);
+    }
+
+    private anyEvent(type: any, target: any, onEnd: () => void, ...args: any[]) {
+        target.events.any(
+            type,
+            ...args
+        ).then(onEnd).then(() => {
+            this.stage.next();
+        });
+        return void 0;
+    }
+
+    private createWaitableAction(target: any[], action: Record<string, any>, after?: (...args: unknown[]) => void) {
+        let resolve: any = null;
+        const item = {
+            action,
+            onClick: (...args: unknown[]) => {
+                target.splice(target.indexOf(item), 1);
+                if (after) after(...args);
+                resolve();
+            }
+        };
+        target.push(item);
+        this.stage.forceUpdate();
+        return new Promise<void>((r) => {
+            resolve = r;
+        });
+    }
 }
 
 function handleAction(state: GameState, action: PlayerAction) {
@@ -148,6 +162,7 @@ export default function Player({
     const {game} = useGame();
     const [state, dispatch] = useReducer(handleAction, new GameState(game, {
         forceUpdate,
+        next
     }));
 
     function next() {

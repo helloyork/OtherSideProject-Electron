@@ -7,6 +7,8 @@ import { LiveGame } from "../game/game";
 import { Condition, Lambda } from "../game/elements/condition";
 import { GameState } from "@/lib/ui/components/player/player";
 import { Image } from "../game/elements/image";
+import {Transform, TransformNameSpace} from "@lib/game/game/elements/transform";
+import SceneBackgroundTransformProps = TransformNameSpace.SceneBackgroundTransformProps;
 
 
 const story = new Story("test");
@@ -31,9 +33,13 @@ const createConditionIsNumberCorrect = (n: number) => new Condition()
     .toActions();
 
 const scene1 = new Scene("scene1", {
-    background: "#3f3f3f"
+    background: "#419eff"
 })
 const scene1Actions = scene1.action([
+    i1.show({
+        ease: "circOut",
+        duration: 0.5,
+    }).toActions(),
     new Character(null)
         .say("简体中文，繁體中文, 日本語, 한국어, ไทย, Tiếng Việt, हिन्दी, বাংলা, తెలుగు, मराठी, 1234567890!@#$%^&*()QWERTYUIOPASDFGHJKLZCVN{}|:\"<>?~`, A quick brown fox jumps over the lazy dog.")
         .toActions(),
@@ -41,10 +47,6 @@ const scene1Actions = scene1.action([
         .say("你好！")
         .say("你最近过的怎么样？")
         .toActions(),
-    i1.show({
-        ease: "easeIn",
-        duration: 5,
-    }).toActions(),
     new Menu("我最近过的怎么样？")
         .choose({
             action:
@@ -63,7 +65,9 @@ const scene1Actions = scene1.action([
             prompt: "还不错吧"
         })
         .toActions(),
-    scene1.setSceneBackground("blue").toActions(),
+    scene1.setSceneBackground("#35ffe5", {
+        duration: 0.5
+    }).toActions(),
     c2
         .say("那你愿不愿意陪我玩一个游戏？")
         .say("听好游戏规则")

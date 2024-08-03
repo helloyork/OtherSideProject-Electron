@@ -1,54 +1,18 @@
 import {ContentNode} from "@lib/game/game/save/rollback";
 import {GameState} from "@lib/ui/components/player/player";
-import type {CalledActionResult} from "@lib/game/game/dgame";
 import {Awaitable} from "@lib/util/data";
+import {CommonImage} from "@lib/game/game/show";
+import {Transform, TransformNameSpace} from "@lib/game/game/elements/transform";
+import {Image} from "@lib/game/game/elements/image";
+import {LogicAction} from "@lib/game/game/logicAction";
+import {Action} from "@lib/game/game/action";
 import type {Character, Sentence} from "@lib/game/game/elements/text";
-import type {Scene, SceneConfig} from "@lib/game/game/elements/scene";
+import type {Scene, SceneEventTypes} from "@lib/game/game/elements/scene";
 import type {Story} from "@lib/game/game/elements/story";
-import type {CommonImage} from "@lib/game/game/show";
-import {Transform, TransformNameSpace} from "@lib/game/game/elements/transformNameSpace";
-import type {Image} from "@lib/game/game/elements/image";
-import type {Condition} from "@lib/game/game/elements/condition";
 import type {Script} from "@lib/game/game/elements/script";
 import type {Menu} from "@lib/game/game/elements/menu";
-import {LogicAction} from "@lib/game/game/logicAction";
-
-export class Action<ContentNodeType = any> {
-    static ActionTypes = {
-        action: "action",
-    };
-    callee: LogicAction.GameElement;
-    type: string;
-    contentNode: ContentNode<ContentNodeType>;
-
-    constructor(callee: LogicAction.GameElement, type: string, contentNode: ContentNode<ContentNodeType>) {
-        this.callee = callee;
-        this.type = type;
-        this.contentNode = contentNode;
-    }
-
-    static isAction(action: any): action is Action {
-        return action instanceof Action;
-    }
-
-    public executeAction(state: GameState): CalledActionResult | Awaitable<CalledActionResult, any> {
-        return {
-            type: this.type as any,
-            node: this.contentNode,
-        };
-    }
-
-    toData() {
-        return {
-            type: this.type,
-            content: this.contentNode.toData(),
-        }
-    }
-
-    undo() {
-        this.contentNode.callee.undo();
-    }
-}
+import type {Condition} from "@lib/game/game/elements/condition";
+import type {CalledActionResult} from "@lib/game/game/gamTypes";
 
 export class TypedAction<
     ContentType extends Record<string, any>,
@@ -104,7 +68,7 @@ export const SceneActionTypes = {
 export type SceneActionContentType = {
     [K in typeof SceneActionTypes[keyof typeof SceneActionTypes]]:
     K extends typeof SceneActionTypes["action"] ? Scene :
-        K extends typeof SceneActionTypes["setBackground"] ? SceneConfig["background"] :
+        K extends typeof SceneActionTypes["setBackground"] ? SceneEventTypes["event:scene.setBackground"] :
             any;
 }
 
@@ -114,12 +78,27 @@ export class SceneAction<T extends typeof SceneActionTypes[keyof typeof SceneAct
 
     public executeAction(state: GameState): CalledActionResult | Awaitable<CalledActionResult, any> {
         if (this.type === SceneActionTypes.action) {
-            state.setScene((this.contentNode as ContentNode<SceneActionContentType[typeof SceneActionTypes["action"]]>).getContent());
+            state.setScene(this.callee);
             return super.executeAction(state);
         } else if (this.type === SceneActionTypes.setBackground) {
-            state.setSceneBackground((this.contentNode as ContentNode<SceneActionContentType[typeof SceneActionTypes["setBackground"]]>).getContent());
-            return super.executeAction(state);
+            const content = (this.contentNode as ContentNode<SceneActionContentType[typeof SceneActionTypes["setBackground"]]>).getContent();
+            const awaitable = new Awaitable<CalledActionResult, any>(v => v);
+            const background = content[0];
+            const transform = content[1];
+
+            state.animateScene("event:scene.setBackground", this.callee, [
+                background,
+                transform
+            ], () => {
+                this.callee.state.background = background;
+                awaitable.resolve({
+                    type: this.type,
+                    node: this.contentNode.child || null,
+                });
+            });
+            return awaitable;
         }
+
     }
 }
 
@@ -170,26 +149,26 @@ export class ImageAction<T extends typeof ImageActionTypes[keyof typeof ImageAct
             return super.executeAction(state);
         } else if (this.type === ImageActionTypes.show) {
             const awaitable = new Awaitable<CalledActionResult, any>(v => v);
-            state.events.any(
-                GameState.EventTypes["event:image.show"],
-                this.callee,
+            state.animateImage(Image.EventTypes["event:image.show"], this.callee, [
                 (this.contentNode as ContentNode<ImageActionContentType["image:show"]>).getContent()[1]
-            ).then(() => {
+            ], () => {
                 this.callee.state.display = true;
-                awaitable.resolve(super.executeAction(state));
-            });
+                awaitable.resolve({
+                    type: this.type,
+                    node: this.contentNode?.child || null,
+                });
+            })
             return awaitable;
         } else if (this.type === ImageActionTypes.hide) {
             const awaitable = new Awaitable<CalledActionResult, any>(v => v);
-            state.events.any(
-                GameState.EventTypes["event:image.show"],
-                this.callee,
+            state.animateImage(Image.EventTypes["event:image.hide"], this.callee, [
                 (this.contentNode as ContentNode<ImageActionContentType["image:hide"]>).getContent()[1]
-            ).then((r) => {
-                if (r){
-                    this.callee.state.display = false;
-                    awaitable.resolve(super.executeAction(state));
-                }
+            ], () => {
+                this.callee.state.display = false;
+                awaitable.resolve({
+                    type: this.type,
+                    node: this.contentNode?.child || null,
+                });
             });
             return awaitable;
         }

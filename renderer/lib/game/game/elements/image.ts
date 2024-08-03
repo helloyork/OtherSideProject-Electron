@@ -1,12 +1,13 @@
 import type {CommonImage, CommonImagePosition} from "../show";
-import type {DeepPartial} from "@lib/util/data";
+import {DeepPartial, EventDispatcher} from "@lib/util/data";
 import {deepMerge} from "@lib/util/data";
 import {ContentNode} from "../save/rollback";
 import {HistoryData} from "../save/transaction";
 import {Game} from "@lib/game/game/game";
-import {Transform, TransformNameSpace} from "./transformNameSpace";
+import {Transform, TransformNameSpace} from "./transform";
 import {ImageAction} from "@lib/game/game/actions";
 import {Actionable} from "@lib/game/game/actionable";
+import ImageTransformProps = TransformNameSpace.ImageTransformProps;
 
 export type ImageConfig = {
     src: string;
@@ -27,19 +28,30 @@ const ImageTransactionTypes = {
     hide: "hide",
 } as const;
 
+export type ImageEventTypes = {
+    "event:image.show": [Transform<TransformNameSpace.ImageTransformProps>];
+    "event:image.hide": [Transform<TransformNameSpace.ImageTransformProps>];
+};
+
 export class Image extends Actionable<typeof ImageTransactionTypes> {
+    static EventTypes: { [K in keyof ImageEventTypes]: K } = {
+        "event:image.show": "event:image.show",
+        "event:image.hide": "event:image.hide",
+    }
     static defaultConfig: ImageConfig = {
         src: "",
         display: false,
         position: ImagePosition.center,
         scale: 1,
         rotation: 0,
+        opacity: 0,
     };
     name: string;
     config: ImageConfig;
     state: ImageConfig;
     declare actions: ImageAction<any>[];
     id: null | number | string;
+    events: EventDispatcher<ImageEventTypes> = new EventDispatcher();
 
     constructor(name: string, config: DeepPartial<ImageConfig> = {}) {
         super();
@@ -183,5 +195,14 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
                 }
                 return hideAction;
         }
+    }
+
+    toTransform(): Transform<ImageTransformProps> {
+        return new Transform<ImageTransformProps>({
+            opacity: this.state.opacity,
+            position: this.state.position, // @todo: add more props, like scale and rotation
+        }, {
+            duration: 0,
+        });
     }
 }

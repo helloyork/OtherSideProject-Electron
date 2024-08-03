@@ -47,5 +47,6 @@ export type CommonImage = {
     scale?: number;
     rotation?: number;
     position?: CommonImagePosition | Coord2D | Align;
+    opacity: number;
 }
 

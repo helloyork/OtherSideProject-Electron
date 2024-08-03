@@ -160,7 +160,7 @@ export class EventDispatcher<T extends EventTypes, Type extends T & {
         const promises = [];
         for (const listener of this.events[event]) {
             const result = listener(...args) as any;
-            if (result && (typeof result === "object" || typeof result["then"] === "function")) {
+            if (result && (typeof result === "object" && typeof result["then"] === "function")) {
                 promises.push(result);
             }
         }
@@ -171,8 +171,8 @@ export class EventDispatcher<T extends EventTypes, Type extends T & {
                 this.on("event:EventDispatcher.register", (type, fc) => {
                     if (type === event) {
                         let res = fc?.(...args);
-                        if (fc["then"]) {
-                            fc["then"](resolve)
+                        if (res["then"]) {
+                            res["then"](resolve)
                         } else {
                             resolve(res);
                         }

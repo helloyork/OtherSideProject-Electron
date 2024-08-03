@@ -1,4 +1,4 @@
-import type {CalledActionResult, GameConfig, GameSettings, SavedGame} from "./dgame";
+import type {CalledActionResult, GameConfig, GameSettings, SavedGame} from "./gamTypes";
 
 import {RenderableNode, RootNode} from "./save/rollback";
 import {Awaitable, deepMerge, safeClone} from "../../util/data";

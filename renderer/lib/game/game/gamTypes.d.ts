@@ -35,6 +35,7 @@ export type ClientActionProto<T> = {
     id: string;
     content: T;
 };
+/**@deprecated */
 export type ClientResponseProto<T> = {
     content: T;
 };
