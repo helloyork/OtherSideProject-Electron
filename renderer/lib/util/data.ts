@@ -117,4 +117,71 @@ export function toHex(hex: { r: number; g: number; b: number; a?: number } | str
     return `#${(hex.r || 0).toString(16).padStart(2, '0')}${(hex.g || 0).toString(16).padStart(2, '0')}${(hex.b || 0).toString(16).padStart(2, '0')}${(hex.a !== undefined ? hex.a.toString(16).padStart(2, '0') : '')}`;
 }
 
+export type EventTypes = {
+    [key: string]: any[];
+}
+type EventListener<T extends any[]> = (...args: T) => void | Promise<any>;
 
+export class EventDispatcher<T extends EventTypes, Type extends T & {
+    "event:EventDispatcher.register": [keyof EventTypes, EventListener<any>];
+} = T & {
+    "event:EventDispatcher.register": [keyof EventTypes, EventListener<any>];
+}> {
+    private events: { [K in keyof Type]: Array<(...args: any[]) => void> } = {} as any;
+
+    public on<K extends keyof Type>(event: K, listener: EventListener<Type[K]>): EventListener<Type[K]> {
+        if (!this.events[event]) {
+            this.events[event] = [];
+        }
+        this.events[event].push(listener);
+        this.emit("event:EventDispatcher.register", event as any, listener as any);
+        return listener;
+    }
+
+    public off<K extends keyof Type>(event: K, listener: EventListener<Type[K]>): void {
+        if (!this.events[event]) return;
+
+        this.events[event] = this.events[event].filter(l => l !== listener);
+    }
+
+    public emit<K extends keyof Type>(event: K, ...args: Type[K]): void {
+        if (!this.events[event]) return;
+
+        this.events[event].forEach(listener => {
+            listener(...args);
+        });
+    }
+
+    public async any<K extends keyof T>(event: K, ...args: T[K]): Promise<void> {
+        if (!this.events[event]) {
+            this.events[event] = [];
+        }
+
+        const promises = [];
+        for (const listener of this.events[event]) {
+            const result = listener(...args) as any;
+            if (result && (typeof result === "object" || typeof result["then"] === "function")) {
+                promises.push(result);
+            }
+        }
+        this.events[event] = this.events[event].filter(l => !promises.includes(l));
+
+        if (promises.length === 0) {
+            return new Promise<void>((resolve) => {
+                this.on("event:EventDispatcher.register", (type, fc) => {
+                    if (type === event) {
+                        let res = fc?.(...args);
+                        if (fc["then"]) {
+                            fc["then"](resolve)
+                        } else {
+                            resolve();
+                        }
+                    }
+                });
+            });
+        }
+        await Promise.all(promises);
+        return void 0;
+    }
+
+}

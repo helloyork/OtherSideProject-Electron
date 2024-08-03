@@ -27,7 +27,6 @@ const ImageTransactionTypes = {
     hide: "hide",
 } as const;
 
-const { ImageAction } = LogicNode;
 export class Image extends Actionable<typeof ImageTransactionTypes> {
     static defaultConfig: ImageConfig = {
         src: "",
@@ -52,22 +51,28 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
 
         this.checkConfig();
     }
+
     checkConfig() {
         if (!this.config.src) {
             throw new Error("Image src is required");
         }
-        if (!this.isCommonImagePosition(this.config.position as any)
-            && !this.isAlign(this.config.position as any)
-            && !this.isCoord2D(this.config.position as any)) {
+        if (!Transform.Transform.isPosition(this.config.position)) {
             throw new Error("Invalid position\nPosition must be one of CommonImagePosition, Align, Coord2D");
         }
         return this;
     }
+
     /**@internal */
     setId(id: number | string): this {
         this.id = id;
         return this;
     }
+
+    /**
+     * 设置图片源
+     * @param src 可以是public目录下的文件
+     * 例如 **%root%/public/static/image.png** 在这里应该填入 **"/static/image.png"**
+     */
     public setSrc(src: string): this {
         const setActions = this.actions.filter(action => action.type === ImageTransactionTypes.set);
         this.transaction
@@ -178,19 +183,5 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
                 }
                 return hideAction;
         }
-    }
-    isAlign(align: any): align is Align {
-        const { xalign, yalign } = align;
-        return typeof xalign === "number" && typeof yalign === "number" &&
-            xalign >= 0 && xalign <= 1 &&
-            yalign >= 0 && yalign <= 1;
-    }
-    isCommonImagePosition(position: any): position is CommonImagePosition {
-        return Object.values(ImagePosition).includes(position);
-    }
-    isCoord2D(coord: any): coord is Coord2D {
-        const coordRegex = /-?\d+%/;
-        return (typeof coord.x === "number" || coordRegex.test(coord.x))
-            && (typeof coord.y === "number" || coordRegex.test(coord.y));
     }
 }
