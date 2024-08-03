@@ -1,7 +1,7 @@
 import { Image as GameImage, ImagePosition } from "@/lib/game/game/elements/image";
 import { useAspectRatio } from "@/lib/ui/providers/ratio";
 import clsx from "clsx";
-import { Transform } from "@/lib/game/game/elements/transform";
+import {Transform, TransformNameSpace} from "@lib/game/game/elements/transformNameSpace";
 import { useEffect } from "react";
 import { GameState } from "../player";
 import { useAnimate } from "framer-motion";
@@ -25,7 +25,7 @@ export default function Image({
     rotation,
   } = image.config;
 
-  const { left, top } = Transform.Transform.positionToCSS(position);
+  const { left, top } = Transform.positionToCSS(position);
 
   const transform = `translate(-50%, -50%) scale(${scale}) rotate(${rotation}deg)`;
 
@@ -36,11 +36,13 @@ export default function Image({
     ];
     console.log("listening to", listening)
     const fc = listening.map((type) => {
-      return state.events.on(type, async (transform) => {
-        console.log("transform", transform)
+      return state.events.on(type, async (target, transform) => {
+        if (target !== image) return;
+        if (type === GameState.EventTypes["event:image.show"]) {
+          scope.current.style.opacity = "0";
+        } // @TODO: add more cases
         await transform.animate(scope, animate);
-        console.log("transformed")
-        return (void 0);
+        return true;
       });
     });
     return () => {

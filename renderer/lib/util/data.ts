@@ -152,7 +152,7 @@ export class EventDispatcher<T extends EventTypes, Type extends T & {
         });
     }
 
-    public async any<K extends keyof T>(event: K, ...args: T[K]): Promise<void> {
+    public async any<K extends keyof T>(event: K, ...args: T[K]): Promise<any> {
         if (!this.events[event]) {
             this.events[event] = [];
         }
@@ -174,7 +174,7 @@ export class EventDispatcher<T extends EventTypes, Type extends T & {
                         if (fc["then"]) {
                             fc["then"](resolve)
                         } else {
-                            resolve();
+                            resolve(res);
                         }
                     }
                 });

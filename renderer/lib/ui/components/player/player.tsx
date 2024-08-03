@@ -16,7 +16,7 @@ import {Choice} from "@/lib/game/game/elements/menu";
 import {Story} from "@/lib/game/game/elements/story";
 import {Scene, SceneConfig} from "@/lib/game/game/elements/scene";
 import {Image} from "@/lib/game/game/elements/image";
-import {Transform} from "@/lib/game/game/elements/transform";
+import {Transform, TransformNameSpace} from "@lib/game/game/elements/transformNameSpace";
 
 type Clickable<T, U = undefined> = {
     action: T;
@@ -44,8 +44,8 @@ interface StageUtils {
 }
 
 type GameStateEvents = {
-    "event:image.show": [Transform.Transform<Transform.ImageTransformProps>];
-    "event:image.hide": [Transform.Transform<Transform.ImageTransformProps>];
+    "event:image.show": [Image, Transform<TransformNameSpace.ImageTransformProps>];
+    "event:image.hide": [Image, Transform<TransformNameSpace.ImageTransformProps>];
 };
 
 export class GameState {

@@ -4,7 +4,7 @@ import {deepMerge} from "@lib/util/data";
 import {ContentNode} from "../save/rollback";
 import {HistoryData} from "../save/transaction";
 import {Game} from "@lib/game/game/game";
-import {Transform} from "./transform";
+import {Transform, TransformNameSpace} from "./transformNameSpace";
 import {ImageAction} from "@lib/game/game/actions";
 import {Actionable} from "@lib/game/game/actionable";
 
@@ -56,7 +56,7 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
         if (!this.config.src) {
             throw new Error("Image src is required");
         }
-        if (!Transform.Transform.isPosition(this.config.position)) {
+        if (!Transform.isPosition(this.config.position)) {
             throw new Error("Invalid position\nPosition must be one of CommonImagePosition, Align, Coord2D");
         }
         return this;
@@ -99,9 +99,9 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
      * 让图片显示，如果图片已显示，则不会有任何效果
      */
     public show(): this;
-    public show(transform: Transform.Transform<Transform.ImageTransformProps>): this;
-    public show(transform: Partial<Transform.CommonTransformProps>): this;
-    public show(transform?: Transform.Transform<Transform.ImageTransformProps> | Partial<Transform.CommonTransformProps>): this {
+    public show(transform: Transform<TransformNameSpace.ImageTransformProps>): this;
+    public show(transform: Partial<TransformNameSpace.CommonTransformProps>): this;
+    public show(transform?: Transform<TransformNameSpace.ImageTransformProps> | Partial<TransformNameSpace.CommonTransformProps>): this {
         this.transaction
             .startTransaction()
             .push({
@@ -115,7 +115,7 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
                 Game.getIdManager().getStringId()
             ).setContent([
                 void 0,
-                (transform instanceof Transform.Transform) ? transform : new Transform.Transform({
+                (transform instanceof Transform) ? transform : new Transform({
                     opacity: 1
                 }, transform)
             ])
@@ -128,9 +128,9 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
      * 让图片隐藏，如果图片已隐藏，则不会有任何效果
      */
     public hide(): this;
-    public hide(transform: Transform.Transform<Transform.ImageTransformProps>): this;
-    public hide(transform: Transform.CommonTransformProps): this;
-    public hide(transform?: Transform.Transform<Transform.ImageTransformProps> | Transform.CommonTransformProps): this {
+    public hide(transform: Transform<TransformNameSpace.ImageTransformProps>): this;
+    public hide(transform: TransformNameSpace.CommonTransformProps): this;
+    public hide(transform?: Transform<TransformNameSpace.ImageTransformProps> | TransformNameSpace.CommonTransformProps): this {
         this.transaction
             .startTransaction()
             .push({
@@ -144,7 +144,7 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
                 Game.getIdManager().getStringId()
             ).setContent([
                 void 0,
-                (transform instanceof Transform.Transform) ? transform : new Transform.Transform({
+                (transform instanceof Transform) ? transform : new Transform({
                     opacity: 0
                 }, transform)
             ])

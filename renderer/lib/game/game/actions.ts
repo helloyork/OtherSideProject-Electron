@@ -6,7 +6,7 @@ import type {Character, Sentence} from "@lib/game/game/elements/text";
 import type {Scene, SceneConfig} from "@lib/game/game/elements/scene";
 import type {Story} from "@lib/game/game/elements/story";
 import type {CommonImage} from "@lib/game/game/show";
-import type {Transform} from "@lib/game/game/elements/transform";
+import {Transform, TransformNameSpace} from "@lib/game/game/elements/transformNameSpace";
 import type {Image} from "@lib/game/game/elements/image";
 import type {Condition} from "@lib/game/game/elements/condition";
 import type {Script} from "@lib/game/game/elements/script";
@@ -149,9 +149,9 @@ export const ImageActionTypes = {
 export type ImageActionContentType = {
     [K in typeof ImageActionTypes[keyof typeof ImageActionTypes]]:
     K extends "image:setSrc" ? [string] :
-        K extends "image:setPosition" ? [CommonImage["position"], Transform.Transform<Transform.ImageTransformProps>] :
-            K extends "image:show" ? [void, Transform.Transform<Transform.ImageTransformProps>] :
-                K extends "image:hide" ? [void, Transform.Transform<Transform.ImageTransformProps>] :
+        K extends "image:setPosition" ? [CommonImage["position"], Transform<TransformNameSpace.ImageTransformProps>] :
+            K extends "image:show" ? [void, Transform<TransformNameSpace.ImageTransformProps>] :
+                K extends "image:hide" ? [void, Transform<TransformNameSpace.ImageTransformProps>] :
                     any;
 }
 
@@ -172,6 +172,7 @@ export class ImageAction<T extends typeof ImageActionTypes[keyof typeof ImageAct
             const awaitable = new Awaitable<CalledActionResult, any>(v => v);
             state.events.any(
                 GameState.EventTypes["event:image.show"],
+                this.callee,
                 (this.contentNode as ContentNode<ImageActionContentType["image:show"]>).getContent()[1]
             ).then(() => {
                 this.callee.state.display = true;
@@ -182,10 +183,13 @@ export class ImageAction<T extends typeof ImageActionTypes[keyof typeof ImageAct
             const awaitable = new Awaitable<CalledActionResult, any>(v => v);
             state.events.any(
                 GameState.EventTypes["event:image.show"],
+                this.callee,
                 (this.contentNode as ContentNode<ImageActionContentType["image:hide"]>).getContent()[1]
-            ).then(() => {
-                this.callee.state.display = false;
-                awaitable.resolve(super.executeAction(state));
+            ).then((r) => {
+                if (r){
+                    this.callee.state.display = false;
+                    awaitable.resolve(super.executeAction(state));
+                }
             });
             return awaitable;
         }

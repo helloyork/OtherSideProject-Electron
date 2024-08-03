@@ -43,7 +43,7 @@ const scene1Actions = scene1.action([
         .toActions(),
     i1.show({
         ease: "easeIn",
-        duration: 5000,
+        duration: 5,
     }).toActions(),
     new Menu("我最近过的怎么样？")
         .choose({
