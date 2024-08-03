@@ -1,11 +1,12 @@
-import type { Align, CommonImage, CommonImagePosition, Coord2D } from "../show";
-import type { DeepPartial } from "@lib/util/data";
-
-import { deepMerge } from "@lib/util/data";
-import { Actionable } from "../constructable";
-import { ContentNode } from "../save/rollback";
-import { HistoryData } from "../save/transaction";
-import { Game, LogicNode } from "../game";
+import type {CommonImage, CommonImagePosition} from "../show";
+import type {DeepPartial} from "@lib/util/data";
+import {deepMerge} from "@lib/util/data";
+import {ContentNode} from "../save/rollback";
+import {HistoryData} from "../save/transaction";
+import {Game} from "@lib/game/game/game";
+import {Transform} from "./transform";
+import {ImageAction} from "@lib/game/game/actions";
+import {Actionable} from "@lib/game/game/actionable";
 
 export type ImageConfig = {
     src: string;
@@ -38,7 +39,7 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
     name: string;
     config: ImageConfig;
     state: ImageConfig;
-    declare actions: LogicNode.ImageAction<any>[];
+    declare actions: ImageAction<any>[];
     id: null | number | string;
 
     constructor(name: string, config: DeepPartial<ImageConfig> = {}) {
@@ -81,14 +82,21 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
         const action = new ImageAction<typeof ImageAction.ActionTypes.setSrc>(
             this,
             ImageAction.ActionTypes.setSrc,
-            new ContentNode<string>(
+            new ContentNode<[string]>(
                 Game.getIdManager().getStringId()
-            ).setContent(src)
+            ).setContent([src])
         );
         this.actions.push(action);
         return this;
     }
-    public show(): this {
+
+    /**
+     * 让图片显示，如果图片已显示，则不会有任何效果
+     */
+    public show(): this;
+    public show(transform: Transform.Transform<Transform.ImageTransformProps>): this;
+    public show(transform: Partial<Transform.CommonTransformProps>): this;
+    public show(transform?: Transform.Transform<Transform.ImageTransformProps> | Partial<Transform.CommonTransformProps>): this {
         this.transaction
             .startTransaction()
             .push({
@@ -100,12 +108,24 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
             ImageAction.ActionTypes.show,
             new ContentNode(
                 Game.getIdManager().getStringId()
-            )
+            ).setContent([
+                void 0,
+                (transform instanceof Transform.Transform) ? transform : new Transform.Transform({
+                    opacity: 1
+                }, transform)
+            ])
         );
         this.actions.push(action);
         return this;
     }
-    public hide(): this {
+
+    /**
+     * 让图片隐藏，如果图片已隐藏，则不会有任何效果
+     */
+    public hide(): this;
+    public hide(transform: Transform.Transform<Transform.ImageTransformProps>): this;
+    public hide(transform: Transform.CommonTransformProps): this;
+    public hide(transform?: Transform.Transform<Transform.ImageTransformProps> | Transform.CommonTransformProps): this {
         this.transaction
             .startTransaction()
             .push({
@@ -117,23 +137,29 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
             ImageAction.ActionTypes.hide,
             new ContentNode(
                 Game.getIdManager().getStringId()
-            )
+            ).setContent([
+                void 0,
+                (transform instanceof Transform.Transform) ? transform : new Transform.Transform({
+                    opacity: 0
+                }, transform)
+            ])
         );
         this.actions.push(action);
         return this;
     }
-    undo(history: HistoryData<typeof ImageTransactionTypes>): LogicNode.ImageAction<any> | void {
+
+    undo(history: HistoryData<typeof ImageTransactionTypes>): ImageAction<any> | void {
         const hideAction = new ImageAction(
             this,
             ImageAction.ActionTypes.hide,
-            new ContentNode<void>(
+            new ContentNode(
                 Game.getIdManager().getStringId()
             )
         );
         const showAction = new ImageAction(
             this,
             ImageAction.ActionTypes.show,
-            new ContentNode<void>(
+            new ContentNode(
                 Game.getIdManager().getStringId()
             )
         );

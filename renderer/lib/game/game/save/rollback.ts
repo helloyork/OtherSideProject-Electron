@@ -1,4 +1,4 @@
-import { LogicNode } from "../game";
+import {LogicAction} from "@lib/game/game/logicAction";
 
 export enum NodeType {
     TreeNode = "TreeNode",
@@ -33,12 +33,12 @@ export type ContentNodeData = {
 export class ContentNode<T = any> extends Node<T> {
     child: RenderableNode | null;
     parent: RenderableNode | null;
-    callee: LogicNode.Actions;
+    callee: LogicAction.Actions;
     constructor(
         id: string, 
         child?: RenderableNode, 
         parent?: RenderableNode | null, 
-        callee?: LogicNode.Actions
+        callee?: LogicAction.Actions
     ) {
         super(id, NodeType.ContentNode);
         this.child = child || null;
@@ -148,8 +148,8 @@ export type TreeNodeData = {
 export class TreeNode extends Node {
     children: RenderableNode[];
     parent: RenderableNode | null;
-    callee: LogicNode.Actions;
-    constructor(id: string, type: string, children?: RenderableNode[], parent?: RenderableNode | null, callee?: LogicNode.Actions) {
+    callee: LogicAction.Actions;
+    constructor(id: string, type: string, children?: RenderableNode[], parent?: RenderableNode | null, callee?: LogicAction.Actions) {
         super(id, type);
         this.children = children || [];
         this.parent = parent || null;

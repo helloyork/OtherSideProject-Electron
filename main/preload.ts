@@ -1,7 +1,6 @@
-import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
-import { Status, success } from './util/status';
-import { GameSettings } from "./app/game/dgame";
-import { ServerConstants } from './config';
+import {contextBridge, ipcRenderer} from 'electron';
+import {Status} from './util/status';
+import {ServerConstants} from './config';
 
 const api = {
     hello(...args: any[]) {
@@ -21,12 +20,6 @@ const api = {
     game: {
         async requestGame() {
             return await ipcRenderer.invoke("game:requestGame");
-        },
-        async setSettings<T extends keyof GameSettings>(key: T, settings: GameSettings[T]) {
-            return await ipcRenderer.invoke("game:settings.set", key, settings);
-        },
-        async getSettings<T extends keyof GameSettings>(key: keyof T): Promise<Status<GameSettings[T]>> {
-            return await ipcRenderer.invoke("game:settings.get", key);
         },
         store: {
             async write(name: string, data: Record<string, any>) {
@@ -84,10 +77,6 @@ export interface Window {
         game: {
             /**@deprecated */
             requestGame: () => Promise<ExpectedHandler["game:requestGame"]>;
-            /**@deprecated */
-            setSettings: <T extends keyof GameSettings>(key: T, settings: GameSettings[T]) => Promise<ExpectedHandler["game:settings.set"]>;
-            /**@deprecated */
-            getSettings: <T extends keyof GameSettings>(key: keyof T) => Promise<ExpectedHandler["game:settings.get"]>;
             store: {
                 write: (name: string, data: Record<string, any>) => Promise<ExpectedHandler["game:store.write"]>;
                 read: (name: string) => Promise<ExpectedHandler["game:store.read"]>;
@@ -103,6 +92,7 @@ export interface Window {
         }
     }
 }
+
 /**
  * after invoking, the return value will be returned to the renderer process.
  */
@@ -111,7 +101,7 @@ export interface ExpectedHandler {
     "game:requestGame": Status<any>;
     "game:settings.set": Status<void, Error>;
     "game:settings.get": Status<any, Error>;
-    "game:settings.all": Status<GameSettings, Error>;
+    "game:settings.all": Status<any, Error>;
     "game:store.write": Status<void, Error>;
     "game:store.read": Status<Record<string, any>, Error>;
     "game:store.list": Status<string[], Error>;

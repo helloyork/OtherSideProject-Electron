@@ -1,16 +1,19 @@
-import { Constructable } from "../constructable";
-import { Game, LogicNode } from "../game";
-import { deepMerge } from "@lib/util/data";
-import { Background } from "../show";
-import { ContentNode } from "../save/rollback";
+import {Constructable} from "../constructable";
+import {Game} from "../game";
+import {deepMerge} from "@lib/util/data";
+import {Background} from "../show";
+import {ContentNode} from "../save/rollback";
+import {LogicAction} from "@lib/game/game/logicAction";
+import Actions = LogicAction.Actions;
+import {SceneAction} from "@lib/game/game/actions";
 
 export type SceneConfig = {} & Background;
 
-const { SceneAction } = LogicNode;
+
 export class Scene extends Constructable<
     any,
-    LogicNode.Actions,
-    LogicNode.SceneAction<"scene:action">
+    Actions,
+    SceneAction<"scene:action">
 > {
     static defaultConfig: SceneConfig = {
         background: null
@@ -20,7 +23,7 @@ export class Scene extends Constructable<
     name: string;
     config: SceneConfig;
     state: SceneConfig = Scene.defaultConfig;
-    private _actions: LogicNode.SceneAction<any>[] = [];
+    private _actions: SceneAction<any>[] = [];
 
     constructor(name: string, config: SceneConfig = Scene.defaultConfig) {
         super();
@@ -40,7 +43,8 @@ export class Scene extends Constructable<
         ));
         return this;
     }
-    public toActions(): LogicNode.SceneAction<any>[] {
+
+    public toActions(): SceneAction<any>[] {
         let actions = this._actions;
         this._actions = [];
         return actions;

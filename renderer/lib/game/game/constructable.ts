@@ -1,39 +1,27 @@
-import { Values } from "@/lib/util/data";
-import { ClientActionProto } from "./dgame";
-import { Scene } from "./elements/scene";
-import { Game, LogicNode } from "./game";
-import { ContentNode, RenderableNode, RootNode } from "./save/rollback";
-import { HistoryData, Transaction, TransactionType } from "./save/transaction";
+import {Game} from "./game";
+import {ContentNode, RenderableNode, RootNode} from "./save/rollback";
+import {LogicAction} from "@lib/game/game/logicAction";
+import {Action} from "@lib/game/game/actions";
 
 export class Constructable<
     T extends typeof Constructable = any,
-    TAction extends LogicNode.Actions = LogicNode.Actions,
-    CAction extends LogicNode.Actions = LogicNode.Actions
+    TAction extends LogicAction.Actions = LogicAction.Actions,
+    CAction extends LogicAction.Actions = LogicAction.Actions
 > {
-    static targetAction: any = LogicNode.Action;
+    static targetAction: any = Action;
     actions: TAction[];
+
     constructor() {
         this.actions = [];
     }
-    /**
-     * Construct the actions into a tree
-     */
-    protected construct(parent?: RenderableNode): RenderableNode | null {
-        for (let i = 0; i < this.actions.length; i++) {
-            const action = this.actions[i];
-            if (i === 0 && parent) {
-                parent.addChild(action.contentNode);
-            } else if (i > 0) {
-                (this.actions[i - 1].contentNode)?.addChild(action.contentNode);
-            }
-        }
-        return (!!this.actions.length) ? this.actions[0].contentNode : null;
-    }
+
     /**
      * Wrap the actions in a new action
      */
     action(actions: (callee: this) => (TAction | TAction[])[]): CAction;
+
     action(actions: (TAction | TAction[])[]): CAction;
+
     action(actions: (TAction | TAction[])[] | ((callee: this) => (TAction | TAction[])[])): CAction {
         if (typeof actions === "function") {
             actions = actions(this);
@@ -54,41 +42,26 @@ export class Constructable<
             sceneRoot
         ])
     }
-    setRoot(root: RootNode): LogicNode.Actions | undefined {
+
+    setRoot(root: RootNode): LogicAction.Actions | undefined {
         this.actions[0]?.contentNode.setParent(root);
         root.setChild(this.actions[0]?.contentNode);
         return this.actions[0];
     }
+
+    /**
+     * Construct the actions into a tree
+     */
+    protected construct(parent?: RenderableNode): RenderableNode | null {
+        for (let i = 0; i < this.actions.length; i++) {
+            const action = this.actions[i];
+            if (i === 0 && parent) {
+                parent.addChild(action.contentNode);
+            } else if (i > 0) {
+                (this.actions[i - 1].contentNode)?.addChild(action.contentNode);
+            }
+        }
+        return (!!this.actions.length) ? this.actions[0].contentNode : null;
+    }
 }
 
-export class Actionable<
-    TransactionEnum extends Record<string, string> = Record<string, string>,
-    Types extends TransactionType<TransactionEnum> = TransactionType<TransactionEnum>,
-    StateData extends Record<string, any> = Record<string, any>
-> {
-    transaction: Transaction<TransactionEnum>;
-    constructor() {
-        this.transaction = new Transaction<TransactionEnum, Types>((history) => this.undo(history));
-    }
-    protected actions: LogicNode.Actions[] = [];
-    toActions() {
-        let actions = this.actions;
-        this.actions = [];
-        return actions;
-    }
-    undo(history: HistoryData<TransactionEnum, Types>) {}
-    /**@deprecated */
-    call(action: LogicNode.Actions): ClientActionProto<any> {
-        return {
-            type: action.type,
-            id: action.contentNode.id,
-            content: action.contentNode.getContent()
-        };
-    }
-    public toData(actions: any[]): StateData {
-        return {} as StateData;
-    }
-    public fromData(data: StateData): this {
-        return this;
-    }
-}
