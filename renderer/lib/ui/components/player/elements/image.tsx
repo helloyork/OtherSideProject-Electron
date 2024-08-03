@@ -1,15 +1,20 @@
 import { Image as GameImage, ImagePosition } from "@/lib/game/game/elements/image";
-import { Image as ReactImage } from "@nextui-org/react";
-import Isolated from "@/lib/ui/elements/isolated";
 import { useAspectRatio } from "@/lib/ui/providers/ratio";
 import clsx from "clsx";
+import { Transform } from "@/lib/game/game/elements/transform";
+import { useEffect } from "react";
+import { GameState } from "../player";
+import { useAnimate } from "framer-motion";
 
 export default function Image({
-  image
+  image,
+  state
 }: Readonly<{
   image: GameImage;
+  state: GameState;
 }>) {
   const { ratio } = useAspectRatio();
+  const [scope, animate] = useAnimate();
 
   const {
     src,
@@ -20,19 +25,30 @@ export default function Image({
     rotation,
   } = image.config;
 
-  const isCommonPosition = image.isCommonImagePosition(position);
-  const isCoord2D = image.isCoord2D(position);
-  const isAlign = image.isAlign(position);
-
-  const left = isCommonPosition ? (
-    position === ImagePosition.left ? "25.33%" :
-      position === ImagePosition.center ? "50%" :
-        position === ImagePosition.right ? "75.66%" : undefined
-  ) : isCoord2D ? position.x : isAlign ? `${position.xalign * 100}%` : undefined;
-
-  const top = isCommonPosition ? "50%" : isCoord2D ? position.y : isAlign ? `${position.yalign * 100}%` : undefined;
+  const { left, top } = Transform.Transform.positionToCSS(position);
 
   const transform = `translate(-50%, -50%) scale(${scale}) rotate(${rotation}deg)`;
+
+  useEffect(() => {
+    const listening = [
+      GameState.EventTypes["event:image.show"],
+      GameState.EventTypes["event:image.hide"]
+    ];
+    console.log("listening to", listening)
+    const fc = listening.map((type) => {
+      return state.events.on(type, async (transform) => {
+        console.log("transform", transform)
+        await transform.animate(scope, animate);
+        console.log("transformed")
+        return (void 0);
+      });
+    });
+    return () => {
+      fc.forEach((fc) => {
+        state.events.off(GameState.EventTypes["event:image.show"], fc);
+      });
+    };
+  }, []);
 
   return (
     <div className={
@@ -59,6 +75,7 @@ export default function Image({
             top,
             position: 'absolute'
           }}
+          ref={scope}
         />
       </div>
     </div>

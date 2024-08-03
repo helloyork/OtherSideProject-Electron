@@ -43,7 +43,16 @@ interface StageUtils {
     forceUpdate: () => void;
 }
 
+type GameStateEvents = {
+    "event:image.show": [Transform.Transform<Transform.ImageTransformProps>];
+    "event:image.hide": [Transform.Transform<Transform.ImageTransformProps>];
+};
+
 export class GameState {
+    static EventTypes: { [K in keyof GameStateEvents]: K } = {
+        "event:image.show": "event:image.show",
+        "event:image.hide": "event:image.hide",
+    };
     state: PlayerState = {
         say: [],
         menu: [],
@@ -54,10 +63,12 @@ export class GameState {
     currentHandling: CalledActionResult | null = null;
     stage: StageUtils;
     clientGame: ClientGame;
+    events: EventDispatcher<GameStateEvents>;
 
     constructor(clientGame: ClientGame, stage: StageUtils) {
         this.stage = stage;
         this.clientGame = clientGame;
+        this.events = new EventDispatcher();
     }
 
     handle(action: PlayerAction): this {
@@ -169,7 +180,7 @@ export default function Player({
             {
                 state.state.images.map((image) => {
                     return (
-                        <StageImage key={image.id} image={image} />
+                        <StageImage key={image.id} image={image} state={state}/>
                     )
                 })
             }
