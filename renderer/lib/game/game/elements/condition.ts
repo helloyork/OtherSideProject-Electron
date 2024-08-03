@@ -1,10 +1,12 @@
 import { deepMerge } from "@lib/util/data";
-import { Actionable } from "../constructable";
-import { Game, LogicNode } from "../game";
+import { Game } from "../game";
 import { ContentNode, RenderableNode } from "../save/rollback";
 import { HistoryData } from "../save/transaction";
 import { ScriptCleaner } from "./script";
 import { GameState } from "@/lib/ui/components/player/player";
+import {LogicAction} from "@lib/game/game/logicAction";
+import {ConditionAction} from "@lib/game/game/actions";
+import {Actionable} from "@lib/game/game/actionable";
 
 export type ConditionConfig = {};
 
@@ -41,14 +43,14 @@ export class Lambda {
 export type ConditionData = {
     If: {
         condition: Lambda | null;
-        action: LogicNode.Actions[] | null;
+        action: LogicAction.Actions[] | null;
     };
     ElseIf: {
         condition: Lambda | null;
-        action: (LogicNode.Actions[]) | null;
+        action: (LogicAction.Actions[]) | null;
     }[];
     Else: {
-        action: (LogicNode.Actions[]) | null;
+        action: (LogicAction.Actions[]) | null;
     }
 };
 
@@ -70,23 +72,23 @@ export class Condition extends Actionable {
         super();
         this.config = deepMerge<ConditionConfig>(Condition.defaultConfig, config);
     }
-    If(condition: Lambda, action: LogicNode.Actions | LogicNode.Actions[]): this {
+    If(condition: Lambda, action: LogicAction.Actions | LogicAction.Actions[]): this {
         this.conditions.If.condition = condition;
         this.conditions.If.action = this.construct(Array.isArray(action) ? action : [action]);
         return this;
     }
-    ElseIf(condition: Lambda, action: (LogicNode.Actions | LogicNode.Actions[])): this {
+    ElseIf(condition: Lambda, action: (LogicAction.Actions | LogicAction.Actions[])): this {
         this.conditions.ElseIf.push({
             condition,
             action: this.construct(Array.isArray(action) ? action : [action])
         });
         return this;
     }
-    Else(action: (LogicNode.Actions | LogicNode.Actions[])): this {
+    Else(action: (LogicAction.Actions | LogicAction.Actions[])): this {
         this.conditions.Else.action = this.construct(Array.isArray(action) ? action : [action]);
         return this;
     }
-    evaluate({ gameState }: { gameState: GameState }): LogicNode.Actions[] | null {
+    evaluate({ gameState }: { gameState: GameState }): LogicAction.Actions[] | null {
         const ctx = { gameState };
         this.transaction.startTransaction();
 
@@ -118,18 +120,18 @@ export class Condition extends Actionable {
             history.data();
         }
     }
-    toActions(): LogicNode.Actions[] {
+    toActions(): LogicAction.Actions[] {
         return [
-            Reflect.construct(LogicNode.ConditionAction, [
+            Reflect.construct(ConditionAction, [
                 this,
-                LogicNode.ConditionAction.ActionTypes.action,
+                ConditionAction.ActionTypes.action,
                 new ContentNode<Condition>(
                     Game.getIdManager().getStringId(),
                 ).setContent(this)
-            ]) as LogicNode.ConditionAction<typeof LogicNode.ConditionAction.ActionTypes.action>
+            ]) as ConditionAction<typeof ConditionAction.ActionTypes.action>
         ]
     }
-    construct(actions: LogicNode.Actions[], lastChild?: RenderableNode, parentChild?: RenderableNode): LogicNode.Actions[] {
+    construct(actions: LogicAction.Actions[], lastChild?: RenderableNode, parentChild?: RenderableNode): LogicAction.Actions[] {
         for (let i = 0; i < actions.length; i++) {
             let node = actions[i].contentNode;
             let child = actions[i + 1]?.contentNode;

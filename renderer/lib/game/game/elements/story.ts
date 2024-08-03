@@ -1,21 +1,22 @@
 import { Constructable } from "../constructable";
-import { Game, LogicNode } from "../game";
+import { Game } from "../game";
 import { deepMerge } from "@lib/util/data";
+import {LogicAction} from "@lib/game/game/logicAction";
+import {SceneAction, StoryAction} from "@lib/game/game/actions";
 
 export type StoryConfig = {};
 
-const { StoryAction } = LogicNode;
 export class Story extends Constructable<
     any,
-    LogicNode.SceneAction<"scene:action">,
-    LogicNode.StoryAction<"story:action">
+    SceneAction<"scene:action">,
+    StoryAction<"story:action">
 > {
     static defaultConfig: StoryConfig = {};
     static targetAction = StoryAction;
     id: string;
     name: string;
     config: StoryConfig;
-    scenes: LogicNode.SceneAction<"scene:action">[] = [];
+    scenes: SceneAction<"scene:action">[] = [];
 
     constructor(name: string, config: StoryConfig = {}) {
         super();
@@ -23,7 +24,7 @@ export class Story extends Constructable<
         this.name = name;
         this.config = deepMerge<StoryConfig>(Story.defaultConfig, config);
     }
-    public registerScene(scene: LogicNode.SceneAction<"scene:action">): this {
+    public registerScene(scene: SceneAction<"scene:action">): this {
         this.scenes.push(scene);
         return this;
     }

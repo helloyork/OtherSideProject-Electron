@@ -1,9 +1,11 @@
-import { Actionable } from "../constructable";
-import { Game, LogicNode } from "../game";
+import { Game } from "../game";
 import { ContentNode } from "../save/rollback";
 import { Color } from "../show";
 import { deepMerge, safeClone } from "@lib/util/data";
 import { HistoryData } from "../save/transaction";
+import {LogicAction} from "@lib/game/game/logicAction";
+import {CharacterAction} from "@lib/game/game/actions";
+import {Actionable} from "@lib/game/game/actionable";
 
 export type SentenceConfig = {
     pause?: boolean | number;
@@ -106,7 +108,6 @@ type CharacterTransactionDataTypes = {
 };
 export type CharacterStateData = {};
 
-const { CharacterAction } = LogicNode;
 export class Character extends Actionable<
     typeof CharacterActionTransaction,
     CharacterTransactionDataTypes,

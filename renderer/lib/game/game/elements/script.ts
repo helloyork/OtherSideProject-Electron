@@ -1,9 +1,11 @@
-import { GameState } from "@/lib/ui/components/player/player";
-import { ClientGame } from "../../game";
-import { Actionable } from "../constructable";
-import { Game, LogicNode } from "../game";
-import { ContentNode } from "../save/rollback";
-import { HistoryData } from "../save/transaction";
+import {GameState} from "@/lib/ui/components/player/player";
+import {Game} from "../game";
+import {ContentNode} from "../save/rollback";
+import {HistoryData} from "../save/transaction";
+import {LogicAction} from "@lib/game/game/logicAction";
+import {ScriptAction} from "@lib/game/game/actions";
+import Actions = LogicAction.Actions;
+import {Actionable} from "@lib/game/game/actionable";
 
 export interface ScriptCtx {
     script: Script;
@@ -19,31 +21,36 @@ const ScriptTransactionTypes = {
 export class Script extends Actionable<typeof ScriptTransactionTypes> {
     handler: ScriptRun;
     cleaner: ScriptCleaner | null = null;
+
     constructor(handler: ScriptRun) {
         super();
         this.handler = handler;
     }
-    execute({ gameState }: { gameState: GameState }): void {
+
+    execute({gameState}: { gameState: GameState }): void {
         this.cleaner = this.handler(this.getCtx({
             gameState
         }));
     }
-    getCtx({ gameState }: { gameState: GameState }): ScriptCtx {
+
+    getCtx({gameState}: { gameState: GameState }): ScriptCtx {
         return {
             script: this,
             gameState
         };
     }
+
     undo(history: HistoryData<typeof ScriptTransactionTypes>): void {
         if (history.type === ScriptTransactionTypes.Run) {
             this.cleaner?.();
         }
     }
-    toActions(): LogicNode.Actions[] {
+
+    toActions(): Actions[] {
         return [
-            new LogicNode.ScriptAction(
+            new ScriptAction(
                 this,
-                LogicNode.ScriptAction.ActionTypes.action,
+                ScriptAction.ActionTypes.action,
                 new ContentNode<Script>(
                     Game.getIdManager().getStringId()
                 ).setContent(this)

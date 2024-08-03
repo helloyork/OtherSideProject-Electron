@@ -1,163 +1,13 @@
 import type { CalledActionResult, GameConfig, GameSettings, SavedGame } from "./dgame";
 
-import { ContentNode, RenderableNode, RootNode } from "./save/rollback";
-import { Awaitable, deepMerge, safeClone, Values } from "../../util/data";
-import { Namespace, Storable, StorableData } from "./save/store";
-import { Singleton } from "../../util/singleton";
-import { Constants } from "@/lib/api/config";
-import { ClientGame } from "../game";
-
-import { Character, Sentence } from "./elements/text";
-import { Condition } from "./elements/condition";
-import { Script } from "./elements/script";
-import { Story } from "./elements/story";
-import { Image } from "./elements/image";
-import { Scene, SceneConfig } from "./elements/scene";
-import { Menu } from "./elements/menu";
-import { GameState } from "@/lib/ui/components/player/player";
-
-export namespace LogicNode {
-    export type GameElement = Character | Scene | Story | Sentence | Image | Condition | Script | Menu;
-    export type Actionlike = Character;
-    export type Actions =
-        CharacterAction<any>
-        | ConditionAction<any>
-        | ImageAction<any>
-        | SceneAction<any>
-        | ScriptAction<any>
-        | StoryAction<any>
-        | TypedAction<any, any, any>
-        | MenuAction<any>;
-    export type ActionTypes =
-        Values<typeof CharacterActionTypes>
-        | Values<typeof ConditionActionTypes>
-        | Values<typeof ImageActionTypes>
-        | Values<typeof SceneActionTypes>
-        | Values<typeof ScriptActionTypes>
-        | Values<typeof StoryActionTypes>
-        | Values<typeof MenuActionTypes>;
-    export type ActionContents =
-        CharacterActionContentType
-        & ConditionActionContentType
-        & ImageActionContentType
-        & SceneActionContentType
-        & ScriptActionContentType
-        & StoryActionContentType
-        & MenuActionContentType;
-
-    export class Action<ContentNodeType = any> {
-        static isAction(action: any): action is Action {
-            return action instanceof Action;
-        }
-        static ActionTypes = {
-            action: "action",
-        };
-        callee: GameElement;
-        type: string;
-        contentNode: ContentNode<ContentNodeType>;
-        constructor(callee: GameElement, type: string, contentNode: ContentNode<ContentNodeType>) {
-            this.callee = callee;
-            this.type = type;
-            this.contentNode = contentNode;
-        }
-        public executeAction(state: GameState): CalledActionResult | Awaitable<CalledActionResult, any> {
-            return {
-                type: this.type as any,
-                node: this.contentNode,
-            };
-        }
-        toData() {
-            return {
-                type: this.type,
-                content: this.contentNode.toData(),
-            }
-        }
-        undo() {
-            this.contentNode.callee.undo();
-        }
-    }
-
-    class TypedAction<
-        ContentType extends Record<string, any>,
-        T extends keyof ContentType & string,
-        Callee extends GameElement
-    > extends Action<ContentType[T]> {
-        declare callee: Callee;
-        constructor(callee: Callee, type: T, contentNode: ContentNode<ContentType[T]>) {
-            super(callee, type, contentNode);
-            this.callee = callee;
-            this.contentNode.callee = this;
-        }
-    }
-
-    /* Character */
-    const CharacterActionTypes = {
-        say: "character:say",
-        action: "character:action",
-    } as const;
-    type CharacterActionContentType = {
-        [K in typeof CharacterActionTypes[keyof typeof CharacterActionTypes]]:
-        K extends "character:say" ? Sentence :
-        K extends "character:action" ? any :
-        any;
-    }
-    export class CharacterAction<T extends typeof CharacterActionTypes[keyof typeof CharacterActionTypes]>
-        extends TypedAction<CharacterActionContentType, T, Character> {
-        static ActionTypes = CharacterActionTypes;
-        public executeAction(state: GameState): CalledActionResult | Awaitable<CalledActionResult, any> {
-            if (this.type === CharacterActionTypes.say) {
-                const awaitable = new Awaitable<CalledActionResult, any>(v => v);
-                const sentence = (this.contentNode as ContentNode<Sentence>).getContent();
-                state.createSay(this.contentNode.id, sentence, () => {
-                    awaitable.resolve({
-                        type: this.type as any,
-                        node: this.contentNode.child
-                    });
-                });
-                return awaitable;
-            }
-            return super.executeAction(state);
-        }
-    }
-
-    /* Scene */
-    export const SceneActionTypes = {
-        action: "scene:action",
-        setBackground: "scene:setBackground",
-    } as const;
-    type SceneActionContentType = {
-        [K in typeof SceneActionTypes[keyof typeof SceneActionTypes]]:
-        K extends typeof SceneActionTypes["action"] ? Scene :
-        K extends typeof SceneActionTypes["setBackground"] ? SceneConfig["background"] :
-        any;
-    }
-    export class SceneAction<T extends typeof SceneActionTypes[keyof typeof SceneActionTypes]>
-        extends TypedAction<SceneActionContentType, T, Scene> {
-        static ActionTypes = SceneActionTypes;
-        public executeAction(state: GameState): CalledActionResult | Awaitable<CalledActionResult, any> {
-            if (this.type === SceneActionTypes.action) {
-                state.setScene((this.contentNode as ContentNode<SceneActionContentType[typeof SceneActionTypes["action"]]>).getContent());
-                return super.executeAction(state);
-            } else if (this.type === SceneActionTypes.setBackground) {
-                state.setSceneBackground((this.contentNode as ContentNode<SceneActionContentType[typeof SceneActionTypes["setBackground"]]>).getContent());
-                return super.executeAction(state);
-            }
-        }
-    }
-
-    /* Story */
-    const StoryActionTypes = {
-        action: "story:action",
-    } as const;
-    type StoryActionContentType = {
-        [K in typeof StoryActionTypes[keyof typeof StoryActionTypes]]:
-        K extends "story:action" ? Story :
-        any;
-    }
-    export class StoryAction<T extends typeof StoryActionTypes[keyof typeof StoryActionTypes]>
-        extends TypedAction<StoryActionContentType, T, Story> {
-        static ActionTypes = StoryActionTypes;
-    }
+import {RenderableNode, RootNode} from "./save/rollback";
+import {Awaitable, deepMerge, safeClone} from "../../util/data";
+import {Namespace, Storable, StorableData} from "./save/store";
+import {Singleton} from "../../util/singleton";
+import {Constants} from "@/lib/api/config";
+import {GameState} from "@/lib/ui/components/player/player";
+import type {Story} from "./elements/story";
+import {LogicAction} from "@lib/game/game/logicAction";
 
     /* Image */
     const ImageActionTypes = {
@@ -376,7 +226,7 @@ export class LiveGame {
 
     currentSceneNumber: number | null = null;
     currentNode: RenderableNode | null = null;
-    currentAction: LogicNode.Actions | null = null;
+    currentAction: LogicAction.Actions | null = null;
     currentSavedGame: SavedGame | null = null;
     story: Story | null = null;
     lockedAwaiting: Awaitable<CalledActionResult, any> | null = null;
@@ -466,5 +316,14 @@ export class LiveGame {
     _get() {
         return this.story;
     }
+}
+
+export default {
+    Game,
+    LiveGame,
+}
+
+export type {
+    LogicAction
 }
 

@@ -1,25 +1,22 @@
 "use client";
 
-import { useEffect, useReducer } from "react";
-import { useGame } from "../../providers/game-state";
-import { ClientGame } from "@/lib/game/game";
-import { CalledActionResult } from "@/lib/game/game/dgame";
-import { Awaitable } from "@/lib/util/data";
+import {useEffect, useReducer} from "react";
+import {useGame} from "../../providers/game-state";
+import {ClientGame} from "@/lib/game/game";
+import {CalledActionResult} from "@/lib/game/game/dgame";
+import {Awaitable, EventDispatcher} from "@/lib/util/data";
 
 import Say from "./elements/say";
 import Menu from "./elements/menu";
-import {
-    default as StageScene
-} from "./elements/scene";
-import {
-    default as StageImage
-} from "./elements/image";
+import {default as StageScene} from "./elements/scene";
+import {default as StageImage} from "./elements/image";
 
-import { Character, Sentence } from "@/lib/game/game/elements/text";
-import { Choice } from "@/lib/game/game/elements/menu";
-import { Story } from "@/lib/game/game/elements/story";
-import { Scene, SceneConfig } from "@/lib/game/game/elements/scene";
-import { Image } from "@/lib/game/game/elements/image";
+import {Character, Sentence} from "@/lib/game/game/elements/text";
+import {Choice} from "@/lib/game/game/elements/menu";
+import {Story} from "@/lib/game/game/elements/story";
+import {Scene, SceneConfig} from "@/lib/game/game/elements/scene";
+import {Image} from "@/lib/game/game/elements/image";
+import {Transform} from "@/lib/game/game/elements/transform";
 
 type Clickable<T, U = undefined> = {
     action: T;
@@ -41,6 +38,7 @@ export type PlayerState = {
     history: CalledActionResult[];
 };
 type PlayerAction = CalledActionResult;
+
 interface StageUtils {
     forceUpdate: () => void;
 }
@@ -61,6 +59,7 @@ export class GameState {
         this.stage = stage;
         this.clientGame = clientGame;
     }
+
     handle(action: PlayerAction): this {
         if (this.currentHandling === action) return this;
         this.currentHandling = action;
@@ -68,12 +67,13 @@ export class GameState {
 
         switch (action.type) {
             case "condition:action":
-                
+
                 break;
         }
         this.stage.forceUpdate();
         return this;
     }
+
     private createWaitableAction(target: any[], action: Record<string, any>, after?: (...args: unknown[]) => void) {
         let resolve: any = null;
         const item = {
@@ -90,6 +90,7 @@ export class GameState {
             resolve = r;
         });
     }
+
     createSay(id: string, sentence: Sentence, afterClick?: () => void) {
         return this.createWaitableAction(this.state.say, {
             character: sentence.character,
@@ -97,20 +98,24 @@ export class GameState {
             id
         }, afterClick);
     }
+
     createMenu(prompt: Sentence, choices: Choice[], afterChoose?: (choice: Choice) => void) {
         return this.createWaitableAction(this.state.menu, {
             prompt,
             choices
         }, afterChoose);
     }
+
     addImage(image: Image) {
         this.state.images.push(image);
         this.stage.forceUpdate();
     }
+
     setScene(scene: Scene) {
         this.state.scene = scene;
         this.stage.forceUpdate();
     }
+
     setSceneBackground(background: SceneConfig["background"]) {
         if (this.state.scene) {
             this.state.scene.state.background = background;
@@ -123,11 +128,13 @@ function handleAction(state: GameState, action: PlayerAction) {
     return state.handle(action);
 }
 
-export default function Player({ story }: Readonly<{
+export default function Player({
+                                   story
+                               }: Readonly<{
     story: Story;
 }>) {
     const [, forceUpdate] = useReducer((x) => x + 1, 0);
-    const { game } = useGame();
+    const {game} = useGame();
     const [state, dispatch] = useReducer(handleAction, new GameState(game, {
         forceUpdate,
     }));
@@ -157,10 +164,10 @@ export default function Player({ story }: Readonly<{
     return (
         <>
             {state.state.scene && (
-                <StageScene scene={state.state.scene} />
+                <StageScene scene={state.state.scene}/>
             )}
             {
-                state.state.images.filter(v => v.state.display).map((image) => {
+                state.state.images.map((image) => {
                     return (
                         <StageImage key={image.id} image={image} />
                     )
@@ -171,7 +178,7 @@ export default function Player({ story }: Readonly<{
                     return (
                         <Say key={action.action.id} action={action.action} onClick={
                             () => (action.onClick && action.onClick(), next())
-                        } />
+                        }/>
                     )
                 })
             }
@@ -180,10 +187,11 @@ export default function Player({ story }: Readonly<{
                     return (
                         <div key={i}>
                             {
-                                <Menu prompt={action.action.prompt} choices={action.action.choices} afterChoose={(choice) => {
-                                    action.onClick(choice);
-                                    next();
-                                }} />
+                                <Menu prompt={action.action.prompt} choices={action.action.choices}
+                                      afterChoose={(choice) => {
+                                          action.onClick(choice);
+                                          next();
+                                      }}/>
                             }
                         </div>
                     )
