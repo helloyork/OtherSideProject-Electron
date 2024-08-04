@@ -1,6 +1,6 @@
 import {Constructable} from "../constructable";
 import {Game} from "../game";
-import {deepMerge, EventDispatcher} from "@lib/util/data";
+import {deepMerge} from "@lib/util/data";
 import {Background} from "../show";
 import {ContentNode} from "../save/rollback";
 import {LogicAction} from "@lib/game/game/logicAction";
@@ -13,10 +13,6 @@ export type SceneConfig = {} & Background;
 
 // @todo: use transition instead of transform
 
-export type SceneEventTypes = {
-    "event:scene.setBackground": [SceneBackgroundTransformProps, Transform<SceneBackgroundTransformProps>?];
-};
-
 export class Scene extends Constructable<
     any,
     Actions,
@@ -25,15 +21,11 @@ export class Scene extends Constructable<
     static defaultConfig: SceneConfig = {
         background: null
     };
-    static EventTypes: { [K in keyof SceneEventTypes]: K } = {
-        "event:scene.setBackground": "event:scene.setBackground"
-    }
     static targetAction = SceneAction;
     id: string;
     name: string;
     config: SceneConfig;
     state: SceneConfig = Scene.defaultConfig;
-    events = new EventDispatcher<SceneEventTypes>();
     private _actions: SceneAction<any>[] = [];
 
     constructor(name: string, config: SceneConfig = Scene.defaultConfig) {

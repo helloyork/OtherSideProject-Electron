@@ -14,7 +14,7 @@ import {default as StageImage} from "./elements/image";
 import {Character, Sentence} from "@/lib/game/game/elements/text";
 import {Choice} from "@/lib/game/game/elements/menu";
 import {Story} from "@/lib/game/game/elements/story";
-import {Scene, SceneConfig, SceneEventTypes} from "@/lib/game/game/elements/scene";
+import {Scene, SceneConfig} from "@/lib/game/game/elements/scene";
 import {Image, ImageEventTypes} from "@/lib/game/game/elements/image";
 
 type Clickable<T, U = undefined> = {
@@ -117,10 +117,6 @@ export class GameState {
         return this.anyEvent(type, target, onEnd, ...args);
     }
 
-    animateScene<T extends keyof SceneEventTypes>(type: T, target: Scene, args: SceneEventTypes[T], onEnd: () => void) {
-        return this.anyEvent(type, target, onEnd, ...args);
-    }
-
     private anyEvent(type: any, target: any, onEnd: () => void, ...args: any[]) {
         target.events.any(
             type,
@@ -203,7 +199,10 @@ export default function Player({
                 state.state.say.filter(a => a.action.sentence.state.display).map((action) => {
                     return (
                         <Say key={action.action.id} action={action.action} onClick={
-                            () => (action.onClick && action.onClick(), next())
+                            () => {
+                                action.onClick();
+                                next();
+                            }
                         }/>
                     )
                 })

@@ -91,6 +91,7 @@ const scene1Actions = scene1.action([
         duration: 1,
         ease: "linear"
     }).toActions(),
+    i1.hide().toActions(),
     c2
         .say("那你愿不愿意陪我玩一个游戏？")
         .say("听好游戏规则")

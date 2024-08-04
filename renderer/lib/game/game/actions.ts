@@ -7,7 +7,7 @@ import {Image} from "@lib/game/game/elements/image";
 import {LogicAction} from "@lib/game/game/logicAction";
 import {Action} from "@lib/game/game/action";
 import type {Character, Sentence} from "@lib/game/game/elements/text";
-import type {Scene, SceneEventTypes} from "@lib/game/game/elements/scene";
+import type {Scene} from "@lib/game/game/elements/scene";
 import type {Story} from "@lib/game/game/elements/story";
 import type {Script} from "@lib/game/game/elements/script";
 import type {Menu} from "@lib/game/game/elements/menu";
@@ -68,8 +68,8 @@ export const SceneActionTypes = {
 export type SceneActionContentType = {
     [K in typeof SceneActionTypes[keyof typeof SceneActionTypes]]:
     K extends typeof SceneActionTypes["action"] ? Scene :
-        K extends typeof SceneActionTypes["setBackground"] ? SceneEventTypes["event:scene.setBackground"] :
-            any;
+        // K extends typeof SceneActionTypes["setBackground"] ? SceneEventTypes["event:scene.setBackground"] :
+        any;
 }
 
 export class SceneAction<T extends typeof SceneActionTypes[keyof typeof SceneActionTypes]>
@@ -81,22 +81,7 @@ export class SceneAction<T extends typeof SceneActionTypes[keyof typeof SceneAct
             state.setScene(this.callee);
             return super.executeAction(state);
         } else if (this.type === SceneActionTypes.setBackground) {
-            const content = (this.contentNode as ContentNode<SceneActionContentType[typeof SceneActionTypes["setBackground"]]>).getContent();
-            const awaitable = new Awaitable<CalledActionResult, any>(v => v);
-            const background = content[0];
-            const transform = content[1];
-
-            state.animateScene("event:scene.setBackground", this.callee, [
-                background,
-                transform
-            ], () => {
-                this.callee.state.background = background.background;
-                awaitable.resolve({
-                    type: this.type,
-                    node: this.contentNode.child || null,
-                });
-            });
-            return awaitable;
+            return new Awaitable<CalledActionResult, any>(v => v);
         }
 
     }
@@ -133,7 +118,7 @@ export type ImageActionContentType = {
             K extends "image:show" ? [void, Transform<TransformNameSpace.ImageTransformProps>] :
                 K extends "image:hide" ? [void, Transform<TransformNameSpace.ImageTransformProps>] :
                     K extends "image:applyTransform" ? [void, Transform<TransformNameSpace.ImageTransformProps>] :
-                    any;
+                        any;
 }
 
 export class ImageAction<T extends typeof ImageActionTypes[keyof typeof ImageActionTypes]>
