@@ -1,14 +1,13 @@
-import { Character, Sentence, Word } from "../game/elements/text";
-import { Scene } from "../game/elements/scene";
-import { Story } from "../game/elements/story";
-import { Menu } from "../game/elements/menu";
-import { Script, ScriptCtx } from "../game/elements/script";
-import { LiveGame } from "../game/game";
-import { Condition, Lambda } from "../game/elements/condition";
-import { GameState } from "@/lib/ui/components/player/player";
-import { Image } from "../game/elements/image";
+import {Character, Sentence, Word} from "../game/elements/text";
+import {Scene} from "../game/elements/scene";
+import {Story} from "../game/elements/story";
+import {Menu} from "../game/elements/menu";
+import {Script, ScriptCtx} from "../game/elements/script";
+import {LiveGame} from "../game/game";
+import {Condition, Lambda} from "../game/elements/condition";
+import {GameState} from "@/lib/ui/components/player/player";
+import {Image} from "../game/elements/image";
 import {Transform, TransformNameSpace} from "@lib/game/game/elements/transform";
-import SceneBackgroundTransformProps = TransformNameSpace.SceneBackgroundTransformProps;
 
 import mainMenuBackground from "@/public/static/images/main-menu-background.webp";
 import mainMenuBackground2 from "@/public/static/images/main-menu-background2.jpg";
@@ -25,10 +24,10 @@ const i1 = new Image("i1", {
 });
 
 const createConditionIsNumberCorrect = (n: number) => new Condition()
-    .If(new Lambda(({ gameState, resolve }) => {
-        resolve(isNumberCorrect(gameState, n));
-        return () => cleanAfterChooseNumber(gameState);
-    }),
+    .If(new Lambda(({gameState, resolve}) => {
+            resolve(isNumberCorrect(gameState, n));
+            return () => cleanAfterChooseNumber(gameState);
+        }),
         c2Say_You_Are_Correct()
     ).Else(
         c2.say("很遗憾，你猜错了")
@@ -95,7 +94,7 @@ const scene1Actions = scene1.action([
     c2
         .say("那你愿不愿意陪我玩一个游戏？")
         .say("听好游戏规则")
-        .say([new Word("我会思考一个介于 "), new Word("1 和 10", { color: "#f00" }), "之间的数字"])
+        .say([new Word("我会思考一个介于 "), new Word("1 和 10", {color: "#f00"}), "之间的数字"])
         .say("你要猜这个数字是多少")
         .toActions(),
     new Script((ctx: ScriptCtx) => {

@@ -1,36 +1,41 @@
 import type {CalledActionResult, GameConfig, GameSettings, SavedGame} from "./gamTypes";
 
 import {RenderableNode, RootNode} from "./save/rollback";
-import {Awaitable, deepMerge, safeClone} from "../../util/data";
+import {Awaitable, deepMerge, safeClone} from "@lib/util/data";
 import {Namespace, Storable, StorableData} from "./save/store";
-import {Singleton} from "../../util/singleton";
+import {Singleton} from "@lib/util/singleton";
 import {Constants} from "@/lib/api/config";
 import {GameState} from "@/lib/ui/components/player/player";
 import type {Story} from "./elements/story";
 import {LogicAction} from "@lib/game/game/logicAction";
 
-;
-
 class IdManager extends Singleton<IdManager>() {
     private id = 0;
+
     public getId() {
         return this.id++;
     }
+
     public getStringId() {
         return (this.id++).toString();
     }
+
     prefix(prefix: string, value: string, separator = ":") {
         return prefix + separator + value;
     }
 }
+
 class GameIdManager {
     private id = 0;
+
     public getId() {
         return this.id++;
     }
+
     public getStringId() {
         return (this.id++).toString();
     }
+
     prefix(prefix: string, value: string, separator = ":") {
         return prefix + separator + value;
     }
@@ -40,13 +45,9 @@ export class Game {
     static defaultSettings: GameSettings = {
         volume: 1,
     };
-    static getIdManager() {
-        return IdManager.getInstance();
-    };
     config: GameConfig;
     root: RootNode;
     liveGame: LiveGame | null = null;
-
     /**
      * Game settings
      */
@@ -57,6 +58,11 @@ export class Game {
         this.root = new RootNode();
         this.settings = deepMerge({}, Game.defaultSettings);
     }
+
+    static getIdManager() {
+        return IdManager.getInstance();
+    };
+
     public init() {
     }
 
@@ -77,6 +83,7 @@ export class Game {
         }
         return this.liveGame;
     }
+
     public createLiveGame() {
         this.liveGame = new LiveGame(this);
         return this.liveGame;
@@ -86,12 +93,14 @@ export class Game {
     getSettingName() {
         return this.config.remoteStore.getName("settings", Constants.app.store.settingFileSuffix);
     }
+
     public async readSettings() {
         if (!await this.config.remoteStore.isFileExists(this.getSettingName())) {
             return await this.saveSettings();
         }
         return await this.config.remoteStore.load<GameSettings>(this.getSettingName());
     }
+
     public async saveSettings() {
         const settings = safeClone(this.settings);
         await this.config.remoteStore.save(this.getSettingName(), settings);
@@ -158,6 +167,7 @@ export class LiveGame {
         this.story = story;
         return this;
     }
+
     newGame() {
         this.initNamespaces();
 
@@ -170,10 +180,12 @@ export class LiveGame {
 
         return this;
     }
+
     setCurrentNode(node: RenderableNode) {
         this.currentNode = node;
         return this;
     }
+
     next(state: GameState): CalledActionResult | Awaitable<unknown, CalledActionResult> | null {
         if (this.lockedAwaiting) {
             if (!this.lockedAwaiting.solved) {
@@ -201,6 +213,7 @@ export class LiveGame {
         this.currentAction = nextAction.node.child?.callee;
         return nextAction;
     }
+
     _get() {
         return this.story;
     }
