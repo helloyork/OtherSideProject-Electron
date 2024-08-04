@@ -10,6 +10,10 @@ import { Image } from "../game/elements/image";
 import {Transform, TransformNameSpace} from "@lib/game/game/elements/transform";
 import SceneBackgroundTransformProps = TransformNameSpace.SceneBackgroundTransformProps;
 
+import mainMenuBackground from "@/public/static/images/main-menu-background.webp";
+import mainMenuBackground2 from "@/public/static/images/main-menu-background2.jpg";
+import ImageTransformProps = TransformNameSpace.ImageTransformProps;
+
 
 const story = new Story("test");
 const c1 = new Character("还没有名字");
@@ -33,7 +37,9 @@ const createConditionIsNumberCorrect = (n: number) => new Condition()
     .toActions();
 
 const scene1 = new Scene("scene1", {
-    background: "#419eff"
+    background: {
+        url: mainMenuBackground,
+    }
 })
 const scene1Actions = scene1.action([
     i1.show({
@@ -65,8 +71,26 @@ const scene1Actions = scene1.action([
             prompt: "还不错吧"
         })
         .toActions(),
-    scene1.setSceneBackground("#35ffe5", {
-        duration: 0.5
+    i1.applyTransform(new Transform<ImageTransformProps>({
+        position: "right"
+    }, {
+        duration: 1,
+        ease: "easeInOut"
+    })).toActions(),
+    scene1.setSceneBackground({
+        backgroundOpacity: 0,
+    }, {
+        duration: 1,
+        ease: "linear"
+    }).setSceneBackground({
+        background: {
+            url: mainMenuBackground2,
+        }
+    }, {duration: 0}).setSceneBackground({
+        backgroundOpacity: 1,
+    }, {
+        duration: 1,
+        ease: "linear"
     }).toActions(),
     c2
         .say("那你愿不愿意陪我玩一个游戏？")

@@ -1,3 +1,5 @@
+import { StaticImageData as NextJSStaticImageData } from 'next/image';
+
 
 export type color = string | {
     r: number;
@@ -34,9 +36,11 @@ export type CommonText = {
     text: string;
 } & Color;
 
+export type StaticImageData = NextJSStaticImageData;
+
 export type Background = {
     background: {
-        url: string;
+        url: string | StaticImageData;
     } | color | null | undefined;
 }
 

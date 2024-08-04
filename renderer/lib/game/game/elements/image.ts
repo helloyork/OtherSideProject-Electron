@@ -31,12 +31,14 @@ const ImageTransactionTypes = {
 export type ImageEventTypes = {
     "event:image.show": [Transform<TransformNameSpace.ImageTransformProps>];
     "event:image.hide": [Transform<TransformNameSpace.ImageTransformProps>];
+    "event:image.applyTransform": [Transform<TransformNameSpace.ImageTransformProps>];
 };
 
 export class Image extends Actionable<typeof ImageTransactionTypes> {
     static EventTypes: { [K in keyof ImageEventTypes]: K } = {
         "event:image.show": "event:image.show",
         "event:image.hide": "event:image.hide",
+        "event:image.applyTransform": "event:image.applyTransform",
     }
     static defaultConfig: ImageConfig = {
         src: "",
@@ -105,6 +107,21 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
         );
         this.actions.push(action);
         return this;
+    }
+
+    public applyTransform(transform: Transform<ImageTransformProps>): this {
+        const action = new ImageAction<typeof ImageAction.ActionTypes.applyTransform>(
+            this,
+            ImageAction.ActionTypes.applyTransform,
+            new ContentNode(
+                Game.getIdManager().getStringId()
+            ).setContent([
+                void 0,
+                transform
+            ])
+        );
+        this.actions.push(action);
+        return this
     }
 
     /**

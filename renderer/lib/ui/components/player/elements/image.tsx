@@ -36,7 +36,8 @@ export default function Image({
 
         const listening = [
             GameImage.EventTypes["event:image.show"],
-            GameImage.EventTypes["event:image.hide"]
+            GameImage.EventTypes["event:image.hide"],
+            GameImage.EventTypes["event:image.applyTransform"]
         ];
 
         const fc = listening.map((type) => {

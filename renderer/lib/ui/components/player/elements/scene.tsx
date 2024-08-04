@@ -1,8 +1,7 @@
 import clsx from "clsx";
 import {AnimatePresence, motion, useAnimate} from "framer-motion";
 
-import {Background, color} from "@/lib/game/game/show";
-import {toHex} from "@/lib/util/data";
+import {Background} from "@/lib/game/game/show";
 
 import {Scene as GameScene} from "@lib/game/game/elements/scene";
 import {useAspectRatio} from "@/lib/ui/providers/ratio";
@@ -19,14 +18,11 @@ export default function Scene({
     const [key, setKey] = useState<string | undefined>(undefined);
 
     useEffect(() => {
-        const backgroundImage = scene.state?.background?.["url"] ? `url(${scene.state.background["url"]})` : undefined;
-        const backgroundColor = (!backgroundImage) ?
-            scene.state.background ? toHex(scene.state.background as color) : undefined :
-            undefined;
+        const {backgroundColor, backgroundImage} = Transform.backgroundToCSS(scene.state.background);
+        setKey(backgroundColor || backgroundImage);
 
-        setKey(backgroundImage || backgroundColor);
-
-        Object.assign(scope.current.style, scene.toTransform().getProps());
+        Object.assign(scope.current.style, Transform.backgroundToCSS(scene.state.background));
+        console.log(Transform.backgroundToCSS(scene.state.background), scene.state.background); // @debug
 
         const listening = [
             GameScene.EventTypes["event:scene.setBackground"],
@@ -34,14 +30,14 @@ export default function Scene({
 
         const fc = listening.map((type) => {
             return {
-                fc: scene.events.on(type, async (background: Background["background"], transform) => {
-                    console.log("Background changing", background, transform);
-                    // await transform.animate(scope, animate);
+                fc: scene.events.on(type, async (background, transform) => {
+                    // console.log("Background changing", background, transform);
+                    // console.log(Transform.backgroundToCSS(background), transform?.getProps());
                     if (transform) {
                         await transform.animate(scope, animate);
-                    } else {
-                        Object.assign(scope.current.style, Transform.backgroundToCSS(background));
                     }
+                    if (background.background) Object.assign(scope.current.style, Transform.backgroundToCSS(background.background));
+
                     console.log("Background changed", background, transform);
                     return true;
                 }),

@@ -11,8 +11,10 @@ import SceneBackgroundTransformProps = TransformNameSpace.SceneBackgroundTransfo
 
 export type SceneConfig = {} & Background;
 
+// @todo: use transition instead of transform
+
 export type SceneEventTypes = {
-    "event:scene.setBackground": [Background["background"], Transform<SceneBackgroundTransformProps>?];
+    "event:scene.setBackground": [SceneBackgroundTransformProps, Transform<SceneBackgroundTransformProps>?];
 };
 
 export class Scene extends Constructable<
@@ -42,7 +44,7 @@ export class Scene extends Constructable<
         this.state = deepMerge<SceneConfig>({}, this.config);
     }
 
-    public setSceneBackground(background: Background["background"], transform?: Transform<TransformNameSpace.ImageTransformProps> | Partial<TransformNameSpace.CommonTransformProps>) {
+    public setSceneBackground(background: Partial<SceneBackgroundTransformProps>, transform?: Transform<TransformNameSpace.ImageTransformProps> | Partial<TransformNameSpace.CommonTransformProps>) {
         this._actions.push(new SceneAction(
             this,
             "scene:setBackground",
@@ -51,7 +53,7 @@ export class Scene extends Constructable<
             ).setContent([
                 background,
                 transform ? (transform instanceof Transform ? transform : new Transform<SceneBackgroundTransformProps>({
-                    background: background
+                    ...background,
                 }, transform)) : undefined
             ])
         ));
@@ -75,7 +77,8 @@ export class Scene extends Constructable<
 
     toTransform(): Transform<SceneBackgroundTransformProps> {
         return new Transform<SceneBackgroundTransformProps>({
-            background: this.state.background
+            background: this.state.background,
+            backgroundOpacity: 1
         }, {
             duration: 0,
         });

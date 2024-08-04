@@ -90,7 +90,7 @@ export class SceneAction<T extends typeof SceneActionTypes[keyof typeof SceneAct
                 background,
                 transform
             ], () => {
-                this.callee.state.background = background;
+                this.callee.state.background = background.background;
                 awaitable.resolve({
                     type: this.type,
                     node: this.contentNode.child || null,
@@ -124,6 +124,7 @@ export const ImageActionTypes = {
     setPosition: "image:setPosition",
     show: "image:show",
     hide: "image:hide",
+    applyTransform: "image:applyTransform",
 } as const;
 export type ImageActionContentType = {
     [K in typeof ImageActionTypes[keyof typeof ImageActionTypes]]:
@@ -131,6 +132,7 @@ export type ImageActionContentType = {
         K extends "image:setPosition" ? [CommonImage["position"], Transform<TransformNameSpace.ImageTransformProps>] :
             K extends "image:show" ? [void, Transform<TransformNameSpace.ImageTransformProps>] :
                 K extends "image:hide" ? [void, Transform<TransformNameSpace.ImageTransformProps>] :
+                    K extends "image:applyTransform" ? [void, Transform<TransformNameSpace.ImageTransformProps>] :
                     any;
 }
 
@@ -165,6 +167,17 @@ export class ImageAction<T extends typeof ImageActionTypes[keyof typeof ImageAct
                 (this.contentNode as ContentNode<ImageActionContentType["image:hide"]>).getContent()[1]
             ], () => {
                 this.callee.state.display = false;
+                awaitable.resolve({
+                    type: this.type,
+                    node: this.contentNode?.child || null,
+                });
+            });
+            return awaitable;
+        } else if (this.type === ImageActionTypes.applyTransform) {
+            const awaitable = new Awaitable<CalledActionResult, any>(v => v);
+            state.animateImage(Image.EventTypes["event:image.applyTransform"], this.callee, [
+                (this.contentNode as ContentNode<ImageActionContentType["image:applyTransform"]>).getContent()[1]
+            ], () => {
                 awaitable.resolve({
                     type: this.type,
                     node: this.contentNode?.child || null,
