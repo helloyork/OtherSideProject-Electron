@@ -1,6 +1,6 @@
 import {HistoryData, Transaction, TransactionType} from "@lib/game/game/save/transaction";
 import {LogicAction} from "@lib/game/game/logicAction";
-import {ClientActionProto} from "@lib/game/game/gamTypes";
+import {ClientActionProto} from "@lib/game/game/gameTypes";
 
 export class Actionable<
     TransactionEnum extends Record<string, string> = Record<string, string>,

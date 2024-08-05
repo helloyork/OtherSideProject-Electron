@@ -1,4 +1,4 @@
-import {CalledActionResult} from "@lib/game/game/gamTypes";
+import {CalledActionResult} from "@lib/game/game/gameTypes";
 import {ClientGame} from "@lib/game/game";
 import {EventDispatcher} from "@lib/util/data";
 import {Character, Sentence} from "@lib/game/game/elements/text";

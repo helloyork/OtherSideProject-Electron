@@ -16,7 +16,7 @@ import ImageTransformProps = TransformNameSpace.ImageTransformProps;
 const scene1 = new Scene("scene1", {
     background: mainMenuBackground,
     invertY: true,
-    invertX: true
+    invertX: false
 })
 
 const i1 = new Image("i1", {

@@ -1,4 +1,4 @@
-import { CalledActionResult } from "@lib/game/game/gamTypes";
+import { CalledActionResult } from "@lib/game/game/gameTypes";
 import { Character, Sentence } from "@/lib/game/game/elements/text";
 import Isolated from "@/lib/ui/elements/isolated";
 import TypingEffect from "@/lib/ui/elements/player/typeing-effect";

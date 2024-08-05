@@ -11,7 +11,7 @@ import type {Story} from "@lib/game/game/elements/story";
 import type {Script} from "@lib/game/game/elements/script";
 import type {Menu} from "@lib/game/game/elements/menu";
 import type {Condition} from "@lib/game/game/elements/condition";
-import type {CalledActionResult} from "@lib/game/game/gamTypes";
+import type {CalledActionResult} from "@lib/game/game/gameTypes";
 import {GameState} from "@lib/ui/components/player/gameState";
 import {Sound} from "@lib/game/game/elements/sound";
 
