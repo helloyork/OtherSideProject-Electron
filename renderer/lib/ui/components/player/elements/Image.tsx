@@ -29,7 +29,7 @@ export default function Image({
         rotation,
     } = image.config;
 
-    const {left, top, bottom} = Transform.positionToCSS(position);
+    const {left, top, bottom, right} = Transform.positionToCSS(position);
 
     const transform = `translate(${state.state?.scene.config.invertX ? "" : "-"}50%, ${state.state?.scene.config.invertY ? "" : "-"}50%) scale(${scale}) rotate(${rotation}deg)`;
 
@@ -88,6 +88,7 @@ export default function Image({
                         left,
                         top,
                         bottom,
+                        right,
                         position: 'absolute'
                     }}
                     ref={scope}
