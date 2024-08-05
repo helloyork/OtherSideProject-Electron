@@ -1,7 +1,7 @@
 "use client";
 
-import PageTransition from "@/lib/ui/components/page-transition";
-import QuickMenu from "@/lib/ui/components/player/quick-menu";
+import PageTransition from "@lib/ui/components/PageTransition";
+import QuickMenu from "@lib/ui/components/player/QuickMenu";
 import Isolated from "@/lib/ui/elements/isolated";
 import clsx from "clsx";
 import { AnimatePresence, motion } from "framer-motion";

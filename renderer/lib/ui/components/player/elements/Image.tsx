@@ -3,8 +3,8 @@ import {useAspectRatio} from "@/lib/ui/providers/ratio";
 import clsx from "clsx";
 import {Transform} from "@lib/game/game/elements/transform";
 import {useEffect} from "react";
-import {GameState} from "../player";
 import {useAnimate} from "framer-motion";
+import {GameState} from "@lib/ui/components/player/gameState";
 
 export default function Image({
                                   image,
@@ -43,6 +43,7 @@ export default function Image({
         const fc = listening.map((type) => {
             return {
                 fc: image.events.on(type, async (transform) => {
+                    console.log(transform.getProps())
                     await transform.animate(scope, animate);
                     if (onAnimationEnd) {
                         onAnimationEnd();

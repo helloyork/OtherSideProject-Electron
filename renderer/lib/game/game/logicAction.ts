@@ -24,15 +24,16 @@ import {
     SceneActionTypes,
     ScriptAction,
     ScriptActionContentType,
-    ScriptActionTypes,
+    ScriptActionTypes, SoundAction, SoundActionContentType,
     StoryAction,
     StoryActionContentType,
     StoryActionTypes,
     TypedAction
 } from "@lib/game/game/actions";
+import {Sound} from "@lib/game/game/elements/sound";
 
 export namespace LogicAction {
-    export type GameElement = Character | Scene | Story | Sentence | Image | Condition | Script | Menu;
+    export type GameElement = Character | Scene | Story | Sentence | Image | Condition | Script | Menu | Sound;
     export type Actions =
         CharacterAction<any>
         | ConditionAction<any>
@@ -41,7 +42,8 @@ export namespace LogicAction {
         | ScriptAction<any>
         | StoryAction<any>
         | TypedAction<any, any, any>
-        | MenuAction<any>;
+        | MenuAction<any>
+        | SoundAction<any>;
     export type ActionTypes =
         Values<typeof CharacterActionTypes>
         | Values<typeof ConditionActionTypes>
@@ -49,7 +51,8 @@ export namespace LogicAction {
         | Values<typeof SceneActionTypes>
         | Values<typeof ScriptActionTypes>
         | Values<typeof StoryActionTypes>
-        | Values<typeof MenuActionTypes>;
+        | Values<typeof MenuActionTypes>
+        | Values<typeof SoundAction.ActionTypes>;
     export type ActionContents =
         CharacterActionContentType
         & ConditionActionContentType
@@ -57,5 +60,6 @@ export namespace LogicAction {
         & SceneActionContentType
         & ScriptActionContentType
         & StoryActionContentType
-        & MenuActionContentType;
+        & MenuActionContentType
+        & SoundActionContentType;
 }

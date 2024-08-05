@@ -1,5 +1,4 @@
 import {ContentNode} from "@lib/game/game/save/rollback";
-import {GameState} from "@lib/ui/components/player/player";
 import {Awaitable} from "@lib/util/data";
 import {CommonImage} from "@lib/game/game/show";
 import {Transform, TransformNameSpace} from "@lib/game/game/elements/transform";
@@ -13,6 +12,8 @@ import type {Script} from "@lib/game/game/elements/script";
 import type {Menu} from "@lib/game/game/elements/menu";
 import type {Condition} from "@lib/game/game/elements/condition";
 import type {CalledActionResult} from "@lib/game/game/gamTypes";
+import {GameState} from "@lib/ui/components/player/gameState";
+import {Sound} from "@lib/game/game/elements/sound";
 
 export class TypedAction<
     ContentType extends Record<string, any>,
@@ -64,11 +65,13 @@ export class CharacterAction<T extends typeof CharacterActionTypes[keyof typeof 
 export const SceneActionTypes = {
     action: "scene:action",
     setBackground: "scene:setBackground",
+    sleep: "scene:sleep",
 } as const;
 export type SceneActionContentType = {
     [K in typeof SceneActionTypes[keyof typeof SceneActionTypes]]:
     K extends typeof SceneActionTypes["action"] ? Scene :
         // K extends typeof SceneActionTypes["setBackground"] ? SceneEventTypes["event:scene.setBackground"] :
+        K extends typeof SceneActionTypes["sleep"] ? Promise<any> :
         any;
 }
 
@@ -82,6 +85,16 @@ export class SceneAction<T extends typeof SceneActionTypes[keyof typeof SceneAct
             return super.executeAction(state);
         } else if (this.type === SceneActionTypes.setBackground) {
             return new Awaitable<CalledActionResult, any>(v => v);
+        } else if (this.type === SceneActionTypes.sleep) {
+            const awaitable = new Awaitable<CalledActionResult, any>(v => v);
+            const content = (this.contentNode as ContentNode<Promise<any>>).getContent();
+            content.then(() => {
+                awaitable.resolve({
+                    type: this.type as any,
+                    node: this.contentNode.child
+                });
+            });
+            return awaitable;
         }
 
     }
@@ -160,8 +173,9 @@ export class ImageAction<T extends typeof ImageActionTypes[keyof typeof ImageAct
             return awaitable;
         } else if (this.type === ImageActionTypes.applyTransform) {
             const awaitable = new Awaitable<CalledActionResult, any>(v => v);
+            const transform = (this.contentNode as ContentNode<ImageActionContentType["image:applyTransform"]>).getContent()[1];
             state.animateImage(Image.EventTypes["event:image.applyTransform"], this.callee, [
-                (this.contentNode as ContentNode<ImageActionContentType["image:applyTransform"]>).getContent()[1]
+                transform
             ], () => {
                 awaitable.resolve({
                     type: this.type,
@@ -254,5 +268,59 @@ export class MenuAction<T extends typeof MenuActionTypes[keyof typeof MenuAction
             });
         })
         return awaitable;
+    }
+}
+
+export const SoundActionTypes = {
+    action: "sound:action",
+    play: "sound:play",
+    stop: "sound:stop", // @todo: add pause and resume
+} as const;
+export type SoundActionContentType = {
+    [K in typeof SoundActionTypes[keyof typeof SoundActionTypes]]:
+    K extends "sound:play" ? [void] :
+        K extends "sound:stop" ? [void] :
+            any;
+}
+export class SoundAction<T extends typeof SoundActionTypes[keyof typeof SoundActionTypes]>
+    extends TypedAction<SoundActionContentType, T, Sound> {
+    static ActionTypes = SoundActionTypes;
+
+    public executeAction(state: GameState): CalledActionResult | Awaitable<CalledActionResult, any> {
+        if (this.type === SoundActionTypes.play) {
+            if (!this.callee.$getHowl()) {
+                this.callee.$setHowl(
+                    new (state.getHowl())({
+                        src: this.callee.config.src,
+                        loop: this.callee.config.loop,
+                        volume: this.callee.config.volume,
+                        autoplay: true,
+                    })
+                )
+            }
+            if (this.callee.config.sync && !this.callee.config.loop) {
+                const awaitable = new Awaitable<CalledActionResult, any>(v => v);
+                state.playSound(this.callee.$getHowl(), () => {
+                    this.callee.$setHowl(null);
+                    console.log("sound end, ", this.contentNode);
+                    awaitable.resolve({
+                        type: this.type as any,
+                        node: this.contentNode?.child || null
+                    });
+                })
+                return awaitable;
+            } else {
+                state.playSound(this.callee.$getHowl(), () => {
+                    this.callee.$setHowl(null);
+                });
+                return super.executeAction(state);
+            }
+        } else if (this.type === SoundActionTypes.stop) {
+            if (this.callee.$getHowl()) {
+                this.callee.$getHowl().stop();
+                this.callee.$setHowl(null);
+            }
+            return super.executeAction(state);
+        }
     }
 }

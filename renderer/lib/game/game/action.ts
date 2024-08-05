@@ -1,8 +1,8 @@
 import {LogicAction} from "@lib/game/game/logicAction";
 import {ContentNode} from "@lib/game/game/save/rollback";
-import {GameState} from "@lib/ui/components/player/player";
 import type {CalledActionResult} from "@lib/game/game/gamTypes";
 import {Awaitable} from "@lib/util/data";
+import {GameState} from "@lib/ui/components/player/gameState";
 
 export class Action<ContentNodeType = any> {
     static ActionTypes = {

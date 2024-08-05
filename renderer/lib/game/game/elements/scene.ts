@@ -1,6 +1,6 @@
 import {Constructable} from "../constructable";
 import {Game} from "../game";
-import {deepMerge} from "@lib/util/data";
+import {Awaitable, deepMerge} from "@lib/util/data";
 import {Background} from "../show";
 import {ContentNode} from "../save/rollback";
 import {LogicAction} from "@lib/game/game/logicAction";
@@ -12,6 +12,7 @@ import SceneBackgroundTransformProps = TransformNameSpace.SceneBackgroundTransfo
 export type SceneConfig = {} & Background;
 
 // @todo: use transition instead of transform
+// @todo: src manager, preload source that will be used in the future
 
 export class Scene extends Constructable<
     any,
@@ -48,6 +49,30 @@ export class Scene extends Constructable<
                     ...background,
                 }, transform)) : undefined
             ])
+        ));
+        return this;
+    }
+
+    public sleep(ms: number);
+    public sleep(promise: Promise<any>);
+    public sleep(awaitable: Awaitable<any, any>);
+    public sleep(content: number | Promise<any> | Awaitable<any, any>) {
+        this._actions.push(new SceneAction(
+            this,
+            "scene:sleep",
+            new ContentNode<Promise<any>>(
+                Game.getIdManager().getStringId(),
+            ).setContent(
+                new Promise<any>((resolve) => {
+                    if (typeof content === "number") {
+                        setTimeout(resolve, content);
+                    } else if (Awaitable.isAwaitable(content)) {
+                        content.then(resolve);
+                    } else {
+                        content.then(resolve);
+                    }
+                })
+            )
         ));
         return this;
     }

@@ -110,6 +110,7 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
     }
 
     public applyTransform(transform: Transform<ImageTransformProps>): this {
+        // @todo: 坐标基准为左上角，添加一个配置以使用左下角
         const action = new ImageAction<typeof ImageAction.ActionTypes.applyTransform>(
             this,
             ImageAction.ActionTypes.applyTransform,

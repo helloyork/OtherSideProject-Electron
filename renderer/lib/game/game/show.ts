@@ -21,12 +21,17 @@ export type RGBAColor = RGBColor & {
 export type Coord2D = {
     x: number | `${'-' | ''}${number}%`;
     y: number | `${'-' | ''}${number}%`;
-}
+} & Offset;
 
 export type Align = {
     xalign: number;
     yalign: number;
-};
+} & Offset;
+
+export type Offset = {
+    xoffset: number;
+    yoffset: number;
+}
 
 export type Color = {
     color: color;

@@ -1,3 +1,5 @@
+import {StaticImageData} from "@lib/game/game/show";
+
 /**
  * @param obj1 source object
  * @param obj2 this object will overwrite the source object

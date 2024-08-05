@@ -3,10 +3,10 @@ import { Game } from "../game";
 import { ContentNode, RenderableNode } from "../save/rollback";
 import { HistoryData } from "../save/transaction";
 import { ScriptCleaner } from "./script";
-import { GameState } from "@/lib/ui/components/player/player";
 import {LogicAction} from "@lib/game/game/logicAction";
 import {ConditionAction} from "@lib/game/game/actions";
 import {Actionable} from "@lib/game/game/actionable";
+import {GameState} from "@lib/ui/components/player/gameState";
 
 export type ConditionConfig = {};
 
