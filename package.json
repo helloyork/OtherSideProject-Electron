@@ -2,7 +2,7 @@
   "private": true,
   "name": "other-side-project",
   "description": "OtherSideProject",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "author": "helloyork@icloud.com",
   "main": "app/background.js",
   "scripts": {
