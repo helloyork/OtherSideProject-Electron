@@ -1,7 +1,7 @@
 "use client";
 
 import { story } from "@/lib/game/story/scene1";
-import Player from "@lib/ui/components/player/Player";
+import Player from "@/lib/ui/components/player/player";
 import { useGame } from "@/lib/ui/providers/game-state";
 
 export default function Page() {

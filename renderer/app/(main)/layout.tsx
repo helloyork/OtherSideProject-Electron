@@ -1,8 +1,8 @@
 "use client";
 
 import { Constants } from "@/lib/api/config";
-import PageTransition from "@lib/ui/components/PageTransition";
-import SideMenu, { MenuItem } from "@lib/ui/components/SideMenu";
+import PageTransition from "@/lib/ui/components/page-transition";
+import SideMenu, { MenuItem } from "@/lib/ui/components/sidemenu";
 import clsx from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
 

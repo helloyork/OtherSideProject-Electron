@@ -5,9 +5,9 @@ import {Awaitable, deepMerge, safeClone} from "@lib/util/data";
 import {Namespace, Storable, StorableData} from "./save/store";
 import {Singleton} from "@lib/util/singleton";
 import {Constants} from "@/lib/api/config";
+import {GameState} from "@/lib/ui/components/player/player";
 import type {Story} from "./elements/story";
 import {LogicAction} from "@lib/game/game/logicAction";
-import {GameState} from "@lib/ui/components/player/gameState";
 
 class IdManager extends Singleton<IdManager>() {
     private id = 0;

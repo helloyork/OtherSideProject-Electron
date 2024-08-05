@@ -1,6 +1,6 @@
 import {Constructable} from "../constructable";
 import {Game} from "../game";
-import {Awaitable, deepMerge} from "@lib/util/data";
+import {deepMerge, EventDispatcher} from "@lib/util/data";
 import {Background} from "../show";
 import {ContentNode} from "../save/rollback";
 import {LogicAction} from "@lib/game/game/logicAction";
@@ -9,13 +9,13 @@ import {Transform, TransformNameSpace} from "@lib/game/game/elements/transform";
 import Actions = LogicAction.Actions;
 import SceneBackgroundTransformProps = TransformNameSpace.SceneBackgroundTransformProps;
 
-export type SceneConfig = {
-    invertY?: boolean;
-    invertX?: boolean;
-} & Background;
+export type SceneConfig = {} & Background;
 
 // @todo: use transition instead of transform
-// @todo: src manager, preload source that will be used in the future
+
+export type SceneEventTypes = {
+    "event:scene.setBackground": [SceneBackgroundTransformProps, Transform<SceneBackgroundTransformProps>?];
+};
 
 export class Scene extends Constructable<
     any,
@@ -23,14 +23,17 @@ export class Scene extends Constructable<
     SceneAction<"scene:action">
 > {
     static defaultConfig: SceneConfig = {
-        background: null,
-        invertY: false,
+        background: null
     };
+    static EventTypes: { [K in keyof SceneEventTypes]: K } = {
+        "event:scene.setBackground": "event:scene.setBackground"
+    }
     static targetAction = SceneAction;
     id: string;
     name: string;
     config: SceneConfig;
-    state: SceneConfig;
+    state: SceneConfig = Scene.defaultConfig;
+    events = new EventDispatcher<SceneEventTypes>();
     private _actions: SceneAction<any>[] = [];
 
     constructor(name: string, config: SceneConfig = Scene.defaultConfig) {
@@ -53,30 +56,6 @@ export class Scene extends Constructable<
                     ...background,
                 }, transform)) : undefined
             ])
-        ));
-        return this;
-    }
-
-    public sleep(ms: number);
-    public sleep(promise: Promise<any>);
-    public sleep(awaitable: Awaitable<any, any>);
-    public sleep(content: number | Promise<any> | Awaitable<any, any>) {
-        this._actions.push(new SceneAction(
-            this,
-            "scene:sleep",
-            new ContentNode<Promise<any>>(
-                Game.getIdManager().getStringId(),
-            ).setContent(
-                new Promise<any>((resolve) => {
-                    if (typeof content === "number") {
-                        setTimeout(resolve, content);
-                    } else if (Awaitable.isAwaitable(content)) {
-                        content.then(resolve);
-                    } else {
-                        content.then(resolve);
-                    }
-                })
-            )
         ));
         return this;
     }

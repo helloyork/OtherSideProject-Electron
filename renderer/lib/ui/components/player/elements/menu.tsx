@@ -1,8 +1,8 @@
 import { Choice } from "@/lib/game/game/elements/menu";
 import { Sentence } from "@/lib/game/game/elements/text";
-import ColoredSentence from "./Sentence";
+import ColoredSentence from "./sentence";
 import Isolated from "@/lib/ui/elements/isolated";
-import Say from "./Say";
+import Say from "./say";
 
 export default function Menu({
     prompt,

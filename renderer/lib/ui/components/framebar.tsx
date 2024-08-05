@@ -4,7 +4,7 @@ import { ClientAPI } from '@/lib/api/ipc';
 import { Button } from '@nextui-org/react';
 import { Minus, Maximize2, X } from 'react-feather'; // 将Minimize2更改为Minus
 
-const Framebar = () => {
+const FrameBar = () => {
   const handleMinimize = () => {
     ClientAPI.getInstance(window).winFrame.minimize();
   };
@@ -34,4 +34,4 @@ const Framebar = () => {
   );
 };
 
-export default Framebar;
+export default FrameBar;

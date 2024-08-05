@@ -50,5 +50,7 @@ export class ClientGame extends BaseGame {
         this.game.createLiveGame();
         return this;
     }
+    
+    public async choose() {} // @TODO: Implement this
 }
 

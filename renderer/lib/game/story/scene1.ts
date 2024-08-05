@@ -5,37 +5,23 @@ import {Menu} from "../game/elements/menu";
 import {Script, ScriptCtx} from "../game/elements/script";
 import {LiveGame} from "../game/game";
 import {Condition, Lambda} from "../game/elements/condition";
+import {GameState} from "@/lib/ui/components/player/player";
 import {Image} from "../game/elements/image";
 import {Transform, TransformNameSpace} from "@lib/game/game/elements/transform";
-import {GameState} from "@lib/ui/components/player/gameState";
 
 import mainMenuBackground from "@/public/static/images/main-menu-background.webp";
-import {Sound} from "@lib/game/game/elements/sound";
+import mainMenuBackground2 from "@/public/static/images/main-menu-background2.jpg";
 import ImageTransformProps = TransformNameSpace.ImageTransformProps;
 
-const scene1 = new Scene("scene1", {
-    background: mainMenuBackground,
-    invertY: true,
-    invertX: true
-})
-
-const i1 = new Image("i1", {
-    src: "/static/images/sensei.png",
-    position: {
-        xalign: 0.3,
-        yalign: 0.5
-    },
-    scale: 0.7
-});
 
 const story = new Story("test");
 const c1 = new Character("还没有名字");
 const c2 = new Character("我");
-const sound1 = new Sound({
-    src: "/static/sounds/SE_Write_01.wav",
-    sync: false
-})
-
+const i1 = new Image("i1", {
+    src: "/static/images/sensei.png",
+    position: "left",
+    scale: 0.7
+});
 
 const createConditionIsNumberCorrect = (n: number) => new Condition()
     .If(new Lambda(({gameState, resolve}) => {
@@ -49,7 +35,11 @@ const createConditionIsNumberCorrect = (n: number) => new Condition()
     )
     .toActions();
 
-
+const scene1 = new Scene("scene1", {
+    background: {
+        url: mainMenuBackground,
+    }
+})
 const scene1Actions = scene1.action([
     i1.show({
         ease: "circOut",
@@ -58,24 +48,6 @@ const scene1Actions = scene1.action([
     new Character(null)
         .say("简体中文，繁體中文, 日本語, 한국어, ไทย, Tiếng Việt, हिन्दी, বাংলা, తెలుగు, मराठी, 1234567890!@#$%^&*()QWERTYUIOPASDFGHJKLZCVN{}|:\"<>?~`, A quick brown fox jumps over the lazy dog.")
         .toActions(),
-    i1.applyTransform(new Transform<ImageTransformProps>({
-        position: {
-            yoffset: 20,
-            xalign: 0.3,
-            yalign: 0.5
-        }
-    }, {
-        duration: 0.2
-    })).applyTransform(new Transform<ImageTransformProps>({
-        position: {
-            yoffset: 0,
-            xalign: 0.3,
-            yalign: 0.5
-        }
-    }, {
-        duration: 0.2
-    })).toActions(),
-    sound1.play().toActions(),
     c1
         .say("你好！")
         .say("你最近过的怎么样？")
@@ -104,20 +76,21 @@ const scene1Actions = scene1.action([
         duration: 1,
         ease: "easeInOut"
     })).toActions(),
-    // scene1.setSceneBackground({
-    //     backgroundOpacity: 0,
-    // }, {
-    //     duration: 1,
-    //     ease: "linear"
-    // }).setSceneBackground({
-    //     background: mainMenuBackground2
-    // }, {duration: 0}).setSceneBackground({
-    //     backgroundOpacity: 1,
-    // }, {
-    //     duration: 1,
-    //     ease: "linear"
-    // }).toActions(),
-    i1.hide().toActions(),
+    scene1.setSceneBackground({
+        backgroundOpacity: 0,
+    }, {
+        duration: 1,
+        ease: "linear"
+    }).setSceneBackground({
+        background: {
+            url: mainMenuBackground2,
+        }
+    }, {duration: 0}).setSceneBackground({
+        backgroundOpacity: 1,
+    }, {
+        duration: 1,
+        ease: "linear"
+    }).toActions(),
     c2
         .say("那你愿不愿意陪我玩一个游戏？")
         .say("听好游戏规则")

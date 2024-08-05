@@ -1,6 +1,6 @@
 "use client";
 
-import PageTransition from "@lib/ui/components/PageTransition";
+import PageTransition from "@/lib/ui/components/page-transition";
 import { GameProvider } from "@/lib/ui/providers/game-state";
 import clsx from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
