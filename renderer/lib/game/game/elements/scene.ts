@@ -9,7 +9,10 @@ import {Transform, TransformNameSpace} from "@lib/game/game/elements/transform";
 import Actions = LogicAction.Actions;
 import SceneBackgroundTransformProps = TransformNameSpace.SceneBackgroundTransformProps;
 
-export type SceneConfig = {} & Background;
+export type SceneConfig = {
+    invertY?: boolean;
+    invertX?: boolean;
+} & Background;
 
 // @todo: use transition instead of transform
 // @todo: src manager, preload source that will be used in the future
@@ -20,13 +23,14 @@ export class Scene extends Constructable<
     SceneAction<"scene:action">
 > {
     static defaultConfig: SceneConfig = {
-        background: null
+        background: null,
+        invertY: false,
     };
     static targetAction = SceneAction;
     id: string;
     name: string;
     config: SceneConfig;
-    state: SceneConfig = Scene.defaultConfig;
+    state: SceneConfig;
     private _actions: SceneAction<any>[] = [];
 
     constructor(name: string, config: SceneConfig = Scene.defaultConfig) {

@@ -6,6 +6,8 @@ import {useEffect} from "react";
 import {useAnimate} from "framer-motion";
 import {GameState} from "@lib/ui/components/player/gameState";
 
+// @todo: 增加无障碍支持
+
 export default function Image({
                                   image,
                                   state,
@@ -27,12 +29,12 @@ export default function Image({
         rotation,
     } = image.config;
 
-    const {left, top} = Transform.positionToCSS(position);
+    const {left, top, bottom} = Transform.positionToCSS(position);
 
-    const transform = `translate(-50%, -50%) scale(${scale}) rotate(${rotation}deg)`;
+    const transform = `translate(${state.state?.scene.config.invertX ? "" : "-"}50%, ${state.state?.scene.config.invertY ? "" : "-"}50%) scale(${scale}) rotate(${rotation}deg)`;
 
     useEffect(() => {
-        Object.assign(scope.current.style, image.toTransform().getProps());
+        Object.assign(scope.current.style, image.toTransform().getProps(state.state?.scene.config));
 
         const listening = [
             GameImage.EventTypes["event:image.show"],
@@ -43,8 +45,9 @@ export default function Image({
         const fc = listening.map((type) => {
             return {
                 fc: image.events.on(type, async (transform) => {
-                    console.log(transform.getProps())
-                    await transform.animate(scope, animate);
+                    console.log(transform.getProps(state.state?.scene.config));
+                    await transform.animate({scope, animate}, state);
+                    Object.assign(scope.current.style, transform.getProps(state.state?.scene.config));
                     if (onAnimationEnd) {
                         onAnimationEnd();
                     }
@@ -75,6 +78,7 @@ export default function Image({
             }}>
 
                 <img
+                    alt={"image"}
                     className=""
                     src={src}
                     width={width}
@@ -83,6 +87,7 @@ export default function Image({
                         transform,
                         left,
                         top,
+                        bottom,
                         position: 'absolute'
                     }}
                     ref={scope}

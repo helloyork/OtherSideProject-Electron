@@ -7,18 +7,16 @@ import {LiveGame} from "../game/game";
 import {Condition, Lambda} from "../game/elements/condition";
 import {Image} from "../game/elements/image";
 import {Transform, TransformNameSpace} from "@lib/game/game/elements/transform";
-
-
-import mainMenuBackground2 from "@/public/static/images/main-menu-background2.jpg";
-import ImageTransformProps = TransformNameSpace.ImageTransformProps;
 import {GameState} from "@lib/ui/components/player/gameState";
 
 import mainMenuBackground from "@/public/static/images/main-menu-background.webp";
 import {Sound} from "@lib/game/game/elements/sound";
+import ImageTransformProps = TransformNameSpace.ImageTransformProps;
+
 const scene1 = new Scene("scene1", {
-    background: {
-        url: mainMenuBackground,
-    }
+    background: mainMenuBackground,
+    invertY: true,
+    invertX: true
 })
 
 const i1 = new Image("i1", {
@@ -35,7 +33,7 @@ const c1 = new Character("还没有名字");
 const c2 = new Character("我");
 const sound1 = new Sound({
     src: "/static/sounds/SE_Write_01.wav",
-    sync: true
+    sync: false
 })
 
 
@@ -62,7 +60,7 @@ const scene1Actions = scene1.action([
         .toActions(),
     i1.applyTransform(new Transform<ImageTransformProps>({
         position: {
-            yoffset: -10,
+            yoffset: 20,
             xalign: 0.3,
             yalign: 0.5
         }
@@ -106,21 +104,19 @@ const scene1Actions = scene1.action([
         duration: 1,
         ease: "easeInOut"
     })).toActions(),
-    scene1.setSceneBackground({
-        backgroundOpacity: 0,
-    }, {
-        duration: 1,
-        ease: "linear"
-    }).setSceneBackground({
-        background: {
-            url: mainMenuBackground2,
-        }
-    }, {duration: 0}).setSceneBackground({
-        backgroundOpacity: 1,
-    }, {
-        duration: 1,
-        ease: "linear"
-    }).toActions(),
+    // scene1.setSceneBackground({
+    //     backgroundOpacity: 0,
+    // }, {
+    //     duration: 1,
+    //     ease: "linear"
+    // }).setSceneBackground({
+    //     background: mainMenuBackground2
+    // }, {duration: 0}).setSceneBackground({
+    //     backgroundOpacity: 1,
+    // }, {
+    //     duration: 1,
+    //     ease: "linear"
+    // }).toActions(),
     i1.hide().toActions(),
     c2
         .say("那你愿不愿意陪我玩一个游戏？")

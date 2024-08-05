@@ -1,4 +1,4 @@
-import {Align, Background, color, CommonImage, CommonImagePosition, Coord2D, Offset} from "../show";
+import {Align, Background, color, CommonImage, CommonImagePosition, Coord2D, Offset, StaticImageData} from "../show";
 import type {
     AnimationPlaybackControls,
     AnimationScope,
@@ -12,6 +12,7 @@ import type {
 } from "framer-motion";
 import {ImagePosition} from "./image";
 import {deepMerge, DeepPartial, toHex} from "@lib/util/data";
+import {GameState} from "@lib/ui/components/player/gameState";
 
 
 export namespace TransformNameSpace {
@@ -48,7 +49,7 @@ export namespace TransformNameSpace {
     export type SceneBackgroundTransformProps = {
         background: Background["background"];
         backgroundOpacity: number;
-    } & CommonTransformProps;
+    };
     export type ImageTransformProps = ({
         opacity: number;
     }) & {
@@ -97,30 +98,49 @@ export class Transform<T extends TransformNameSpace.Types> {
         return this.isCommonImagePosition(position) || this.isCoord2D(position) || this.isAlign(position);
     }
 
-    public static positionToCSS(position: CommonImage["position"]): { left?: string | number, top?: string | number } {
+    public static positionToCSS(
+        position: CommonImage["position"],
+        invertY?: boolean | undefined,
+        invertX?: boolean | undefined
+    ): { left?: string | number, right?: string | number,  top?: string | number, bottom?: string | number } {
         const CommonImagePositionMap = {
             [ImagePosition.left]: "25.33%",
             [ImagePosition.center]: "50%",
             [ImagePosition.right]: "75.66%"
         }
-        const left = Transform.isCommonImagePosition(position)
-            ? (CommonImagePositionMap[position] || undefined)
-            : Transform.isCoord2D(position)
-                ? this.coord2DToCSS(position.x)
-                : Transform.isAlign(position)
-                    ? this.alignToCSS(position.xalign)
-                    : undefined;
+        const x = this.offsetToCSS(
+            Transform.isCommonImagePosition(position)
+                ? (CommonImagePositionMap[position] || undefined)
+                : Transform.isCoord2D(position)
+                    ? this.coord2DToCSS(position.x)
+                    : Transform.isAlign(position)
+                        ? this.alignToCSS(position.xalign)
+                        : undefined
+            ,
+            (!this.isCommonImagePosition(position) && position["xoffset"])
+        );
 
-        const top = Transform.isCommonImagePosition(position)
-            ? "50%"
-            : Transform.isCoord2D(position)
-                ? this.coord2DToCSS(position.y)
-                : Transform.isAlign(position)
-                    ? this.alignToCSS(position.yalign)
-                    : undefined;
+        const y = this.offsetToCSS(
+            Transform.isCommonImagePosition(position)
+                ? "50%"
+                : Transform.isCoord2D(position)
+                    ? this.coord2DToCSS(position.y)
+                    : Transform.isAlign(position)
+                        ? this.alignToCSS(position.yalign)
+                        : undefined,
+            (!this.isCommonImagePosition(position) && position["yoffset"])
+        );
+
+        const yRes = invertY ? {bottom: y} : {top: y};
+        const xRes = invertX ? {right: x} : {left: x};
+
         return {
-            left: this.offsetToCSS(left, (!this.isCommonImagePosition(position) && position["xoffset"])),
-            top: this.offsetToCSS(top, (!this.isCommonImagePosition(position) && position["yoffset"]))
+            left: "auto",
+            right: "auto",
+            top: "auto",
+            bottom: "auto",
+            ...yRes,
+            ...xRes
         };
     }
 
@@ -142,13 +162,22 @@ export class Transform<T extends TransformNameSpace.Types> {
         backgroundImage?: string,
         backgroundColor?: string
     } {
+        if (background === null || background === undefined) return {};
+        if (this.isStaticImageData(background)) {
+            return {backgroundImage: `url(${background.src})`};
+        }
         const backgroundImage = background?.["url"] ? (
-            "url(" + (background["url"]["src"] || background["url"]) + ")"
+            "url(" + background?.["url"] + ")"
         ) : undefined;
+
         const backgroundColor = (!backgroundImage) ?
             background ? toHex(background as color) : undefined :
             undefined;
         return {backgroundImage, backgroundColor};
+    }
+
+    static isStaticImageData(src: any): src is StaticImageData {
+        return src.src !== undefined;
     }
 
     /**
@@ -159,13 +188,22 @@ export class Transform<T extends TransformNameSpace.Types> {
      * return <div ref={scope} />
      * ```
      */
-    public async animate<T extends Element = any>(scope: TransformNameSpace.FramerAnimationScope<T>, animate: TransformNameSpace.FramerAnimate) {
-        return animate(scope.current, this.getProps(), this.options);
+    public async animate<T extends Element = any>(
+        {scope, animate}:
+            { scope: TransformNameSpace.FramerAnimationScope<T>, animate: TransformNameSpace.FramerAnimate },
+        state: GameState
+    ) {
+        return animate(scope.current, this.getProps(
+            state.state?.scene.config
+        ), this.options);
     }
 
-    getProps(): DOMKeyframesDefinition {
+    getProps(
+        {invertY, invertX}:
+            { invertY?: boolean | undefined, invertX?: boolean | undefined }
+    ): DOMKeyframesDefinition {
         const FieldHandlers: Record<string, (v: any) => any> = {
-            "position": (value: CommonImage["position"]) => Transform.positionToCSS(value),
+            "position": (value: CommonImage["position"]) => Transform.positionToCSS(value, invertY, invertX),
             "backgroundColor": (value: Background["background"]) => Transform.backgroundToCSS(value),
             "backgroundOpacity": (value: number) => ({opacity: value}),
         };
@@ -181,7 +219,7 @@ export class Transform<T extends TransformNameSpace.Types> {
         }
         return props;
     }
-    
+
     assign(props: DeepPartial<T>) {
         this.props = deepMerge(props, this.props);
     }

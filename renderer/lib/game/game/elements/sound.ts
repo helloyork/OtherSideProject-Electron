@@ -11,6 +11,7 @@ export enum SoundType {
     voice = "voice",
 }
 export type SoundConfig = {
+    // @todo: 速读模式
     // @todo: 速读模式中忽略voice和soundEffect
     /**
      * 声音类型

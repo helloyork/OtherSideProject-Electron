@@ -45,8 +45,8 @@ export type StaticImageData = NextJSStaticImageData;
 
 export type Background = {
     background: {
-        url: string | StaticImageData;
-    } | color | null | undefined;
+        url: string;
+    } | color | null | undefined | StaticImageData;
 }
 
 export type CommonImagePosition = "left" | "center" | "right";
