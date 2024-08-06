@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from 'clsx';
-import { motion } from 'framer-motion';
+import {motion} from 'framer-motion';
 
 const pageVariants = {
     initial: {
@@ -28,14 +28,14 @@ const pageVariants = {
     }
 };
 
-const PageTransition = ({ children, className }) => (
+const PageTransition = ({children, className}) => (
     <motion.div
         initial="initial"
         animate="in"
         exit="out"
         variants={pageVariants}
         className={clsx(className)}
-        style={{ position: 'absolute', width: '100%', height: '100%' }}
+        style={{position: 'absolute', width: '100%', height: '100%'}}
     >
         {children}
     </motion.div>

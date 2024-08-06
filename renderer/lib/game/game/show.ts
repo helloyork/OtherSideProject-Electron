@@ -1,4 +1,4 @@
-import { StaticImageData as NextJSStaticImageData } from 'next/image';
+import {StaticImageData as NextJSStaticImageData} from 'next/image';
 
 
 export type color = string | {

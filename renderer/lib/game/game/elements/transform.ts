@@ -13,6 +13,7 @@ import type {
 import {ImagePosition} from "./image";
 import {deepMerge, DeepPartial, toHex} from "@lib/util/data";
 import {GameState} from "@lib/ui/components/player/gameState";
+import {Scene} from "@lib/game/game/elements/scene";
 
 
 export namespace TransformNameSpace {
@@ -52,6 +53,8 @@ export namespace TransformNameSpace {
     };
     export type ImageTransformProps = ({
         opacity: number;
+        scale: number;
+        rotation: number;
     }) & {
         position: CommonImage["position"];
     };
@@ -66,11 +69,11 @@ export class Transform<T extends TransformNameSpace.Types> {
      * @example
      * ```ts
      * const transform = new Transform<ImageTransformProps>({
-     *    opacity: 1,
-     *    position: "center"
+     *   opacity: 1,
+     *   position: "center"
      * }, {
-     *    duration: 0,
-     *    ease: "linear"
+     *   duration: 0,
+     *   ease: "linear"
      * });
      * ```
      */
@@ -102,7 +105,7 @@ export class Transform<T extends TransformNameSpace.Types> {
         position: CommonImage["position"],
         invertY?: boolean | undefined,
         invertX?: boolean | undefined
-    ): { left?: string | number, right?: string | number,  top?: string | number, bottom?: string | number } {
+    ): { left?: string | number, right?: string | number, top?: string | number, bottom?: string | number } {
         const CommonImagePositionMap = {
             [ImagePosition.left]: "25.33%",
             [ImagePosition.center]: "50%",
@@ -144,8 +147,8 @@ export class Transform<T extends TransformNameSpace.Types> {
         };
     }
 
-    public static offsetToCSS(origin: string | number, offset: Offset[keyof Offset] | undefined | false): string | number {
-        if (offset === undefined || offset === false) return origin;
+    public static offsetToCSS(origin: string | number, offset: Offset[keyof Offset] | undefined | false = 0): string | number {
+        if (offset === false) return origin;
         return typeof origin === "number" ? origin + offset : `calc(${origin} + ${offset}px)`;
     }
 
@@ -193,35 +196,59 @@ export class Transform<T extends TransformNameSpace.Types> {
             { scope: TransformNameSpace.FramerAnimationScope<T>, animate: TransformNameSpace.FramerAnimate },
         state: GameState
     ) {
-        return animate(scope.current, this.getProps(
-            state.state?.scene.config
+        return animate(scope.current, this.getCSSProps(
+            state.state?.scene
         ), this.options);
     }
 
-    getProps(
+    getTransformProps(
         {invertY, invertX}:
             { invertY?: boolean | undefined, invertX?: boolean | undefined }
+    ): string {
+        const Transforms = [
+            `translate(${invertX ? "" : "-"}50%, ${invertY ? "" : "-"}50%)`,
+            (this.props["scale"] !== undefined) && `scale(${this.props["scale"]})`,
+            (this.props["rotation"] !== undefined) && `rotate(${this.props["rotation"]}deg)`,
+        ]
+        return Transforms.filter(Boolean).join(" ");
+    }
+
+    getCSSProps(
+        scene: Scene,
     ): DOMKeyframesDefinition {
+        const {invertY, invertX} = scene.config;
         const FieldHandlers: Record<string, (v: any) => any> = {
             "position": (value: CommonImage["position"]) => Transform.positionToCSS(value, invertY, invertX),
             "backgroundColor": (value: Background["background"]) => Transform.backgroundToCSS(value),
             "backgroundOpacity": (value: number) => ({opacity: value}),
+            "opacity": (value: number) => ({opacity: value}),
+            "scale": () => ({}),
+            "rotation": () => ({}),
+            "transform": () => ({}),
+
         };
+        const transforms = this.getTransformProps({invertY, invertX});
+
         const props = {} as any;
-        for (const key in this.props) {
-            if (this.props.hasOwnProperty(key)) {
-                if (FieldHandlers[key]) {
-                    Object.assign(props, FieldHandlers[key](this.props[key]));
-                } else {
-                    props[key] = this.props[key];
-                }
+        props.transform = transforms;
+        for (const [key, value] of Object.entries(FieldHandlers)) {
+            if (this.props[key] !== undefined) {
+                Object.assign(props, value(this.props[key]));
             }
         }
         return props;
     }
 
+    getProps() {
+        return this.props;
+    }
+
     assign(props: DeepPartial<T>) {
-        this.props = deepMerge(props, this.props);
+        this.props = Object.assign(
+            {},
+            deepMerge(props, this.props)
+        );
+        return this;
     }
 }
 

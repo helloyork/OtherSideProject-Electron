@@ -1,9 +1,8 @@
-import { Game } from "../game";
-import { ContentNode } from "../save/rollback";
-import { Color } from "../show";
-import { deepMerge, safeClone } from "@lib/util/data";
-import { HistoryData } from "../save/transaction";
-import {LogicAction} from "@lib/game/game/logicAction";
+import {Game} from "../game";
+import {ContentNode} from "../save/rollback";
+import {Color} from "../show";
+import {deepMerge, safeClone} from "@lib/util/data";
+import {HistoryData} from "../save/transaction";
 import {CharacterAction} from "@lib/game/game/actions";
 import {Actionable} from "@lib/game/game/actionable";
 
@@ -21,28 +20,33 @@ export type SentenceState = {
 };
 
 type UnSentencePrompt = (string | Word)[] | (string | Word);
+
 export class Sentence {
     static defaultConfig: SentenceConfig = {
         color: "#fff",
         pause: true,
     };
-    static isSentence(obj: any): obj is Sentence {
-        return obj instanceof Sentence;
-    }
-    static toSentence(prompt: UnSentencePrompt | Sentence): Sentence {
-        return Sentence.isSentence(prompt) ? prompt : new Sentence(null, prompt);
-    }
     character: Character | null;
     text: Word[];
     config: SentenceConfig;
     state: SentenceState = {
         display: true
     };
+
     constructor(character: Character | null, text: (string | Word)[] | (string | Word), config: Partial<SentenceConfig> = {}) {
         this.character = character;
         this.text = this.format(text);
         this.config = deepMerge<SentenceConfig>(Sentence.defaultConfig, config);
     }
+
+    static isSentence(obj: any): obj is Sentence {
+        return obj instanceof Sentence;
+    }
+
+    static toSentence(prompt: UnSentencePrompt | Sentence): Sentence {
+        return Sentence.isSentence(prompt) ? prompt : new Sentence(null, prompt);
+    }
+
     format(text: (string | Word)[] | (string | Word)): Word[] {
         const result: Word[] = [];
         if (Array.isArray(text)) {
@@ -58,17 +62,20 @@ export class Sentence {
         }
         return result;
     }
+
     toData(): SentenceDataRaw {
         return {
             state: safeClone(this.state),
             character: safeClone(this.character.toData())
         };
     }
+
     fromData(data: SentenceDataRaw) {
         this.state = deepMerge<SentenceState>(this.state, data);
         this.character.fromData(data.character);
         return this;
     }
+
     toString() {
         return this.text.map(word => word.text).join("");
     }
@@ -78,15 +85,18 @@ export class Word {
     static defaultConfig: WordConfig = {
         color: "#000"
     };
-    static isWord(obj: any): obj is Word {
-        return obj instanceof Word;
-    }
     text: string;
     config: WordConfig;
+
     constructor(text: string, config: Partial<WordConfig> = {}) {
         this.text = text;
         this.config = deepMerge<WordConfig>(Word.defaultConfig, config);
     }
+
+    static isWord(obj: any): obj is Word {
+        return obj instanceof Word;
+    }
+
     toData() {
         return {
             text: this.text,
@@ -103,8 +113,8 @@ const CharacterActionTransaction = {
 type CharacterTransactionDataTypes = {
     [K in typeof CharacterActionTransaction[keyof typeof CharacterActionTransaction]]:
     K extends typeof CharacterActionTransaction.say ? Sentence :
-    K extends typeof CharacterActionTransaction.hide ? Sentence :
-    any;
+        K extends typeof CharacterActionTransaction.hide ? Sentence :
+            any;
 };
 export type CharacterStateData = {};
 
@@ -121,6 +131,7 @@ export class Character extends Actionable<
         this.name = name;
         this.config = config;
     }
+
     public say(content: string): Character;
     public say(content: Sentence): Character;
     public say(content: (string | Word)[]): Character;
@@ -164,9 +175,11 @@ export class Character extends Actionable<
             history.data.state.display = true;
         }
     }
+
     public toData(): CharacterStateData {
         return {};
     }
+
     public fromData(_: CharacterStateData): this {
         return this;
     }

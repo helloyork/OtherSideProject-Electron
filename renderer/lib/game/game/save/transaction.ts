@@ -1,4 +1,3 @@
-
 export type HistoryData<
     Enum extends Record<string, any>,
     Types extends TransactionType<Enum> = TransactionType<Enum>
@@ -25,9 +24,9 @@ export class Transaction<
     Enum extends Record<string, any>,
     Types extends TransactionType<Enum> = TransactionType<Enum>
 > {
+    undoHandler: TransactionHandler<Enum>;
     private history: TransactionData<Enum>[] = [];
     private currentTransaction: TransactionData<Enum> | null = null;
-    undoHandler: TransactionHandler<Enum>;
 
     constructor(undoHandler: TransactionHandler<Enum, Types>) {
         this.undoHandler = undoHandler;
@@ -46,6 +45,7 @@ export class Transaction<
         };
         return this;
     }
+
     /**
      * Commit the current transaction
      * @returns the token of the transaction
@@ -59,6 +59,7 @@ export class Transaction<
         this.currentTransaction = null;
         return this.history[this.history.length - 1]!;
     }
+
     commitWith<T extends Enum[keyof Enum]>(history: {
         type: T;
         data: Types[Enum[T]];
@@ -68,6 +69,7 @@ export class Transaction<
             .commit();
         return this;
     }
+
     /**
      * Undo a transaction
      * @param token the token of the transaction to undo
@@ -81,6 +83,7 @@ export class Transaction<
             this.history = this.history.filter(t => t !== token);
         }
     }
+
     /**
      * Add a history to the current transaction
      * @param history the history to add

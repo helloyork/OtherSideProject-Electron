@@ -1,20 +1,20 @@
 "use client";
 
 import clsx from "clsx";
-import { useTheme } from "@lib/ui/providers/theme-mode";
-import { useEffect, useState } from "react";
-import { useAspectRatio } from "../providers/ratio";
+import {useTheme} from "@lib/ui/providers/theme-mode";
+import {useEffect, useState} from "react";
+import {useAspectRatio} from "../providers/ratio";
 
 export default function Main({
-    children,
-    className
-}: {
+                                 children,
+                                 className
+                             }: {
     children: React.ReactNode,
     className?: string;
 }) {
-    const { theme } = useTheme();
+    const {theme} = useTheme();
     const [style, setStyle] = useState({});
-    const { setRatio } = useAspectRatio();
+    const {setRatio} = useAspectRatio();
 
     useEffect(() => {
         let resizeTimeout: NodeJS.Timeout;
@@ -49,7 +49,7 @@ export default function Main({
                     alignItems: "center",
                     justifyContent: "center"
                 });
-                setRatio({ w: width, h: height });
+                setRatio({w: width, h: height});
             }
         };
 
@@ -67,7 +67,7 @@ export default function Main({
     }, [theme, setRatio]);
 
     return (
-        <div id="content-container" style={{ position: "relative", width: "100%", height: "100%", overflow: "hidden" }}>
+        <div id="content-container" style={{position: "relative", width: "100%", height: "100%", overflow: "hidden"}}>
             <main className={clsx("text-foreground bg-background", theme, className)} style={style}>
                 {children}
             </main>

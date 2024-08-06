@@ -72,7 +72,7 @@ export type SceneActionContentType = {
     K extends typeof SceneActionTypes["action"] ? Scene :
         // K extends typeof SceneActionTypes["setBackground"] ? SceneEventTypes["event:scene.setBackground"] :
         K extends typeof SceneActionTypes["sleep"] ? Promise<any> :
-        any;
+            any;
 }
 
 export class SceneAction<T extends typeof SceneActionTypes[keyof typeof SceneActionTypes]>
@@ -149,8 +149,9 @@ export class ImageAction<T extends typeof ImageActionTypes[keyof typeof ImageAct
             return super.executeAction(state);
         } else if (this.type === ImageActionTypes.show) {
             const awaitable = new Awaitable<CalledActionResult, any>(v => v);
+            const transform = (this.contentNode as ContentNode<ImageActionContentType["image:show"]>).getContent()[1];
             state.animateImage(Image.EventTypes["event:image.show"], this.callee, [
-                (this.contentNode as ContentNode<ImageActionContentType["image:show"]>).getContent()[1]
+                transform
             ], () => {
                 this.callee.state.display = true;
                 awaitable.resolve({
@@ -161,8 +162,9 @@ export class ImageAction<T extends typeof ImageActionTypes[keyof typeof ImageAct
             return awaitable;
         } else if (this.type === ImageActionTypes.hide) {
             const awaitable = new Awaitable<CalledActionResult, any>(v => v);
+            const transform = (this.contentNode as ContentNode<ImageActionContentType["image:hide"]>).getContent()[1];
             state.animateImage(Image.EventTypes["event:image.hide"], this.callee, [
-                (this.contentNode as ContentNode<ImageActionContentType["image:hide"]>).getContent()[1]
+                transform
             ], () => {
                 this.callee.state.display = false;
                 awaitable.resolve({
@@ -282,6 +284,7 @@ export type SoundActionContentType = {
         K extends "sound:stop" ? [void] :
             any;
 }
+
 export class SoundAction<T extends typeof SoundActionTypes[keyof typeof SoundActionTypes]>
     extends TypedAction<SoundActionContentType, T, Sound> {
     static ActionTypes = SoundActionTypes;

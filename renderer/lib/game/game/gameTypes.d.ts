@@ -1,8 +1,7 @@
-
-import { ClientGame } from "../game";
-import { ContentNode } from "./save/rollback";
-import { StorableData } from "./save/store";
-import { FileStore, RemoteFileStoreClient } from "./save/storeProvider";
+import {ClientGame} from "../game";
+import {ContentNode} from "./save/rollback";
+import {StorableData} from "./save/store";
+import {FileStore, RemoteFileStoreClient} from "./save/storeProvider";
 import {LogicAction} from "@lib/game/game/logicAction";
 
 
@@ -16,7 +15,7 @@ export interface SavedGame {
     game: {
         store: { [key: string]: StorableData; };
     };
-};
+}
 
 export type GameConfig = {
     /**@deprecated */

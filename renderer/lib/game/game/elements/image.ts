@@ -1,6 +1,5 @@
 import type {CommonImage, CommonImagePosition} from "../show";
-import {DeepPartial, EventDispatcher} from "@lib/util/data";
-import {deepMerge} from "@lib/util/data";
+import {deepMerge, DeepPartial, EventDispatcher} from "@lib/util/data";
 import {ContentNode} from "../save/rollback";
 import {HistoryData} from "../save/transaction";
 import {Game} from "@lib/game/game/game";
@@ -64,6 +63,26 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
         this.id = null;
 
         this.checkConfig();
+        this.init();
+    }
+
+    init() {
+        const transform = new Transform<ImageTransformProps>({
+            ...(this.config),
+        }, {
+            duration: 0,
+        });
+        this.actions.push(new ImageAction<typeof ImageAction.ActionTypes.applyTransform>(
+            this,
+            ImageAction.ActionTypes.applyTransform,
+            new ContentNode(
+                Game.getIdManager().getStringId()
+            ).setContent([
+                void 0,
+                transform
+            ])
+        ));
+        return this;
     }
 
     checkConfig() {
@@ -128,15 +147,19 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
      * 让图片显示，如果图片已显示，则不会有任何效果
      */
     public show(): this;
-    public show(transform: Transform<TransformNameSpace.ImageTransformProps>): this;
-    public show(transform: Partial<TransformNameSpace.CommonTransformProps>): this;
-    public show(transform?: Transform<TransformNameSpace.ImageTransformProps> | Partial<TransformNameSpace.CommonTransformProps>): this {
+    public show(options: Transform<TransformNameSpace.ImageTransformProps>): this;
+    public show(options: Partial<TransformNameSpace.CommonTransformProps>): this;
+    public show(options?: Transform<TransformNameSpace.ImageTransformProps> | Partial<TransformNameSpace.CommonTransformProps>): this {
         this.transaction
             .startTransaction()
             .push({
                 type: ImageTransactionTypes.show,
                 data: this.config.display
             }).commit();
+        const trans =
+            (options instanceof Transform) ? options : new Transform({
+                opacity: 1,
+            }, options);
         const action = new ImageAction<typeof ImageAction.ActionTypes.show>(
             this,
             ImageAction.ActionTypes.show,
@@ -144,9 +167,7 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
                 Game.getIdManager().getStringId()
             ).setContent([
                 void 0,
-                (transform instanceof Transform) ? transform : new Transform({
-                    opacity: 1
-                }, transform)
+                trans
             ])
         );
         this.actions.push(action);
@@ -215,10 +236,7 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
     }
 
     toTransform(): Transform<ImageTransformProps> {
-        return new Transform<ImageTransformProps>({
-            opacity: this.state.opacity,
-            position: this.state.position, // @todo: add more props, like scale and rotation
-        }, {
+        return new Transform<ImageTransformProps>(this.state, {
             duration: 0,
         });
     }
