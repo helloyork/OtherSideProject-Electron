@@ -1,5 +1,3 @@
-import {StaticImageData} from "@lib/game/game/show";
-
 /**
  * @param obj1 source object
  * @param obj2 this object will overwrite the source object
@@ -34,7 +32,12 @@ export function deepMerge<T = Record<string, any>>(obj1: Record<string, any>, ob
 
     for (const key in obj2) {
         if (hasOwnProperty(obj2, key) && !hasOwnProperty(result, key)) {
-            result[key] = mergeValue(key, obj1[key], obj2[key]);
+            // If the value in obj2 is an object, perform a deep copy
+            if (typeof obj2[key] === 'object' && obj2[key] !== null) {
+                result[key] = deepMerge({}, obj2[key]);
+            } else {
+                result[key] = obj2[key];
+            }
         }
     }
 

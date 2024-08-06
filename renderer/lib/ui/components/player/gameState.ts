@@ -115,6 +115,7 @@ export class GameState {
             howl.once("end", end.bind(this)),
             howl.once("stop", end.bind(this))
         ];
+
         function end(this: GameState) {
             if (onEnd) {
                 onEnd();

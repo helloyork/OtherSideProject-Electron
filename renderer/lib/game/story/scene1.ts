@@ -61,20 +61,19 @@ const scene1Actions = scene1.action([
     i1.applyTransform(new Transform<ImageTransformProps>({
         position: {
             yoffset: 20,
-            xalign: 0.3,
-            yalign: 0.5
-        }
+        },
     }, {
         duration: 0.2
-    })).applyTransform(new Transform<ImageTransformProps>({
-        position: {
-            yoffset: 0,
-            xalign: 0.3,
-            yalign: 0.5
-        }
-    }, {
-        duration: 0.2
-    })).toActions(),
+    }))
+        .applyTransform(new Transform<ImageTransformProps>({
+            position: {
+                yoffset: 0,
+            },
+            opacity: 1
+        }, {
+            duration: 0.2
+        }))
+        .toActions(),
     sound1.play().toActions(),
     c1
         .say("你好！")
@@ -99,7 +98,7 @@ const scene1Actions = scene1.action([
         })
         .toActions(),
     i1.applyTransform(new Transform<ImageTransformProps>({
-        position: "right"
+        position: "right",
     }, {
         duration: 1,
         ease: "easeInOut"

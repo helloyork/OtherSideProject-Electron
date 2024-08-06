@@ -1,7 +1,6 @@
-import { Constructable } from "../constructable";
-import { Game } from "../game";
-import { deepMerge } from "@lib/util/data";
-import {LogicAction} from "@lib/game/game/logicAction";
+import {Constructable} from "../constructable";
+import {Game} from "../game";
+import {deepMerge} from "@lib/util/data";
 import {SceneAction, StoryAction} from "@lib/game/game/actions";
 
 export type StoryConfig = {};
@@ -24,10 +23,12 @@ export class Story extends Constructable<
         this.name = name;
         this.config = deepMerge<StoryConfig>(Story.defaultConfig, config);
     }
+
     public registerScene(scene: SceneAction<"scene:action">): this {
         this.scenes.push(scene);
         return this;
     }
+
     toData() {
         return {
             id: this.id,

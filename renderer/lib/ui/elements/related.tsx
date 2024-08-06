@@ -1,15 +1,15 @@
 import clsx from "clsx";
-import { useAspectRatio } from "../providers/ratio";
+import {useAspectRatio} from "../providers/ratio";
 
 
 export default function Related({
-    children,
-    className,
-}: Readonly<{
+                                    children,
+                                    className,
+                                }: Readonly<{
     children: React.ReactNode,
     className?: string
 }>) {
-    const { ratio } = useAspectRatio();
+    const {ratio} = useAspectRatio();
     return (
         <>
             <div style={{

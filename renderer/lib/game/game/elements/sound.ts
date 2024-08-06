@@ -10,6 +10,7 @@ export enum SoundType {
     music = "music",
     voice = "voice",
 }
+
 export type SoundConfig = {
     // @todo: 速读模式
     // @todo: 速读模式中忽略voice和soundEffect
@@ -45,6 +46,7 @@ export class Sound extends Actionable {
     } = {
         playing: null,
     };
+
     constructor(config: DeepPartial<SoundConfig> = {}) {
         super();
         this.config = deepMerge<SoundConfig>(Sound.defaultConfig, config);

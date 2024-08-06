@@ -4,9 +4,9 @@ import {Sentence, Word} from "./text";
 import {ContentNode, RenderableNode} from "../save/rollback";
 import {LogicAction} from "@lib/game/game/logicAction";
 import {MenuAction} from "@lib/game/game/actions";
-import Actions = LogicAction.Actions;
 import {Actionable} from "@lib/game/game/actionable";
 import {GameState} from "@lib/ui/components/player/gameState";
+import Actions = LogicAction.Actions;
 
 export type MenuConfig = {};
 export type MenuChoice = {

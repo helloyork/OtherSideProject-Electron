@@ -1,10 +1,10 @@
 import {Image as GameImage} from "@/lib/game/game/elements/image";
 import {useAspectRatio} from "@/lib/ui/providers/ratio";
 import clsx from "clsx";
-import {Transform} from "@lib/game/game/elements/transform";
 import {useEffect} from "react";
 import {useAnimate} from "framer-motion";
 import {GameState} from "@lib/ui/components/player/gameState";
+import {deepMerge} from "@lib/util/data";
 
 // @todo: 增加无障碍支持
 
@@ -22,19 +22,13 @@ export default function Image({
 
     const {
         src,
-        position,
         height,
         width,
-        scale,
-        rotation,
     } = image.config;
 
-    const {left, top, bottom, right} = Transform.positionToCSS(position);
-
-    const transform = `translate(${state.state?.scene.config.invertX ? "" : "-"}50%, ${state.state?.scene.config.invertY ? "" : "-"}50%) scale(${scale}) rotate(${rotation}deg)`;
-
     useEffect(() => {
-        Object.assign(scope.current.style, image.toTransform().getProps(state.state?.scene.config));
+        const initTransform = image.toTransform().assign(image.state);
+        Object.assign(image.state, deepMerge({}, initTransform.getProps()));
 
         const listening = [
             GameImage.EventTypes["event:image.show"],
@@ -45,9 +39,12 @@ export default function Image({
         const fc = listening.map((type) => {
             return {
                 fc: image.events.on(type, async (transform) => {
-                    console.log(transform.getProps(state.state?.scene.config));
+
+                    transform.assign(image.state);
+
                     await transform.animate({scope, animate}, state);
-                    Object.assign(scope.current.style, transform.getProps(state.state?.scene.config));
+                    image.state = deepMerge({}, transform.getProps());
+
                     if (onAnimationEnd) {
                         onAnimationEnd();
                     }
@@ -84,11 +81,6 @@ export default function Image({
                     width={width}
                     height={height}
                     style={{
-                        transform,
-                        left,
-                        top,
-                        bottom,
-                        right,
                         position: 'absolute'
                     }}
                     ref={scope}

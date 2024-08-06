@@ -3,14 +3,15 @@ import {ContentNode} from "../save/rollback";
 import {HistoryData} from "../save/transaction";
 import {LogicAction} from "@lib/game/game/logicAction";
 import {ScriptAction} from "@lib/game/game/actions";
-import Actions = LogicAction.Actions;
 import {Actionable} from "@lib/game/game/actionable";
 import {GameState} from "@lib/ui/components/player/gameState";
+import Actions = LogicAction.Actions;
 
 export interface ScriptCtx {
     script: Script;
     gameState: GameState;
 }
+
 type ScriptRun = (ctx: ScriptCtx) => ScriptCleaner;
 export type ScriptCleaner = () => void;
 
