@@ -101,6 +101,31 @@ export class Transform<T extends TransformNameSpace.Types> {
         return this.isCommonImagePosition(position) || this.isCoord2D(position) || this.isAlign(position);
     }
 
+    public static commonPositionToCoord2D(position: CommonImagePosition): Coord2D {
+        const base: Coord2D = {x: "50%", y: "50%", xoffset: 0, yoffset: 0};
+        switch (position) {
+            case ImagePosition.left:
+                return {...base, x: "0%"};
+            case ImagePosition.center:
+                return base;
+            case ImagePosition.right:
+                return {...base, x: "100%"};
+        }
+    }
+
+    public static toCoord2D(position: Coord2D | Align | CommonImagePosition): Coord2D {
+        if (this.isCommonImagePosition(position)) return this.commonPositionToCoord2D(position);
+        if (this.isCoord2D(position)) return position;
+        if (this.isAlign(position)) {
+            const {xalign, yalign, ...rest} = position;
+            return {
+                x: this.alignToCSS(xalign),
+                y: this.alignToCSS(yalign),
+                ...rest
+            };
+        }
+    }
+
     public static positionToCSS(
         position: CommonImage["position"],
         invertY?: boolean | undefined,
@@ -157,7 +182,9 @@ export class Transform<T extends TransformNameSpace.Types> {
         return coord;
     }
 
-    public static alignToCSS(align: number): string {
+    public static alignToCSS(align: number): (
+        `${number}%`
+    ) {
         return `${align * 100}%`;
     }
 
@@ -196,6 +223,7 @@ export class Transform<T extends TransformNameSpace.Types> {
             { scope: TransformNameSpace.FramerAnimationScope<T>, animate: TransformNameSpace.FramerAnimate },
         state: GameState
     ) {
+        console.log("Animating", this.props, this.getCSSProps(state.state?.scene));
         return animate(scope.current, this.getCSSProps(
             state.state?.scene
         ), this.options);

@@ -98,11 +98,32 @@ const scene1Actions = scene1.action([
         })
         .toActions(),
     i1.applyTransform(new Transform<ImageTransformProps>({
-        position: "right",
+        position: {
+            xalign: 0.75,
+            yalign: 0.5
+        },
     }, {
         duration: 1,
-        ease: "easeInOut"
-    })).toActions(),
+        ease: "linear"
+    }))
+        .applyTransform(new Transform<ImageTransformProps>({
+            scale: 1.0,
+            opacity: 0.5
+        }, {
+            duration: 1,
+            ease: "easeInOut"
+        }))
+        .applyTransform(new Transform<ImageTransformProps>({
+            position: {
+                yoffset: 100,
+                xalign: 0.45,
+                yalign: 0.3
+            }
+        }, {
+            duration: 1,
+            ease: "easeInOut"
+        }))
+        .toActions(),
     // scene1.setSceneBackground({
     //     backgroundOpacity: 0,
     // }, {
