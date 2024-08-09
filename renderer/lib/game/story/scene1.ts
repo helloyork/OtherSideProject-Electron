@@ -11,6 +11,7 @@ import {GameState} from "@lib/ui/components/player/gameState";
 
 import mainMenuBackground from "@/public/static/images/main-menu-background.webp";
 import {Sound} from "@lib/game/game/elements/sound";
+import ImageSpeechless from "@/public/static/images/test_speechless.png";
 import ImageTransformProps = TransformNameSpace.ImageTransformProps;
 
 const scene1 = new Scene("scene1", {
@@ -20,12 +21,21 @@ const scene1 = new Scene("scene1", {
 })
 
 const i1 = new Image("i1", {
-    src: "/static/images/sensei.png",
+    src: "/static/images/test_sensei.png",
     position: {
         xalign: 0.3,
         yalign: 0.5
     },
     scale: 0.7
+});
+const i2 = new Image("i2", {
+    src: ImageSpeechless,
+    position: {
+        xalign: 0.3,
+        yalign: 0.7,
+        xoffset: 70
+    },
+    scale: 0.1
 });
 
 const story = new Story("test");
@@ -34,7 +44,7 @@ const c2 = new Character("我");
 const sound1 = new Sound({
     src: "/static/sounds/SE_Write_01.wav",
     sync: false
-})
+});
 
 
 const createConditionIsNumberCorrect = (n: number) => new Condition()
@@ -54,30 +64,67 @@ const scene1Actions = scene1.action([
     i1.show({
         ease: "circOut",
         duration: 0.5,
+        sync: true
     }).toActions(),
     new Character(null)
         .say("简体中文，繁體中文, 日本語, 한국어, ไทย, Tiếng Việt, हिन्दी, বাংলা, తెలుగు, मराठी, 1234567890!@#$%^&*()QWERTYUIOPASDFGHJKLZCVN{}|:\"<>?~`, A quick brown fox jumps over the lazy dog.")
         .toActions(),
-    i1.applyTransform(new Transform<ImageTransformProps>({
-        position: {
-            yoffset: 20,
-        },
-    }, {
-        duration: 0.2
-    }))
-        .applyTransform(new Transform<ImageTransformProps>({
+    i2.show(new Transform<ImageTransformProps>([{
+        props: {
+            opacity: 1,
             position: {
-                yoffset: 0,
+                yoffset: -10
+            }
+        },
+        options: {
+            duration: 0.5,
+            ease: "easeOut",
+        }
+    }], {
+        sync: false
+    })).toActions(),
+    i1.applyTransform(new Transform<ImageTransformProps>([
+        {
+            props: {
+                position: {
+                    xoffset: 5,
+                }
             },
-            opacity: 1
-        }, {
-            duration: 0.2
-        }))
-        .toActions(),
+            options: {
+                duration: 0.1,
+                ease: "easeOut",
+            }
+        },
+        {
+            props: {
+                position: {
+                    xoffset: -5,
+                }
+            },
+            options: {
+                duration: 0.1,
+                ease: "easeOut",
+            }
+        },
+        {
+            props: {
+                position: {
+                    xoffset: 5,
+                }
+            },
+            options: {
+                duration: 0.1,
+                ease: "easeOut",
+            }
+        },
+    ], {
+        sync: false
+    })).toActions(),
     sound1.play().toActions(),
     c1
-        .say("你好！")
-        .say("你最近过的怎么样？")
+        .say("你好！").toActions(),
+    i2.hide().toActions(),
+    c1.say("你最近过的怎么样？")
         .toActions(),
     new Menu("我最近过的怎么样？")
         .choose({
@@ -97,26 +144,49 @@ const scene1Actions = scene1.action([
             prompt: "还不错吧"
         })
         .toActions(),
-    i1.applyTransform(new Transform<ImageTransformProps>({
-        position: "right",
-    }, {
-        duration: 1,
-        ease: "easeInOut"
+    i1.applyTransform(new Transform<ImageTransformProps>([
+        {
+            props: {
+                position: {
+                    xalign: 0.75,
+                    yalign: 0.5
+                }
+            },
+            options: {
+                duration: 1,
+                ease: "linear",
+            }
+        },
+        {
+            props: {
+                scale: 1.0,
+                opacity: 0.5
+            },
+            options: {
+                duration: 1,
+                ease: "easeInOut",
+            }
+        },
+        {
+            props: {
+                position: {
+                    yoffset: 100,
+                    xalign: 0.45,
+                    yalign: 0.3
+                }
+            },
+            options: {
+                duration: 1,
+                ease: "easeInOut",
+            }
+        }
+    ], {
+        sync: true
     })).toActions(),
-    // scene1.setSceneBackground({
-    //     backgroundOpacity: 0,
-    // }, {
-    //     duration: 1,
-    //     ease: "linear"
-    // }).setSceneBackground({
-    //     background: mainMenuBackground2
-    // }, {duration: 0}).setSceneBackground({
-    //     backgroundOpacity: 1,
-    // }, {
-    //     duration: 1,
-    //     ease: "linear"
-    // }).toActions(),
-    i1.hide().toActions(),
+    i1.hide({
+        ease: "circOut",
+        duration: 0.5,
+    }).toActions(),
     c2
         .say("那你愿不愿意陪我玩一个游戏？")
         .say("听好游戏规则")
@@ -124,6 +194,8 @@ const scene1Actions = scene1.action([
         .say("你要猜这个数字是多少")
         .toActions(),
     new Script((ctx: ScriptCtx) => {
+        // 由于游戏脚本创建必须没有副作用，所以这里不能直接修改游戏状态
+        // 使用Script来更新状态，使用Storable来管理状态
         const namespace =
             ctx.gameState.clientGame.game
                 .getLiveGame()
@@ -132,7 +204,10 @@ const scene1Actions = scene1.action([
         let availableNumbers = [3, 6, 8];
         const number = availableNumbers[Math.floor(Math.random() * availableNumbers.length)];
         namespace.set("number", number);
-        console.log("number", number);
+        console.log("number", number); // @debug
+        console.log("storable", ctx.gameState.clientGame.game
+            .getLiveGame()
+            .storable); // @debug
         return () => namespace.set("number", void 0);
     }).toActions(),
     new Menu(new Sentence(c2, "那么，你猜这个数字是多少？"))

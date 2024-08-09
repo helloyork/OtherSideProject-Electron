@@ -9,10 +9,10 @@ export class Action<ContentNodeType = any> {
         action: "action",
     };
     callee: LogicAction.GameElement;
-    type: string;
+    type: ContentNodeType;
     contentNode: ContentNode<ContentNodeType>;
 
-    constructor(callee: LogicAction.GameElement, type: string, contentNode: ContentNode<ContentNodeType>) {
+    constructor(callee: LogicAction.GameElement, type: ContentNodeType, contentNode: ContentNode<ContentNodeType>) {
         this.callee = callee;
         this.type = type;
         this.contentNode = contentNode;

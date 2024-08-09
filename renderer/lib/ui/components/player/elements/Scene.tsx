@@ -29,7 +29,6 @@ export default function Scene({
                 }}
                 ref={scope}
             >
-                {/* // @TODO: Animation */}
             </motion.div>
         </AnimatePresence>
     )
