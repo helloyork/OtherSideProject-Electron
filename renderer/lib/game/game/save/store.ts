@@ -27,6 +27,24 @@ export class Namespace<T extends StorableData<string>> {
     private history: Transaction[] = [];
     private currentTransaction: Transaction | null = null;
 
+    static isSerializable(value: any) {
+        if (["number", "string", "boolean"].includes(typeof value)) {
+            return true;
+        }
+        if (value instanceof Date) {
+            return true;
+        }
+        if (value === null || value === undefined) {
+            return true;
+        }
+        if (Array.isArray(value)) {
+            return value.every(Namespace.isSerializable);
+        }
+        if (typeof value === "object") {
+            return Object.getPrototypeOf(value) === Object.prototype && Object.values(value).every(Namespace.isSerializable);
+        }
+    }
+
     constructor(name: string, initContent: T, key?: string) {
         this.name = name;
         this.key = key || name;
@@ -95,6 +113,11 @@ export class Namespace<T extends StorableData<string>> {
                 key: key as string,
                 value: [this.content[key], value],
             });
+        }
+        if (!Namespace.isSerializable(value)) {
+            console.warn(`Value ${value} is not serializable`);
+            this.content[key] = value;
+            return this;
         }
         this.content[key] = value;
         return this;

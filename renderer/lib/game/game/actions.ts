@@ -22,7 +22,7 @@ export class TypedAction<
 > extends Action<ContentType[T]> {
     declare callee: Callee;
 
-    constructor(callee: Callee, type: T, contentNode: ContentNode<ContentType[T]>) {
+    constructor(callee: Callee, type: any, contentNode: ContentNode<ContentType[T]>) {
         super(callee, type, contentNode);
         this.callee = callee;
         this.contentNode.callee = this;

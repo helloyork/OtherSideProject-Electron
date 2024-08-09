@@ -7,13 +7,13 @@ import type {
     DynamicAnimationOptions,
     ElementOrSelector,
     MotionValue,
-    SequenceOptions,
     ValueAnimationTransition
 } from "framer-motion";
 import {ImagePosition} from "./image";
 import {deepMerge, DeepPartial, toHex} from "@lib/util/data";
 import {GameState} from "@lib/ui/components/player/gameState";
-import {Scene} from "@lib/game/game/elements/scene";
+import Sequence = TransformNameSpace.Sequence;
+import SequenceProps = TransformNameSpace.SequenceProps;
 
 
 export namespace TransformNameSpace {
@@ -46,7 +46,13 @@ export namespace TransformNameSpace {
     export type CommonTransformProps = {
         duration: number;
         ease: EasingDefinition;
+        delay: number;
+    } & {
+        sync: boolean;
     };
+    export type CommonSequenceProps = {
+        sync: boolean;
+    }
     export type SceneBackgroundTransformProps = {
         background: Background["background"];
         backgroundOpacity: number;
@@ -55,17 +61,32 @@ export namespace TransformNameSpace {
         opacity: number;
         scale: number;
         rotation: number;
+        display: boolean;
     }) & {
         position: CommonImage["position"];
     };
     export type Types = ImageTransformProps | SceneBackgroundTransformProps;
+    export type SequenceProps<T> = DeepPartial<T>;
+    export type SequenceOptions = Partial<CommonTransformProps>;
+    // export type Sequence<T> = [SequenceProps<T>, SequenceOptions];
+    export type Sequence<T> = {
+        props: SequenceProps<T>,
+        options: SequenceOptions
+    }
 }
 
 export class Transform<T extends TransformNameSpace.Types> {
+    static defaultOptions: Partial<TransformNameSpace.CommonTransformProps> = {
+        sync: true
+    };
+    static defaultSequenceOptions: Partial<TransformNameSpace.CommonSequenceProps> = {
+        sync: true
+    }
+    private readonly sequenceOptions: Partial<TransformNameSpace.CommonSequenceProps>;
+    private sequences: TransformNameSpace.Sequence<T>[] = [];
+    state: SequenceProps<T> = {};
+
     /**
-     *
-     * @param props Items to animate
-     * @param options Animation options
      * @example
      * ```ts
      * const transform = new Transform<ImageTransformProps>({
@@ -77,7 +98,18 @@ export class Transform<T extends TransformNameSpace.Types> {
      * });
      * ```
      */
-    constructor(public props: DeepPartial<T>, public options: Partial<TransformNameSpace.CommonTransformProps>) {
+    constructor(sequences: Sequence<T>[], sequenceOptions?: TransformNameSpace.SequenceOptions);
+    constructor(props: DeepPartial<T>, options?: Partial<TransformNameSpace.CommonTransformProps>);
+    constructor(arg0: Sequence<T>[] | DeepPartial<T>, arg1?: Partial<TransformNameSpace.CommonTransformProps> | TransformNameSpace.SequenceOptions) {
+        if (Array.isArray(arg0)) {
+            this.sequences.push(...arg0);
+            this.sequenceOptions = Object.assign({}, Transform.defaultSequenceOptions, arg1 || {});
+        } else {
+            const [props, options] =
+                [arg0, arg1 || {}];
+            this.sequences.push({props, options: options || {}});
+            this.sequenceOptions = Object.assign({}, Transform.defaultSequenceOptions);
+        }
     }
 
     public static isAlign(align: any): align is Align {
@@ -184,7 +216,7 @@ export class Transform<T extends TransformNameSpace.Types> {
 
     public static alignToCSS(align: number): (
         `${number}%`
-    ) {
+        ) {
         return `${align * 100}%`;
     }
 
@@ -223,28 +255,25 @@ export class Transform<T extends TransformNameSpace.Types> {
             { scope: TransformNameSpace.FramerAnimationScope<T>, animate: TransformNameSpace.FramerAnimate },
         state: GameState
     ) {
-        console.log("Animating", this.props, this.getCSSProps(state.state?.scene));
-        return animate(scope.current, this.getCSSProps(
-            state.state?.scene
-        ), this.options);
+        return new Promise<void>(async (resolve) => {
+            if (!this.sequenceOptions.sync) { // @todo: ？增加动画跳过和打断
+                resolve();
+            }
+            for (const {props, options} of this.sequences) {
+                this.state = deepMerge(this.state, props);
+                const animation = animate(scope.current, this.propToCSS(state, this.state), options);
+                if (options?.sync !== false) {
+                    await animation;
+                }
+            }
+            if (this.sequenceOptions.sync) {
+                resolve();
+            }
+        });
     }
 
-    getTransformProps(
-        {invertY, invertX}:
-            { invertY?: boolean | undefined, invertX?: boolean | undefined }
-    ): string {
-        const Transforms = [
-            `translate(${invertX ? "" : "-"}50%, ${invertY ? "" : "-"}50%)`,
-            (this.props["scale"] !== undefined) && `scale(${this.props["scale"]})`,
-            (this.props["rotation"] !== undefined) && `rotate(${this.props["rotation"]}deg)`,
-        ]
-        return Transforms.filter(Boolean).join(" ");
-    }
-
-    getCSSProps(
-        scene: Scene,
-    ): DOMKeyframesDefinition {
-        const {invertY, invertX} = scene.config;
+    propToCSS(state: GameState, prop: DeepPartial<T>): DOMKeyframesDefinition {
+        const {invertY, invertX} = state.state.scene.config;
         const FieldHandlers: Record<string, (v: any) => any> = {
             "position": (value: CommonImage["position"]) => Transform.positionToCSS(value, invertY, invertX),
             "backgroundColor": (value: Background["background"]) => Transform.backgroundToCSS(value),
@@ -252,30 +281,31 @@ export class Transform<T extends TransformNameSpace.Types> {
             "opacity": (value: number) => ({opacity: value}),
             "scale": () => ({}),
             "rotation": () => ({}),
-            "transform": () => ({}),
-
+            "display": () => ({})
         };
-        const transforms = this.getTransformProps({invertY, invertX});
 
-        const props = {} as any;
-        props.transform = transforms;
-        for (const [key, value] of Object.entries(FieldHandlers)) {
-            if (this.props[key] !== undefined) {
-                Object.assign(props, value(this.props[key]));
+        const props = {} as DOMKeyframesDefinition;
+        props.transform = this.propToTransformCSS(state, prop);
+        for (const key in prop) {
+            if (FieldHandlers[key]) {
+                Object.assign(props, FieldHandlers[key](prop[key]));
             }
         }
         return props;
     }
 
-    getProps() {
-        return this.props;
+    propToTransformCSS(state: GameState, prop: DeepPartial<T>): string {
+        const {invertY, invertX} = state.state.scene.config;
+        const Transforms = [
+            `translate(${invertX ? "" : "-"}50%, ${invertY ? "" : "-"}50%)`,
+            (prop["scale"] !== undefined) && `scale(${prop["scale"]})`,
+            (prop["rotation"] !== undefined) && `rotate(${prop["rotation"]}deg)`,
+        ]
+        return Transforms.filter(Boolean).join(" ");
     }
 
-    assign(props: DeepPartial<T>) {
-        this.props = Object.assign(
-            {},
-            deepMerge(props, this.props)
-        );
+    assignState(state: SequenceProps<T>) {
+        this.state = deepMerge(state, this.state);
         return this;
     }
 }

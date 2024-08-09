@@ -69,13 +69,6 @@ export class Menu extends Actionable {
         return actions;
     }
 
-    $setChild(child: RenderableNode): this {
-        this.choices.forEach(choice => {
-            choice.action[choice.action.length - 1].contentNode.addChild(child);
-        });
-        return this;
-    }
-
     toActions(): MenuAction<"menu:action">[] {
         return [
             new MenuAction(

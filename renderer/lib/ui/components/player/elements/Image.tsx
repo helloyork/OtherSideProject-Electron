@@ -27,8 +27,8 @@ export default function Image({
     } = image.config;
 
     useEffect(() => {
-        const initTransform = image.toTransform().assign(image.state);
-        Object.assign(image.state, deepMerge({}, initTransform.getProps()));
+        const initTransform = image.toTransform();
+        Object.assign(scope.current, initTransform.propToCSS(state, initTransform.state));
 
         const listening = [
             GameImage.EventTypes["event:image.show"],
@@ -39,11 +39,10 @@ export default function Image({
         const fc = listening.map((type) => {
             return {
                 fc: image.events.on(type, async (transform) => {
-
-                    transform.assign(image.state);
+                    transform.assignState(image.state);
 
                     await transform.animate({scope, animate}, state);
-                    image.state = deepMerge({}, transform.getProps());
+                    image.state = deepMerge({}, transform.state);
 
                     if (onAnimationEnd) {
                         onAnimationEnd();
@@ -77,7 +76,7 @@ export default function Image({
                 <img
                     alt={"image"}
                     className=""
-                    src={src}
+                    src={GameImage.staticImageDataToSrc(src)}
                     width={width}
                     height={height}
                     style={{

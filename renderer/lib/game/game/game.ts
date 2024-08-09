@@ -8,6 +8,7 @@ import {Constants} from "@/lib/api/config";
 import type {Story} from "./elements/story";
 import {LogicAction} from "@lib/game/game/logicAction";
 import {GameState} from "@lib/ui/components/player/gameState";
+import { cloneDeep } from "lodash";
 
 class IdManager extends Singleton<IdManager>() {
     private id = 0;
@@ -164,7 +165,7 @@ export class LiveGame {
 
     /* Game */
     loadStory(story: Story) {
-        this.story = story;
+        this.story = cloneDeep(story);
         return this;
     }
 
