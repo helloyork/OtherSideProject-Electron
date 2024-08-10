@@ -9,8 +9,8 @@ import type {Character, Sentence} from "@lib/game/game/elements/text";
 import type {Scene} from "@lib/game/game/elements/scene";
 import type {Story} from "@lib/game/game/elements/story";
 import type {Script} from "@lib/game/game/elements/script";
-import type {Menu} from "@lib/game/game/elements/menu";
-import type {Condition} from "@lib/game/game/elements/condition";
+import {Menu, MenuData} from "@lib/game/game/elements/menu";
+import type {Condition, ConditionData} from "@lib/game/game/elements/condition";
 import type {CalledActionResult} from "@lib/game/game/gameTypes";
 import {GameState} from "@lib/ui/components/player/gameState";
 import {Sound} from "@lib/game/game/elements/sound";
@@ -195,7 +195,7 @@ export const ConditionActionTypes = {
 } as const;
 export type ConditionActionContentType = {
     [K in typeof ConditionActionTypes[keyof typeof ConditionActionTypes]]:
-    K extends "condition:action" ? Condition :
+    K extends "condition:action" ? ConditionData :
         any;
 }
 
@@ -204,7 +204,7 @@ export class ConditionAction<T extends typeof ConditionActionTypes[keyof typeof 
     static ActionTypes = ConditionActionTypes;
 
     executeAction(gameState: GameState) {
-        const nodes = this.contentNode.getContent().evaluate({
+        const nodes = this.callee.evaluate(this.contentNode.getContent(), {
             gameState
         });
         nodes?.[nodes.length - 1]?.contentNode.addChild(this.contentNode.child);
@@ -247,7 +247,7 @@ export const MenuActionTypes = {
 } as const;
 export type MenuActionContentType = {
     [K in typeof MenuActionTypes[keyof typeof MenuActionTypes]]:
-    K extends "menu:action" ? any :
+    K extends "menu:action" ? MenuData :
         any;
 }
 
@@ -257,9 +257,9 @@ export class MenuAction<T extends typeof MenuActionTypes[keyof typeof MenuAction
 
     public executeAction(state: GameState): Awaitable<CalledActionResult, any> {
         const awaitable = new Awaitable<CalledActionResult, CalledActionResult>(v => v);
-        const menu = this.contentNode.getContent() as Menu;
+        const menu = this.contentNode.getContent() as MenuData;
 
-        state.createMenu(menu.prompt, menu.$constructChoices(state), v => {
+        state.createMenu(menu.prompt, menu.choices, v => {
             let lastChild = state.clientGame.game.getLiveGame().currentAction.contentNode.child;
             if (lastChild) {
                 v.action[v.action.length - 1]?.contentNode.addChild(lastChild);
@@ -268,7 +268,7 @@ export class MenuAction<T extends typeof MenuActionTypes[keyof typeof MenuAction
                 type: this.type as any,
                 node: v.action[0].contentNode
             });
-        })
+        }).then(r => r)
         return awaitable;
     }
 }

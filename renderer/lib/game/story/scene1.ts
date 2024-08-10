@@ -106,20 +106,9 @@ const scene1Actions = scene1.action([
                 ease: "easeOut",
             }
         },
-        {
-            props: {
-                position: {
-                    xoffset: 5,
-                }
-            },
-            options: {
-                duration: 0.1,
-                ease: "easeOut",
-            }
-        },
     ], {
         sync: false
-    })).toActions(),
+    }).repeat(2)).toActions(),
     sound1.play().toActions(),
     c1
         .say("你好！").toActions(),

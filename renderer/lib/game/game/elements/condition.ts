@@ -14,6 +14,7 @@ interface LambdaCtx {
     gameState: GameState;
     resolve: (value?: any) => void;
 }
+
 type LambdaHandler = (ctx: LambdaCtx) => ScriptCleaner;
 
 export class Lambda {
@@ -70,11 +71,23 @@ export class Condition extends Actionable {
             action: null
         }
     };
-    cleaner: ScriptCleaner | null = null;
 
     constructor(config: ConditionConfig = {}) {
         super();
         this.config = deepMerge<ConditionConfig>(Condition.defaultConfig, config);
+    }
+
+    static getInitialState(): ConditionData {
+        return {
+            If: {
+                condition: null,
+                action: null
+            },
+            ElseIf: [],
+            Else: {
+                action: null
+            }
+        }
     }
 
     If(condition: Lambda, action: LogicAction.Actions | LogicAction.Actions[]): this {
@@ -96,32 +109,22 @@ export class Condition extends Actionable {
         return this;
     }
 
-    evaluate({gameState}: { gameState: GameState }): LogicAction.Actions[] | null {
+    evaluate(conditions: ConditionData, {gameState}: { gameState: GameState }): LogicAction.Actions[] | null {
         const ctx = {gameState};
-        this.transaction.startTransaction();
 
-        const _if = this.conditions.If.condition?.evaluate(ctx);
+        const _if = conditions.If.condition?.evaluate(ctx);
         if (_if?.value) {
-            this.transaction.push({
-                type: '',
-                data: _if.cleaner
-            }).commit();
-            return this.conditions.If.action || null;
+            return conditions.If.action || null;
         }
 
-        for (const elseIf of this.conditions.ElseIf) {
+        for (const elseIf of conditions.ElseIf) {
             const _elseIf = elseIf.condition?.evaluate(ctx);
             if (_elseIf?.value) {
-                this.transaction.push({
-                    type: '',
-                    data: _elseIf.cleaner
-                }).commit();
                 return elseIf.action || null;
             }
         }
 
-        this.transaction.commit();
-        return this.conditions.Else.action || null;
+        return conditions.Else.action || null;
     }
 
     undo(history: HistoryData<Record<string, string>>): void {
@@ -131,15 +134,20 @@ export class Condition extends Actionable {
     }
 
     toActions(): LogicAction.Actions[] {
-        return [
+        // 为了确保所有操作的行为一致，修改为一次性toActions，调用之后状态恢复到初始状态
+        // 防止多次调用toActions导致状态混乱
+
+        const output = [
             Reflect.construct(ConditionAction, [
                 this,
                 ConditionAction.ActionTypes.action,
-                new ContentNode<Condition>(
+                new ContentNode<ConditionData>(
                     Game.getIdManager().getStringId(),
-                ).setContent(this)
+                ).setContent(this.conditions)
             ]) as ConditionAction<typeof ConditionAction.ActionTypes.action>
-        ]
+        ];
+        this.conditions = Condition.getInitialState();
+        return output;
     }
 
     construct(actions: LogicAction.Actions[], lastChild?: RenderableNode, parentChild?: RenderableNode): LogicAction.Actions[] {
