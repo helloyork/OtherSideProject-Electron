@@ -26,7 +26,7 @@ export class Node<C = any> {
     }
 }
 
-export type RenderableNode = ContentNode | TreeNode;
+export type RenderableNode = ContentNode;
 export type RenderableNodeData = ContentNodeData | TreeNodeData;
 
 export type ContentNodeData = {
@@ -147,9 +147,7 @@ export class RootNode extends ContentNode {
                 continue;
             }
             callback(node);
-            if (node instanceof TreeNode) {
-                queue.push(...node.children);
-            } else if (node instanceof ContentNode) {
+            if (node instanceof ContentNode) {
                 queue.push(node.child);
             }
         }
@@ -161,66 +159,4 @@ export type TreeNodeData = {
     id: string;
     data: any;
 }
-
-export class TreeNode extends Node {
-    children: RenderableNode[];
-    parent: RenderableNode | null;
-    callee: LogicAction.Actions;
-
-    constructor(id: string, type: string, children?: RenderableNode[], parent?: RenderableNode | null, callee?: LogicAction.Actions) {
-        super(id, type);
-        this.children = children || [];
-        this.parent = parent || null;
-        this.callee = callee;
-    }
-
-    setParent(parent: RenderableNode | null) {
-        if (parent === this) {
-            throw new Error('Cannot set parent to itself');
-        }
-        this.parent = parent;
-        return this;
-    }
-
-    addChild(child: RenderableNode) {
-        if (child === this) {
-            throw new Error('Cannot add node to itself');
-        }
-        this.children.push(child);
-        if (child.parent !== this) {
-            child.remove().setParent(this);
-        }
-        return this;
-    }
-
-    removeChild(child: RenderableNode) {
-        this.children = this.children.filter(c => {
-            if (c === child) {
-                c.setParent(null);
-            }
-            return c !== child;
-        });
-        return this;
-    }
-
-    /**
-     * Remove this node from the parent's children
-     */
-    remove() {
-        this.parent?.removeChild(this);
-        return this;
-    }
-
-    toData(): RenderableNodeData {
-        return {
-            id: this.id,
-            data: this.children.map(c => c?.toData ? c.toData() : null),
-        };
-    }
-
-    hasChild() {
-        return this.children.length > 0;
-    }
-}
-
 

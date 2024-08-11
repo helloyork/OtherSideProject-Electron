@@ -187,7 +187,7 @@ export class LiveGame {
         return this;
     }
 
-    next(state: GameState): CalledActionResult | Awaitable<unknown, CalledActionResult> | null {
+    next(state: GameState): CalledActionResult | Awaitable<CalledActionResult, CalledActionResult> | null {
         if (this.lockedAwaiting) {
             if (!this.lockedAwaiting.solved) {
                 console.log("Locked awaiting");
@@ -215,8 +215,12 @@ export class LiveGame {
         return nextAction;
     }
 
-    _get() {
-        return this.story;
+    executeAction(state: GameState, action: LogicAction.Actions): LogicAction.Actions | Awaitable<CalledActionResult, CalledActionResult> | null {
+        const nextAction = action.executeAction(state);
+        if (Awaitable.isAwaitable(nextAction)) {
+            return nextAction;
+        }
+        return nextAction.node.child?.callee;
     }
 }
 

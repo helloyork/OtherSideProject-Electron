@@ -14,6 +14,7 @@ import type {Condition, ConditionData} from "@lib/game/game/elements/condition";
 import type {CalledActionResult} from "@lib/game/game/gameTypes";
 import {GameState} from "@lib/ui/components/player/gameState";
 import {Sound} from "@lib/game/game/elements/sound";
+import {Control} from "@lib/game/game/elements/control";
 
 export class TypedAction<
     ContentType extends Record<string, any>,
@@ -70,7 +71,6 @@ export const SceneActionTypes = {
 export type SceneActionContentType = {
     [K in typeof SceneActionTypes[keyof typeof SceneActionTypes]]:
     K extends typeof SceneActionTypes["action"] ? Scene :
-        // K extends typeof SceneActionTypes["setBackground"] ? SceneEventTypes["event:scene.setBackground"] :
         K extends typeof SceneActionTypes["sleep"] ? Promise<any> :
             any;
 }
@@ -138,6 +138,7 @@ export class ImageAction<T extends typeof ImageActionTypes[keyof typeof ImageAct
     extends TypedAction<ImageActionContentType, T, Image> {
     static ActionTypes = ImageActionTypes;
 
+    // @todo: 简化
     public executeAction(state: GameState): CalledActionResult | Awaitable<CalledActionResult, any> {
         if (this.callee.id === null) {
             this.callee.setId(state.clientGame.game.getLiveGame().idManager.getStringId());
@@ -325,5 +326,101 @@ export class SoundAction<T extends typeof SoundActionTypes[keyof typeof SoundAct
             }
             return super.executeAction(state);
         }
+    }
+}
+
+export const ControlActionTypes = {
+    action: "control:action",
+    do: "control:do",
+    doAsync: "control:doAsync",
+    any: "control:any",
+    all: "control:all",
+    allAsync: "control:allAsync",
+} as const;
+export type ControlActionContentType = {
+    [K in typeof ControlActionTypes[keyof typeof ControlActionTypes]]:
+    K extends "control:do" ? [LogicAction.Actions[]] :
+        K extends "control:doAsync" ? [LogicAction.Actions[]] :
+            K extends "control:any" ? [LogicAction.Actions[]] :
+                K extends "control:all" ? [LogicAction.Actions[]] :
+                    K extends "control:parallel" ? [LogicAction.Actions[]] :
+                    any;
+}
+
+export class ControlAction<T extends typeof ControlActionTypes[keyof typeof ControlActionTypes]>
+    extends TypedAction<ControlActionContentType, T, Control> {
+    static ActionTypes = ControlActionTypes;
+
+    public async executeAllActions(state: GameState, action: LogicAction.Actions) {
+        let exited = false;
+        let current = action;
+        while (!exited) {
+            const next = state.clientGame.game.getLiveGame().executeAction(state, current);
+            if (!next) {
+                break;
+            }
+            if (Awaitable.isAwaitable(next)) {
+                const {node} = await new Promise<CalledActionResult>((r) => {
+                    next.then((_) => r(next.result));
+                });
+                if (!node) {
+                    break;
+                } else {
+                    current = node.callee;
+                }
+            } else {
+                current = next;
+            }
+        }
+    }
+
+    public executeAction(state: GameState): CalledActionResult | Awaitable<CalledActionResult, CalledActionResult> {
+        const contentNode = this.contentNode as ContentNode<ControlActionContentType[T]>;
+        const [content] = contentNode.getContent() as [LogicAction.Actions[]];
+        if (this.type === ControlActionTypes.do) {
+            const firstNode = content[0]?.contentNode;
+            const lastNode = content[content.length - 1]?.contentNode;
+            const thisChild = this.contentNode.child;
+
+            lastNode?.addChild(thisChild);
+            this.contentNode.addChild(firstNode || null);
+            return super.executeAction(state);
+        } else if (this.type === ControlActionTypes.doAsync) {
+            (async () => {
+                for (const action of content) {
+                    await this.executeAllActions(state, action);
+                }
+            })();
+            return super.executeAction(state);
+        } else if (this.type === ControlActionTypes.any) {
+            const awaitable = new Awaitable<CalledActionResult, CalledActionResult>(v => v);
+            for (const action of content) {
+                this.executeAllActions(state, action).then(() => {
+                    awaitable.resolve({
+                        type: this.type as any,
+                        node: this.contentNode.child
+                    });
+                });
+            }
+            return awaitable;
+        } else if (this.type === ControlActionTypes.all) {
+            const awaitable = new Awaitable<CalledActionResult, CalledActionResult>(v => v);
+            const promises = content.map(action => this.executeAllActions(state, action));
+            Promise.all(promises).then(() => {
+                awaitable.resolve({
+                    type: this.type as any,
+                    node: this.contentNode.child
+                });
+            });
+            return awaitable;
+        } else if (this.type === ControlActionTypes.allAsync) {
+            (async () => {
+                const promises = content.map(action => this.executeAllActions(state, action));
+                await Promise.all(promises);
+            })();
+            return super.executeAction(state);
+        }
+
+        throw new Error("Unknown control action type: " + this.type);
     }
 }

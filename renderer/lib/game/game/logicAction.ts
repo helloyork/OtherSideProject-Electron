@@ -12,7 +12,7 @@ import {
     CharacterActionTypes,
     ConditionAction,
     ConditionActionContentType,
-    ConditionActionTypes,
+    ConditionActionTypes, ControlAction, ControlActionContentType,
     ImageAction,
     ImageActionContentType,
     ImageActionTypes,
@@ -33,9 +33,10 @@ import {
     TypedAction
 } from "@lib/game/game/actions";
 import {Sound} from "@lib/game/game/elements/sound";
+import {Control} from "@lib/game/game/elements/control";
 
 export namespace LogicAction {
-    export type GameElement = Character | Scene | Story | Sentence | Image | Condition | Script | Menu | Sound;
+    export type GameElement = Character | Scene | Story | Sentence | Image | Condition | Script | Menu | Sound | Control;
     export type Actions =
         CharacterAction<any>
         | ConditionAction<any>
@@ -45,7 +46,8 @@ export namespace LogicAction {
         | StoryAction<any>
         | TypedAction<any, any, any>
         | MenuAction<any>
-        | SoundAction<any>;
+        | SoundAction<any>
+        | ControlAction<any>;
     export type ActionTypes =
         Values<typeof CharacterActionTypes>
         | Values<typeof ConditionActionTypes>
@@ -54,7 +56,8 @@ export namespace LogicAction {
         | Values<typeof ScriptActionTypes>
         | Values<typeof StoryActionTypes>
         | Values<typeof MenuActionTypes>
-        | Values<typeof SoundAction.ActionTypes>;
+        | Values<typeof SoundAction.ActionTypes>
+        | Values<typeof ControlAction.ActionTypes>;
     export type ActionContents =
         CharacterActionContentType
         & ConditionActionContentType
@@ -63,5 +66,6 @@ export namespace LogicAction {
         & ScriptActionContentType
         & StoryActionContentType
         & MenuActionContentType
-        & SoundActionContentType;
+        & SoundActionContentType
+        & ControlActionContentType;
 }

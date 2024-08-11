@@ -32,6 +32,7 @@ export type PlayerAction = CalledActionResult;
 interface StageUtils {
     forceUpdate: () => void;
     next: () => void;
+    dispatch: (action: PlayerAction) => void;
 }
 
 type GameStateEvents = {};
@@ -44,7 +45,7 @@ export class GameState {
         images: [],
         scene: null,
         history: [],
-        sounds: []
+        sounds: [],
     };
     currentHandling: CalledActionResult | null = null;
     stage: StageUtils;
@@ -95,13 +96,6 @@ export class GameState {
         this.state.scene = scene;
         this.stage.forceUpdate();
     }
-
-    // setSceneBackground(background: SceneConfig["background"]) {
-    //     if (this.state.scene) {
-    //         this.state.scene.state.background = background;
-    //         this.stage.forceUpdate();
-    //     }
-    // }
 
     addSound(sound: Sound) {
         if (this.state.sounds.includes(sound)) return;

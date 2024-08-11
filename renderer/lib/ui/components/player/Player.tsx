@@ -24,7 +24,8 @@ export default function Player({
     const {game} = useGame();
     const [state, dispatch] = useReducer(handleAction, new GameState(game, {
         forceUpdate,
-        next
+        next,
+        dispatch: (action) => dispatch(action),
     }));
 
     function next() {
