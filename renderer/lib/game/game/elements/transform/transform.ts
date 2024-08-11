@@ -1,87 +1,20 @@
-import {Align, Background, color, CommonImage, CommonImagePosition, Coord2D, Offset, StaticImageData} from "../show";
-import type {
-    AnimationPlaybackControls,
-    AnimationScope,
-    AnimationSequence,
-    DOMKeyframesDefinition,
-    DynamicAnimationOptions,
-    ElementOrSelector,
-    MotionValue,
-    ValueAnimationTransition
-} from "framer-motion";
-import {ImagePosition} from "./image";
+import {Align, Background, color, CommonImage, CommonImagePosition, Coord2D, Offset, StaticImageData} from "../../show";
+import type {DOMKeyframesDefinition} from "framer-motion";
+import {ImagePosition} from "../image";
 import {deepMerge, DeepPartial, toHex} from "@lib/util/data";
 import {GameState} from "@lib/ui/components/player/gameState";
-import Sequence = TransformNameSpace.Sequence;
-import SequenceProps = TransformNameSpace.SequenceProps;
+import {TransformDefinitions} from "@lib/game/game/elements/transform/type";
+import Sequence = TransformDefinitions.Sequence;
+import SequenceProps = TransformDefinitions.SequenceProps;
 
 
-export namespace TransformNameSpace {
-    export type BezierDefinition = [number, number, number, number];
-    export type CustomEasingFunction = (t: number) => number;
-    export type EasingDefinition =
-        CustomEasingFunction
-        | BezierDefinition
-        | "linear"
-        | "easeIn"
-        | "easeOut"
-        | "easeInOut"
-        | "circIn"
-        | "circOut"
-        | "circInOut"
-        | "backIn"
-        | "backOut"
-        | "backInOut"
-        | "anticipate";
-
-    export type GenericKeyframesTarget<V> = [null, ...V[]] | V[];
-    export type FramerAnimationScope<T> = AnimationScope<T>;
-    export type FramerAnimate = {
-        <V>(from: V, to: V | GenericKeyframesTarget<V>, options?: ValueAnimationTransition<V> | undefined): AnimationPlaybackControls;
-        <V_1>(value: MotionValue<V_1>, keyframes: V_1 | GenericKeyframesTarget<V_1>, options?: ValueAnimationTransition<V_1> | undefined): AnimationPlaybackControls;
-        (value: ElementOrSelector, keyframes: DOMKeyframesDefinition, options?: DynamicAnimationOptions | undefined): AnimationPlaybackControls;
-        (sequence: AnimationSequence, options?: SequenceOptions | undefined): AnimationPlaybackControls;
-    }
-
-    export type CommonTransformProps = {
-        duration: number;
-        ease: EasingDefinition;
-        delay: number;
-    } & {
-        sync: boolean;
-    };
-    export type CommonSequenceProps = {
-        sync: boolean;
-        repeat: number;
-    }
-    export type SceneBackgroundTransformProps = {
-        background: Background["background"];
-        backgroundOpacity: number;
-    };
-    export type ImageTransformProps = ({
-        opacity: number;
-        scale: number;
-        rotation: number;
-        display: boolean;
-    }) & {
-        position: CommonImage["position"];
-    };
-    export type Types = ImageTransformProps | SceneBackgroundTransformProps;
-    export type SequenceProps<T> = DeepPartial<T>;
-    export type SequenceOptions = Partial<CommonTransformProps>;
-    export type Sequence<T> = {
-        props: SequenceProps<T>,
-        options: SequenceOptions
-    }
-}
-
-export class Transform<T extends TransformNameSpace.Types> {
-    static defaultSequenceOptions: Partial<TransformNameSpace.CommonSequenceProps> = {
+export class Transform<T extends TransformDefinitions.Types> {
+    static defaultSequenceOptions: Partial<TransformDefinitions.CommonSequenceProps> = {
         sync: true,
         repeat: 1,
     }
-    private readonly sequenceOptions: Partial<TransformNameSpace.CommonSequenceProps>;
-    private sequences: TransformNameSpace.Sequence<T>[] = [];
+    private readonly sequenceOptions: Partial<TransformDefinitions.CommonSequenceProps>;
+    private sequences: TransformDefinitions.Sequence<T>[] = [];
     state: SequenceProps<T> = {};
 
     /**
@@ -96,9 +29,9 @@ export class Transform<T extends TransformNameSpace.Types> {
      * });
      * ```
      */
-    constructor(sequences: Sequence<T>[], sequenceOptions?: TransformNameSpace.SequenceOptions);
-    constructor(props: DeepPartial<T>, options?: Partial<TransformNameSpace.CommonTransformProps>);
-    constructor(arg0: Sequence<T>[] | DeepPartial<T>, arg1?: Partial<TransformNameSpace.CommonTransformProps> | TransformNameSpace.SequenceOptions) {
+    constructor(sequences: Sequence<T>[], sequenceOptions?: TransformDefinitions.SequenceOptions);
+    constructor(props: DeepPartial<T>, options?: Partial<TransformDefinitions.CommonTransformProps>);
+    constructor(arg0: Sequence<T>[] | DeepPartial<T>, arg1?: Partial<TransformDefinitions.CommonTransformProps> | TransformDefinitions.SequenceOptions) {
         if (Array.isArray(arg0)) {
             this.sequences.push(...arg0);
             this.sequenceOptions = Object.assign({}, Transform.defaultSequenceOptions, arg1 || {});
@@ -250,7 +183,7 @@ export class Transform<T extends TransformNameSpace.Types> {
      */
     public async animate<T extends Element = any>(
         {scope, animate}:
-            { scope: TransformNameSpace.FramerAnimationScope<T>, animate: TransformNameSpace.FramerAnimate },
+            { scope: TransformDefinitions.FramerAnimationScope<T>, animate: TransformDefinitions.FramerAnimate },
         state: GameState
     ) {
         return new Promise<void>(async (resolve) => {

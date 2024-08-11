@@ -1,7 +1,7 @@
 import {ContentNode} from "@lib/game/game/save/rollback";
 import {Awaitable} from "@lib/util/data";
 import {CommonImage} from "@lib/game/game/show";
-import {Transform, TransformNameSpace} from "@lib/game/game/elements/transform";
+import {Transform} from "@lib/game/game/elements/transform/transform";
 import {Image} from "@lib/game/game/elements/image";
 import {LogicAction} from "@lib/game/game/logicAction";
 import {Action} from "@lib/game/game/action";
@@ -15,6 +15,7 @@ import type {CalledActionResult} from "@lib/game/game/gameTypes";
 import {GameState} from "@lib/ui/components/player/gameState";
 import {Sound} from "@lib/game/game/elements/sound";
 import {Control} from "@lib/game/game/elements/control";
+import {TransformDefinitions} from "@lib/game/game/elements/transform/type";
 
 export class TypedAction<
     ContentType extends Record<string, any>,
@@ -127,10 +128,10 @@ export const ImageActionTypes = {
 export type ImageActionContentType = {
     [K in typeof ImageActionTypes[keyof typeof ImageActionTypes]]:
     K extends "image:setSrc" ? [string] :
-        K extends "image:setPosition" ? [CommonImage["position"], Transform<TransformNameSpace.ImageTransformProps>] :
-            K extends "image:show" ? [void, Transform<TransformNameSpace.ImageTransformProps>] :
-                K extends "image:hide" ? [void, Transform<TransformNameSpace.ImageTransformProps>] :
-                    K extends "image:applyTransform" ? [void, Transform<TransformNameSpace.ImageTransformProps>] :
+        K extends "image:setPosition" ? [CommonImage["position"], Transform<TransformDefinitions.ImageTransformProps>] :
+            K extends "image:show" ? [void, Transform<TransformDefinitions.ImageTransformProps>] :
+                K extends "image:hide" ? [void, Transform<TransformDefinitions.ImageTransformProps>] :
+                    K extends "image:applyTransform" ? [void, Transform<TransformDefinitions.ImageTransformProps>] :
                         any;
 }
 

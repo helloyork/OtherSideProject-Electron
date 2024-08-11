@@ -5,9 +5,10 @@ import {Background} from "../show";
 import {ContentNode} from "../save/rollback";
 import {LogicAction} from "@lib/game/game/logicAction";
 import {SceneAction} from "@lib/game/game/actions";
-import {Transform, TransformNameSpace} from "@lib/game/game/elements/transform";
+import {Transform} from "@lib/game/game/elements/transform/transform";
 import Actions = LogicAction.Actions;
-import SceneBackgroundTransformProps = TransformNameSpace.SceneBackgroundTransformProps;
+import SceneBackgroundTransformProps = TransformDefinitions.SceneBackgroundTransformProps;
+import {TransformDefinitions} from "@lib/game/game/elements/transform/type";
 
 export type SceneConfig = {
     invertY?: boolean;
@@ -41,7 +42,7 @@ export class Scene extends Constructable<
         this.state = deepMerge<SceneConfig>({}, this.config);
     }
 
-    public setSceneBackground(background: Partial<SceneBackgroundTransformProps>, transform?: Transform<TransformNameSpace.ImageTransformProps> | Partial<TransformNameSpace.CommonTransformProps>) {
+    public setSceneBackground(background: Partial<SceneBackgroundTransformProps>, transform?: Transform<TransformDefinitions.ImageTransformProps> | Partial<TransformDefinitions.CommonTransformProps>) {
         this._actions.push(new SceneAction(
             this,
             "scene:setBackground",
@@ -57,10 +58,10 @@ export class Scene extends Constructable<
         return this;
     }
 
-    public sleep(ms: number);
-    public sleep(promise: Promise<any>);
-    public sleep(awaitable: Awaitable<any, any>);
-    public sleep(content: number | Promise<any> | Awaitable<any, any>) {
+    public sleep(ms: number): this;
+    public sleep(promise: Promise<any>): this;
+    public sleep(awaitable: Awaitable<any, any>): this;
+    public sleep(content: number | Promise<any> | Awaitable<any, any>): this {
         this._actions.push(new SceneAction(
             this,
             "scene:sleep",

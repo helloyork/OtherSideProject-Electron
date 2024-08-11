@@ -3,10 +3,11 @@ import {deepMerge, DeepPartial, EventDispatcher} from "@lib/util/data";
 import {ContentNode} from "../save/rollback";
 import {HistoryData} from "../save/transaction";
 import {Game} from "@lib/game/game/game";
-import {Transform, TransformNameSpace} from "./transform";
+import {Transform} from "./transform/transform";
 import {ImageAction} from "@lib/game/game/actions";
 import {Actionable} from "@lib/game/game/actionable";
-import ImageTransformProps = TransformNameSpace.ImageTransformProps;
+import ImageTransformProps = TransformDefinitions.ImageTransformProps;
+import {TransformDefinitions} from "@lib/game/game/elements/transform/type";
 
 export type ImageConfig = {
     src: string | StaticImageData;
@@ -28,9 +29,9 @@ const ImageTransactionTypes = {
 } as const;
 
 export type ImageEventTypes = {
-    "event:image.show": [Transform<TransformNameSpace.ImageTransformProps>];
-    "event:image.hide": [Transform<TransformNameSpace.ImageTransformProps>];
-    "event:image.applyTransform": [Transform<TransformNameSpace.ImageTransformProps>];
+    "event:image.show": [Transform<TransformDefinitions.ImageTransformProps>];
+    "event:image.hide": [Transform<TransformDefinitions.ImageTransformProps>];
+    "event:image.applyTransform": [Transform<TransformDefinitions.ImageTransformProps>];
 };
 
 export class Image extends Actionable<typeof ImageTransactionTypes> {
@@ -158,9 +159,9 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
      * 让图片显示，如果图片已显示，则不会有任何效果
      */
     public show(): this;
-    public show(options: Transform<TransformNameSpace.ImageTransformProps>): this;
-    public show(options: Partial<TransformNameSpace.CommonTransformProps>): this;
-    public show(options?: Transform<TransformNameSpace.ImageTransformProps> | Partial<TransformNameSpace.CommonTransformProps>): this {
+    public show(options: Transform<TransformDefinitions.ImageTransformProps>): this;
+    public show(options: Partial<TransformDefinitions.CommonTransformProps>): this;
+    public show(options?: Transform<TransformDefinitions.ImageTransformProps> | Partial<TransformDefinitions.CommonTransformProps>): this {
         this.transaction
             .startTransaction()
             .push({
@@ -195,9 +196,9 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
      * 让图片隐藏，如果图片已隐藏，则不会有任何效果
      */
     public hide(): this;
-    public hide(transform: Transform<TransformNameSpace.ImageTransformProps>): this;
-    public hide(transform: Partial<TransformNameSpace.CommonTransformProps>): this;
-    public hide(transform?: Transform<TransformNameSpace.ImageTransformProps> | Partial<TransformNameSpace.CommonTransformProps>): this {
+    public hide(transform: Transform<TransformDefinitions.ImageTransformProps>): this;
+    public hide(transform: Partial<TransformDefinitions.CommonTransformProps>): this;
+    public hide(transform?: Transform<TransformDefinitions.ImageTransformProps> | Partial<TransformDefinitions.CommonTransformProps>): this {
         this.transaction
             .startTransaction()
             .push({
