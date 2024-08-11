@@ -1,6 +1,5 @@
 import {HistoryData, Transaction, TransactionType} from "@lib/game/game/save/transaction";
 import {LogicAction} from "@lib/game/game/logicAction";
-import {ClientActionProto} from "@lib/game/game/gameTypes";
 
 export class Actionable<
     TransactionEnum extends Record<string, string> = Record<string, string>,
@@ -21,15 +20,6 @@ export class Actionable<
     }
 
     undo(history: HistoryData<TransactionEnum, Types>) {
-    }
-
-    /**@deprecated */
-    call(action: LogicAction.Actions): ClientActionProto<any> {
-        return {
-            type: action.type,
-            id: action.contentNode.id,
-            content: action.contentNode.getContent()
-        };
     }
 
     public toData(_: any[]): StateData {

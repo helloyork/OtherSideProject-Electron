@@ -52,6 +52,7 @@ export namespace TransformNameSpace {
     };
     export type CommonSequenceProps = {
         sync: boolean;
+        repeat: number;
     }
     export type SceneBackgroundTransformProps = {
         background: Background["background"];
@@ -68,7 +69,6 @@ export namespace TransformNameSpace {
     export type Types = ImageTransformProps | SceneBackgroundTransformProps;
     export type SequenceProps<T> = DeepPartial<T>;
     export type SequenceOptions = Partial<CommonTransformProps>;
-    // export type Sequence<T> = [SequenceProps<T>, SequenceOptions];
     export type Sequence<T> = {
         props: SequenceProps<T>,
         options: SequenceOptions
@@ -76,11 +76,9 @@ export namespace TransformNameSpace {
 }
 
 export class Transform<T extends TransformNameSpace.Types> {
-    static defaultOptions: Partial<TransformNameSpace.CommonTransformProps> = {
-        sync: true
-    };
     static defaultSequenceOptions: Partial<TransformNameSpace.CommonSequenceProps> = {
-        sync: true
+        sync: true,
+        repeat: 1,
     }
     private readonly sequenceOptions: Partial<TransformNameSpace.CommonSequenceProps>;
     private sequences: TransformNameSpace.Sequence<T>[] = [];
@@ -256,20 +254,39 @@ export class Transform<T extends TransformNameSpace.Types> {
         state: GameState
     ) {
         return new Promise<void>(async (resolve) => {
-            if (!this.sequenceOptions.sync) { // @todo: ？增加动画跳过和打断
+            // @todo: ？增加动画跳过和打断
+            if (!this.sequenceOptions.sync) {
                 resolve();
             }
-            for (const {props, options} of this.sequences) {
-                this.state = deepMerge(this.state, props);
-                const animation = animate(scope.current, this.propToCSS(state, this.state), options);
-                if (options?.sync !== false) {
-                    await animation;
+            for (let i = 0; i < this.sequenceOptions.repeat; i++) {
+                for (const {props, options} of this.sequences) {
+                    this.state = deepMerge(this.state, props);
+                    const animation = animate(scope.current, this.propToCSS(state, this.state), options);
+                    if (options?.sync !== false) {
+                        await animation;
+                    }
                 }
             }
             if (this.sequenceOptions.sync) {
                 resolve();
             }
         });
+    }
+
+    /**
+     * 将动画的重复次数乘以n
+     * 会受到传入Config的影响
+     * @example
+     * ```ts
+     * transform
+     *   .repeat(2)
+     *   .repeat(3)
+     * // 重复6次
+     * ```
+     */
+    public repeat(n: number) {
+        this.sequenceOptions.repeat *= n;
+        return this;
     }
 
     propToCSS(state: GameState, prop: DeepPartial<T>): DOMKeyframesDefinition {

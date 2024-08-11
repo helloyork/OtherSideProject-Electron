@@ -49,13 +49,13 @@ export type DeepPartial<T> = {
 };
 
 export class Awaitable<T, U> {
-    reciever: (value: U) => T;
+    receiver: (value: U) => T;
     result: T;
     solved = false;
     listeners: ((value: T) => void)[] = [];
 
-    constructor(reciever: (value: U) => T) {
-        this.reciever = reciever;
+    constructor(receiver: (value: U) => T) {
+        this.receiver = receiver;
     }
 
     static isAwaitable(obj: any): obj is Awaitable<any, any> {
@@ -63,7 +63,10 @@ export class Awaitable<T, U> {
     }
 
     resolve(value: U) {
-        this.result = this.reciever(value);
+        if (this.solved) {
+            return;
+        }
+        this.result = this.receiver(value);
         this.solved = true;
         for (const listener of this.listeners) {
             listener(this.result);

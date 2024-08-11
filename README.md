@@ -26,11 +26,12 @@ https://afdian.com/a/OtherSideProject
 
 ## 技术栈
 
-> [Nextron](https://github.com/saltyshiomix/nextron)  
-> > [React](https://reactjs.org/)  
-> > [TypeScript](https://www.typescriptlang.org/)  
+> [Nextron](https://github.com/saltyshiomix/nextron)
+> > [Electron](https://www.electronjs.org/)  
+> 
 > > [Next.js](https://nextjs.org/)  
-> > [Electron](https://www.electronjs.org/)
+> > > [React](https://reactjs.org/)  
+> > > [TypeScript](https://www.typescriptlang.org/)  
 
 ## 贡献
 

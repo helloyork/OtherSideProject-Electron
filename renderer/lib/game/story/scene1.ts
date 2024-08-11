@@ -12,6 +12,7 @@ import {GameState} from "@lib/ui/components/player/gameState";
 import mainMenuBackground from "@/public/static/images/main-menu-background.webp";
 import {Sound} from "@lib/game/game/elements/sound";
 import ImageSpeechless from "@/public/static/images/test_speechless.png";
+import {Control} from "@lib/game/game/elements/control";
 import ImageTransformProps = TransformNameSpace.ImageTransformProps;
 
 const scene1 = new Scene("scene1", {
@@ -69,61 +70,55 @@ const scene1Actions = scene1.action([
     new Character(null)
         .say("简体中文，繁體中文, 日本語, 한국어, ไทย, Tiếng Việt, हिन्दी, বাংলা, తెలుగు, मराठी, 1234567890!@#$%^&*()QWERTYUIOPASDFGHJKLZCVN{}|:\"<>?~`, A quick brown fox jumps over the lazy dog.")
         .toActions(),
-    i2.show(new Transform<ImageTransformProps>([{
-        props: {
-            opacity: 1,
-            position: {
-                yoffset: -10
-            }
-        },
-        options: {
-            duration: 0.5,
-            ease: "easeOut",
-        }
-    }], {
-        sync: false
-    })).toActions(),
-    i1.applyTransform(new Transform<ImageTransformProps>([
-        {
-            props: {
-                position: {
-                    xoffset: 5,
+    Control.allAsync([
+        i1.applyTransform(new Transform<ImageTransformProps>([
+            {
+                props: {
+                    position: {
+                        xoffset: 5,
+                    }
+                },
+                options: {
+                    duration: 0.1,
+                    ease: "easeOut",
                 }
             },
-            options: {
-                duration: 0.1,
-                ease: "easeOut",
-            }
-        },
-        {
-            props: {
-                position: {
-                    xoffset: -5,
+            {
+                props: {
+                    position: {
+                        xoffset: -5,
+                    }
+                },
+                options: {
+                    duration: 0.1,
+                    ease: "easeOut",
                 }
             },
-            options: {
-                duration: 0.1,
-                ease: "easeOut",
-            }
-        },
-        {
-            props: {
-                position: {
-                    xoffset: 5,
+        ], {
+            sync: true
+        }).repeat(2)).toActions(),
+        Control.do([
+            i2.show(new Transform<ImageTransformProps>([{
+                props: {
+                    opacity: 1,
+                    position: {
+                        yoffset: -10
+                    }
+                },
+                options: {
+                    duration: 0.5,
+                    ease: "easeOut",
                 }
-            },
-            options: {
-                duration: 0.1,
-                ease: "easeOut",
-            }
-        },
-    ], {
-        sync: false
-    })).toActions(),
+            }], {
+                sync: true
+            })).toActions(),
+            scene1.sleep(3000).toActions(),
+            i2.hide().toActions(),
+        ]).toActions(),
+    ]).toActions(),
     sound1.play().toActions(),
     c1
         .say("你好！").toActions(),
-    i2.hide().toActions(),
     c1.say("你最近过的怎么样？")
         .toActions(),
     new Menu("我最近过的怎么样？")

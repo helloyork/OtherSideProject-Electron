@@ -5,7 +5,6 @@ import {ContentNode, RenderableNode} from "../save/rollback";
 import {LogicAction} from "@lib/game/game/logicAction";
 import {MenuAction} from "@lib/game/game/actions";
 import {Actionable} from "@lib/game/game/actionable";
-import {GameState} from "@lib/ui/components/player/gameState";
 import Actions = LogicAction.Actions;
 
 export type MenuConfig = {};
@@ -20,6 +19,10 @@ export type Choice = {
     prompt: Sentence;
 };
 
+export type MenuData = {
+    prompt: Sentence;
+    choices: Choice[];
+}
 
 export class Menu extends Actionable {
     static defaultConfig: MenuConfig = {};
@@ -70,18 +73,23 @@ export class Menu extends Actionable {
     }
 
     toActions(): MenuAction<"menu:action">[] {
-        return [
+        const output = [
             new MenuAction(
                 this,
                 MenuAction.ActionTypes.action,
-                new ContentNode<Menu>(
+                new ContentNode<MenuData>(
                     Game.getIdManager().getStringId()
-                ).setContent(this)
+                ).setContent({
+                    prompt: this.prompt,
+                    choices: this.constructChoices()
+                })
             )
         ];
+        this.choices = [];
+        return output;
     }
 
-    $constructChoices(state: GameState): Choice[] {
+    private constructChoices(): Choice[] {
         return this.choices.map(choice => {
             return {
                 action: this.construct(choice.action),
