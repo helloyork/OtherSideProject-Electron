@@ -7,6 +7,7 @@ import {Image, ImageEventTypes} from "@lib/game/game/elements/image";
 import {Scene} from "@lib/game/game/elements/scene";
 import {Sound} from "@lib/game/game/elements/sound";
 import * as Howler from "howler";
+import {SrcManager, SrcType} from "@lib/game/game/elements/srcManager";
 
 type Clickable<T, U = undefined> = {
     action: T;
@@ -26,6 +27,9 @@ export type PlayerState = {
     scene: Scene | null;
     history: CalledActionResult[];
     sounds: Sound[];
+    src: {
+        [K in SrcType]: any[];
+    };
 };
 export type PlayerAction = CalledActionResult;
 
@@ -46,6 +50,11 @@ export class GameState {
         scene: null,
         history: [],
         sounds: [],
+        src: {
+            [SrcManager.SrcTypes.image]: [],
+            [SrcManager.SrcTypes.video]: [],
+            [SrcManager.SrcTypes.audio]: [],
+        }
     };
     currentHandling: CalledActionResult | null = null;
     stage: StageUtils;
@@ -125,6 +134,19 @@ export class GameState {
 
     animateImage<T extends keyof ImageEventTypes>(type: T, target: Image, args: ImageEventTypes[T], onEnd: () => void) {
         return this.anyEvent(type, target, onEnd, ...args);
+    }
+
+    addSrc(src: SrcManager) {
+        const newSrc = {
+            [SrcManager.SrcTypes.image]: [],
+            [SrcManager.SrcTypes.audio]: [],
+            [SrcManager.SrcTypes.video]: [],
+        };
+        src.getSrc().forEach(s => {
+            newSrc[s.type].push(s.src);
+        });
+        this.state.src = newSrc;
+        return this;
     }
 
     private anyEvent(type: any, target: any, onEnd: () => void, ...args: any[]) {

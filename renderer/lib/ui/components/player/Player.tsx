@@ -1,6 +1,6 @@
 "use client";
 
-import {useEffect, useReducer} from "react";
+import {useEffect, useReducer, useState} from "react";
 import {useGame} from "../../providers/game-state";
 import {Awaitable} from "@/lib/util/data";
 
@@ -21,6 +21,7 @@ export default function Player({
     story: Story;
 }>) {
     const [, forceUpdate] = useReducer((x) => x + 1, 0);
+    const [lastUpdated, setLastUpdated] = useState(Date.now());
     const {game} = useGame();
     const [state, dispatch] = useReducer(handleAction, new GameState(game, {
         forceUpdate,
@@ -29,6 +30,12 @@ export default function Player({
     }));
 
     function next() {
+        console.log("Triggering next, last updated", ( // @debug
+            Date.now() - lastUpdated
+        ), "ms ago");
+        setLastUpdated(Date.now());
+        let now = Date.now();
+
         let exited = false;
         while (!exited) {
             const next = game.game.getLiveGame().next(state);
@@ -42,6 +49,8 @@ export default function Player({
             dispatch(next);
         }
         state.stage.forceUpdate();
+
+        console.log("Next took", Date.now() - now, "ms");
     }
 
     useEffect(() => {

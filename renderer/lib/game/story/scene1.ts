@@ -13,10 +13,23 @@ import {
 import {GameState, LiveGame} from "@lib/game/game/common/game";
 import type {TransformDefinitions} from "@lib/game/game/common/types";
 
-import {character1, character2, image1, image2, scene1, sound1} from "@lib/game/story/definitions";
+import {
+    character1,
+    character2,
+    image1,
+    image2,
+    mainMenuBackground,
+    mainMenuBackground2,
+    scene1,
+    sound1
+} from "@lib/game/story/definitions";
+import {Fade} from "@lib/game/game/elements/transition/fade";
 
 const story = new Story("test");
 
+const YouAreCorrect = character2.say("恭喜你！")
+    .say("你猜对了！")
+    .toActions();
 
 const checkNumber = (n: number) => new Condition()
     .If(new Lambda(({gameState, resolve}) => {
@@ -26,6 +39,10 @@ const checkNumber = (n: number) => new Condition()
     ).Else(character2.say("很遗憾，你猜错了").toActions())
     .toActions();
 
+const fadeOutTransition = new Fade(2000, "out");
+const fadeInTransition = new Fade(2000, "in");
+
+// @todo: 包装一下转场
 
 const scene1Actions = scene1.action([
     image1.show({
@@ -88,8 +105,13 @@ const scene1Actions = scene1.action([
     character1
         .say("你好！").toActions(),
 
+    scene1.applyTransition(fadeOutTransition)
+        .setSceneBackground(mainMenuBackground2)
+        .applyTransition(fadeInTransition).toActions(),
+
     character1.say("你最近过的怎么样？")
         .toActions(),
+
 
     new Menu("我最近过的怎么样？")
         .choose({
@@ -147,6 +169,10 @@ const scene1Actions = scene1.action([
         .toActions()
 ]);
 
+scene1.srcManager.register("audio", "/static/sounds/SE_Write_01.wav")
+    .register(mainMenuBackground)
+    .register(mainMenuBackground2)
+
 function isNumberCorrect(gameState: GameState, number: number) {
     const namespace =
         gameState.clientGame.game
@@ -155,10 +181,6 @@ function isNumberCorrect(gameState: GameState, number: number) {
             .getNamespace(LiveGame.GameSpacesKey.game)
     return namespace.get("number") === number;
 }
-
-const YouAreCorrect = character2.say("恭喜你！")
-    .say("你猜对了！")
-    .toActions();
 
 
 story.action([

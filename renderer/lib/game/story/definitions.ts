@@ -1,5 +1,6 @@
 import {Scene} from "@lib/game/game/elements/scene";
 import mainMenuBackground from "@/public/static/images/main-menu-background.webp";
+import mainMenuBackground2 from "@/public/static/images/main-menu-background2.jpg";
 import {Character} from "@lib/game/game/elements/text";
 import {Sound} from "@lib/game/game/elements/sound";
 import {Image} from "@lib/game/game/elements/image";
@@ -34,3 +35,8 @@ export const sound1 = new Sound({
     src: "/static/sounds/SE_Write_01.wav",
     sync: false
 });
+
+export {
+    mainMenuBackground,
+    mainMenuBackground2
+};

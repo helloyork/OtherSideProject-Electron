@@ -6,8 +6,8 @@ import {Game} from "@lib/game/game/game";
 import {Transform} from "./transform/transform";
 import {ImageAction} from "@lib/game/game/actions";
 import {Actionable} from "@lib/game/game/actionable";
-import ImageTransformProps = TransformDefinitions.ImageTransformProps;
 import {TransformDefinitions} from "@lib/game/game/elements/transform/type";
+import ImageTransformProps = TransformDefinitions.ImageTransformProps;
 
 export type ImageConfig = {
     src: string | StaticImageData;
@@ -48,9 +48,6 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
         rotation: 0,
         opacity: 0,
     };
-    public static staticImageDataToSrc(image: StaticImageData | string): string {
-        return typeof image === "string" ? image : image.src;
-    }
     name: string;
     config: ImageConfig;
     state: ImageConfig;
@@ -68,6 +65,10 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
 
         this.checkConfig();
         this.init();
+    }
+
+    public static staticImageDataToSrc(image: StaticImageData | string): string {
+        return typeof image === "string" ? image : image.src;
     }
 
     init() {
