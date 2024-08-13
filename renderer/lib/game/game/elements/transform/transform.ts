@@ -197,6 +197,11 @@ export class Transform<T extends TransformDefinitions.Types> {
                     const animation = animate(scope.current, this.propToCSS(state, this.state), options);
                     if (options?.sync !== false) {
                         await animation;
+                        Object.assign(scope.current, this.propToCSS(state, this.state));
+                    } else {
+                        animation.then(() => {
+                            Object.assign(scope.current, this.propToCSS(state, this.state));
+                        });
                     }
                 }
             }

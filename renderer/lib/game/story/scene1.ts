@@ -83,6 +83,7 @@ const scene1Actions = scene1.action([
         Control.do([
             image2.show(new Transform<TransformDefinitions.ImageTransformProps>([{
                 props: {
+                    display: true,
                     opacity: 1,
                     position: {
                         yoffset: -10
@@ -93,7 +94,7 @@ const scene1Actions = scene1.action([
                     ease: "easeOut",
                 }
             }], {
-                sync: true
+                sync: false
             })).toActions(),
             scene1.sleep(3000).toActions(),
             image2.hide().toActions(),

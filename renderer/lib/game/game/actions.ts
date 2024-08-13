@@ -17,6 +17,7 @@ import {Sound} from "@lib/game/game/elements/sound";
 import {Control} from "@lib/game/game/elements/control";
 import {TransformDefinitions} from "@lib/game/game/elements/transform/type";
 import {ITransition} from "@lib/game/game/elements/transition/type";
+import ImageTransformProps = TransformDefinitions.ImageTransformProps;
 
 export class TypedAction<
     ContentType extends Record<string, any>,
@@ -76,7 +77,7 @@ export const SceneActionTypes = {
 export type SceneActionContentType = {
     [K in typeof SceneActionTypes[keyof typeof SceneActionTypes]]:
     K extends typeof SceneActionTypes["action"] ? Scene :
-        K extends typeof SceneActionTypes["sleep"] ? Promise<any> :
+        K extends typeof SceneActionTypes["sleep"] ? number | Promise<any> | Awaitable<any, any> :
             K extends typeof SceneActionTypes["setBackground"] ? [Background["background"]] :
                 K extends typeof SceneActionTypes["setTransition"] ? [ITransition] :
                     K extends typeof SceneActionTypes["applyTransition"] ? [ITransition] :
@@ -97,8 +98,19 @@ export class SceneAction<T extends typeof SceneActionTypes[keyof typeof SceneAct
             return super.executeAction(state);
         } else if (this.type === SceneActionTypes.sleep) {
             const awaitable = new Awaitable<CalledActionResult, any>(v => v);
-            const content = (this.contentNode as ContentNode<Promise<any>>).getContent();
-            content.then(() => {
+            const content = (this.contentNode as ContentNode<number | Promise<any> | Awaitable<any, any>>).getContent();
+            const wait = new Promise<void>(resolve => {
+                if (typeof content === "number") {
+                    setTimeout(() => {
+                        resolve();
+                    }, content);
+                } else if (Awaitable.isAwaitable(content)) {
+                    content.then(resolve);
+                } else {
+                    content.then(resolve);
+                }
+            });
+            wait.then(() => {
                 awaitable.resolve({
                     type: this.type,
                     node: this.contentNode.child
@@ -152,6 +164,7 @@ export const ImageActionTypes = {
     show: "image:show",
     hide: "image:hide",
     applyTransform: "image:applyTransform",
+    init: "image:init",
 } as const;
 export type ImageActionContentType = {
     [K in typeof ImageActionTypes[keyof typeof ImageActionTypes]]:
@@ -159,7 +172,8 @@ export type ImageActionContentType = {
         K extends "image:setPosition" ? [CommonImage["position"], Transform<TransformDefinitions.ImageTransformProps>] :
             K extends "image:show" ? [void, Transform<TransformDefinitions.ImageTransformProps>] :
                 K extends "image:hide" ? [void, Transform<TransformDefinitions.ImageTransformProps>] :
-                    K extends "image:applyTransform" ? [void, Transform<TransformDefinitions.ImageTransformProps>] :
+                    K extends "image:applyTransform" ? [void, Transform<TransformDefinitions.ImageTransformProps>, string] :
+                        K extends "image:init" ? [] :
                         any;
 }
 
@@ -206,6 +220,25 @@ export class ImageAction<T extends typeof ImageActionTypes[keyof typeof ImageAct
         } else if (this.type === ImageActionTypes.applyTransform) {
             const awaitable = new Awaitable<CalledActionResult, any>(v => v);
             const transform = (this.contentNode as ContentNode<ImageActionContentType["image:applyTransform"]>).getContent()[1];
+            state.animateImage(Image.EventTypes["event:image.applyTransform"], this.callee, [
+                transform
+            ], () => {
+                awaitable.resolve({
+                    type: this.type,
+                    node: this.contentNode?.child || null,
+                });
+            });
+            return awaitable;
+        } else if (this.type === ImageActionTypes.init) {
+            const awaitable = new Awaitable<CalledActionResult, any>(v => v);
+            const transform = new Transform<ImageTransformProps>([{
+                props: this.callee.state,
+                options: {
+                    duration: 0,
+                }
+            }], {
+                sync: true
+            });
             state.animateImage(Image.EventTypes["event:image.applyTransform"], this.callee, [
                 transform
             ], () => {

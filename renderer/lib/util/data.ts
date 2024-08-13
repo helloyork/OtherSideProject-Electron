@@ -199,5 +199,12 @@ export class EventDispatcher<T extends EventTypes, Type extends T & {
         await Promise.all(promises);
         return void 0;
     }
+}
 
+export function getCallStack(): string {
+    const stack = new Error().stack;
+    if (!stack) {
+        return "";
+    }
+    return stack;
 }

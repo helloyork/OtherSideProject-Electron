@@ -1,6 +1,6 @@
 "use client";
 
-import {useEffect, useReducer, useState} from "react";
+import {useEffect, useMemo, useReducer, useState} from "react";
 import {useGame} from "../../providers/game-state";
 import {Awaitable} from "@/lib/util/data";
 
@@ -10,6 +10,7 @@ import {default as StageScene} from "./elements/Scene";
 import {default as StageImage} from "./elements/Image";
 import {Story} from "@/lib/game/game/elements/story";
 import {GameState, PlayerAction} from "@lib/ui/components/player/gameState";
+import {cloneDeep} from "lodash";
 
 function handleAction(state: GameState, action: PlayerAction) {
     return state.handle(action);
@@ -28,6 +29,9 @@ export default function Player({
         next,
         dispatch: (action) => dispatch(action),
     }));
+    const _story = useMemo(() => {
+        return cloneDeep(story);
+    }, [story]);
 
     function next() {
         console.log("Triggering next, last updated", ( // @debug
@@ -54,10 +58,10 @@ export default function Player({
     }
 
     useEffect(() => {
-        game.game.getLiveGame().loadStory(story);
+        game.game.getLiveGame().loadStory(_story);
         game.game.getLiveGame().newGame();
         next();
-    }, []);
+    }, [story]);
 
     return (
         <>

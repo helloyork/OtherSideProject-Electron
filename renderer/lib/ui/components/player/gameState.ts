@@ -76,7 +76,7 @@ export class GameState {
             case "condition:action":
                 break;
         }
-        this.stage.forceUpdate();
+        console.log("[handle]", action);
         return this;
     }
 

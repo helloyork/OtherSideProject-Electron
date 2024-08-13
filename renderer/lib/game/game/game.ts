@@ -165,7 +165,7 @@ export class LiveGame {
 
     /* Game */
     loadStory(story: Story) {
-        this.story = cloneDeep(story);
+        this.story = story;
         return this;
     }
 

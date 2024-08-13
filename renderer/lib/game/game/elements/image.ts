@@ -1,5 +1,5 @@
 import type {CommonImage, CommonImagePosition, StaticImageData} from "../show";
-import {deepMerge, DeepPartial, EventDispatcher} from "@lib/util/data";
+import {deepMerge, DeepPartial, EventDispatcher, getCallStack} from "@lib/util/data";
 import {ContentNode} from "../save/rollback";
 import {HistoryData} from "../save/transaction";
 import {Game} from "@lib/game/game/game";
@@ -71,29 +71,13 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
         return typeof image === "string" ? image : image.src;
     }
 
-    init() {
-        const transform = new Transform<ImageTransformProps>([
-            {
-                props: {
-                    opacity: this.config.opacity,
-                    scale: this.config.scale,
-                    rotation: this.config.rotation,
-                    position: this.config.position
-                },
-                options: {
-                    duration: 0,
-                }
-            }
-        ]);
-        this.actions.push(new ImageAction<typeof ImageAction.ActionTypes.applyTransform>(
+    private init() {
+        this.actions.push(new ImageAction<typeof ImageAction.ActionTypes.init>(
             this,
-            ImageAction.ActionTypes.applyTransform,
+            ImageAction.ActionTypes.init,
             new ContentNode(
                 Game.getIdManager().getStringId()
-            ).setContent([
-                void 0,
-                transform
-            ])
+            )
         ));
         return this;
     }
@@ -149,7 +133,8 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
                 Game.getIdManager().getStringId()
             ).setContent([
                 void 0,
-                transform
+                transform,
+                getCallStack()
             ])
         );
         this.actions.push(action);

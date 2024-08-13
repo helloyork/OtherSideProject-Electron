@@ -85,19 +85,9 @@ export class Scene extends Constructable<
         this._actions.push(new SceneAction(
             this,
             "scene:sleep",
-            new ContentNode<Promise<any>>(
+            new ContentNode(
                 Game.getIdManager().getStringId(),
-            ).setContent(
-                new Promise<any>((resolve) => {
-                    if (typeof content === "number") {
-                        setTimeout(resolve, content);
-                    } else if (Awaitable.isAwaitable(content)) {
-                        content.then(resolve);
-                    } else {
-                        content.then(resolve);
-                    }
-                })
-            )
+            ).setContent(content)
         ));
         return this;
     }
