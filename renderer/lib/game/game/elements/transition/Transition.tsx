@@ -2,6 +2,8 @@ import {useEffect, useState} from 'react';
 import {Scene as GameScene, SceneEventTypes} from "../../elements/scene";
 import {ITransition, TransitionEventTypes} from "./type";
 import {EventListener} from "@lib/util/data";
+import Isolated from "@lib/ui/elements/isolated";
+import Background from "@lib/ui/elements/Background";
 
 export default function Transition({scene, props}: { scene: GameScene, props: Record<string, any> }) {
     const [transition, setTransition] =
@@ -58,7 +60,9 @@ export default function Transition({scene, props}: { scene: GameScene, props: Re
         <>
             {
                 transition ? transition.toElements(scene, props) : (
-                    <img {...props}/>
+                    <Background>
+                        <img {...props}/>
+                    </Background>
                 )
             }
         </>

@@ -54,6 +54,7 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
     declare actions: ImageAction<any>[];
     id: null | number | string;
     events: EventDispatcher<ImageEventTypes> = new EventDispatcher();
+    initiated: boolean = false;
 
     constructor(name: string, config: DeepPartial<ImageConfig> = {}) {
         super();

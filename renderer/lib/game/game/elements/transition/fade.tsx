@@ -3,6 +3,7 @@ import {Base} from "@lib/game/game/elements/transition/base";
 import {animate} from "framer-motion";
 import React from "react";
 import {Scene} from "@lib/game/game/elements/scene";
+import Background from "@lib/ui/elements/Background";
 
 
 export type FadeElementProps = {
@@ -59,7 +60,9 @@ export class Fade extends Base<Record<string, any>> implements ITransition<FadeE
 
     public toElements(scene: Scene, props: Record<string, any> = {}): React.ReactElement {
         return (
-            <img {...props} {...this.toElementProps()}/>
+            <Background>
+                <img {...props} {...this.toElementProps()}/>
+            </Background>
         )
     }
 }

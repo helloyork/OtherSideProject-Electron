@@ -1,9 +1,9 @@
 import {
     Character,
     Condition,
-    Control,
+    Control, Image,
     Lambda,
-    Menu,
+    Menu, Scene,
     Script,
     Sentence,
     Story,
@@ -24,6 +24,7 @@ import {
     sound1
 } from "@lib/game/story/definitions";
 import {Fade} from "@lib/game/game/elements/transition/fade";
+import {Dissolve} from "@lib/game/game/elements/transition/dissolve";
 
 const story = new Story("test");
 
@@ -106,9 +107,11 @@ const scene1Actions = scene1.action([
     character1
         .say("你好！").toActions(),
 
-    scene1.applyTransition(fadeOutTransition)
-        .setSceneBackground(mainMenuBackground2)
-        .applyTransition(fadeInTransition).toActions(),
+    // scene1.applyTransition(fadeOutTransition)
+    //     .setSceneBackground(mainMenuBackground2)
+    //     .applyTransition(fadeInTransition).toActions(),
+    scene1.applyTransition(new Dissolve(Image.staticImageDataToSrc(mainMenuBackground2), 2000))
+        .setSceneBackground(mainMenuBackground2).toActions(),
 
     character1.say("你最近过的怎么样？")
         .toActions(),
@@ -170,7 +173,7 @@ const scene1Actions = scene1.action([
         .toActions()
 ]);
 
-scene1.srcManager.register("audio", "/static/sounds/SE_Write_01.wav")
+scene1.srcManager.register(sound1)
     .register(mainMenuBackground)
     .register(mainMenuBackground2)
 

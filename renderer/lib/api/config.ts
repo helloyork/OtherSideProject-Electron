@@ -1,5 +1,3 @@
-"use client";
-
 import Logo from "@/public/static/images/mewbaka.png";
 
 
@@ -34,6 +32,11 @@ const Constants = {
         store: {
             saveFileSuffix: "save",
             settingFileSuffix: "setting",
+        },
+        request: {
+            maxAlive: 36000,
+            cacheableRoute: "/api/cacheable",
+            cacheableRouteParam: "request_url"
         }
     }
 };

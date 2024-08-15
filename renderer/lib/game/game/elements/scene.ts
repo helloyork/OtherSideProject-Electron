@@ -17,9 +17,6 @@ export type SceneConfig = {
     invertX?: boolean;
 } & Background;
 
-// @todo: use transition instead of transform
-// @todo: src manager, preload source that will be used in the future
-
 export type SceneEventTypes = {
     "event:scene.setTransition": [ITransition];
     "event:scene.remove": [];

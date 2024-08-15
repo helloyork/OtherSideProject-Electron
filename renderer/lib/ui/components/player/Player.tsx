@@ -11,6 +11,7 @@ import {default as StageImage} from "./elements/Image";
 import {Story} from "@/lib/game/game/elements/story";
 import {GameState, PlayerAction} from "@lib/ui/components/player/gameState";
 import {cloneDeep} from "lodash";
+import {Preload} from "@lib/ui/elements/player/Preload";
 
 function handleAction(state: GameState, action: PlayerAction) {
     return state.handle(action);
@@ -65,6 +66,7 @@ export default function Player({
 
     return (
         <>
+            <Preload state={state} />
             {state.state.scene && (
                 <StageScene scene={state.state.scene}/>
             )}

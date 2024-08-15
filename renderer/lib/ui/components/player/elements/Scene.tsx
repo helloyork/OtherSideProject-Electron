@@ -7,7 +7,7 @@ import {Scene as GameScene} from "@lib/game/game/elements/scene";
 import {useAspectRatio} from "@/lib/ui/providers/ratio";
 import {useEffect} from "react";
 import Transition from "@lib/game/game/elements/transition/Transition";
-import {Image as GameImage} from "@lib/game/game/elements/image";
+import {SrcManager} from "@lib/game/game/elements/srcManager";
 
 export default function Scene({
                                   scene
@@ -17,6 +17,7 @@ export default function Scene({
     const aspectRatio = useAspectRatio();
     const ratio = aspectRatio.ratio;
     const [scope, animate] = useAnimate();
+    const baseUrl = new URL(window.location.href).origin;
     useEffect(() => {
     }, []);
 
@@ -38,7 +39,7 @@ export default function Scene({
                     <Transition scene={scene} props={{
                         width: ratio.w,
                         height: ratio.h,
-                        src: GameScene.backgroundToSrc(scene.state.background),
+                        src: SrcManager.cacheablize(GameScene.backgroundToSrc(scene.state.background), baseUrl),
                     }}/>
                 </motion.div>
             </AnimatePresence>

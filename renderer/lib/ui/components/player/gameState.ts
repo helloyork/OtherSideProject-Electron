@@ -7,7 +7,7 @@ import {Image, ImageEventTypes} from "@lib/game/game/elements/image";
 import {Scene} from "@lib/game/game/elements/scene";
 import {Sound} from "@lib/game/game/elements/sound";
 import * as Howler from "howler";
-import {SrcManager, SrcType} from "@lib/game/game/elements/srcManager";
+import {SrcManager} from "@lib/game/game/elements/srcManager";
 
 type Clickable<T, U = undefined> = {
     action: T;
@@ -28,7 +28,9 @@ export type PlayerState = {
     history: CalledActionResult[];
     sounds: Sound[];
     src: {
-        [K in SrcType]: any[];
+        "image": string[];
+        "audio": Sound[];
+        "video": string[];
     };
 };
 export type PlayerAction = CalledActionResult;
@@ -76,7 +78,7 @@ export class GameState {
             case "condition:action":
                 break;
         }
-        console.log("[handle]", action);
+        console.log("[handle]", action); // @debug
         return this;
     }
 
@@ -103,12 +105,6 @@ export class GameState {
 
     setScene(scene: Scene) {
         this.state.scene = scene;
-        this.stage.forceUpdate();
-    }
-
-    addSound(sound: Sound) {
-        if (this.state.sounds.includes(sound)) return;
-        this.state.sounds.push(sound);
         this.stage.forceUpdate();
     }
 

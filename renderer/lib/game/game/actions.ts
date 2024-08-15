@@ -191,10 +191,14 @@ export class ImageAction<T extends typeof ImageActionTypes[keyof typeof ImageAct
         if (this.type === ImageActionTypes.setSrc) {
             this.callee.state.src = (this.contentNode as ContentNode<ImageActionContentType["image:setSrc"]>).getContent()[0];
             return super.executeAction(state);
-        } else if (this.type === ImageActionTypes.show) {
+        } else if ([
+            ImageActionTypes.show,
+            ImageActionTypes.hide,
+            ImageActionTypes.applyTransform
+        ].includes(this.type)) {
             const awaitable = new Awaitable<CalledActionResult, any>(v => v);
             const transform = (this.contentNode as ContentNode<ImageActionContentType["image:show"]>).getContent()[1];
-            state.animateImage(Image.EventTypes["event:image.show"], this.callee, [
+            state.animateImage(Image.EventTypes["event:image.applyTransform"], this.callee, [
                 transform
             ], () => {
                 this.callee.state.display = true;
@@ -204,32 +208,11 @@ export class ImageAction<T extends typeof ImageActionTypes[keyof typeof ImageAct
                 });
             })
             return awaitable;
-        } else if (this.type === ImageActionTypes.hide) {
-            const awaitable = new Awaitable<CalledActionResult, any>(v => v);
-            const transform = (this.contentNode as ContentNode<ImageActionContentType["image:hide"]>).getContent()[1];
-            state.animateImage(Image.EventTypes["event:image.hide"], this.callee, [
-                transform
-            ], () => {
-                this.callee.state.display = false;
-                awaitable.resolve({
-                    type: this.type,
-                    node: this.contentNode?.child || null,
-                });
-            });
-            return awaitable;
-        } else if (this.type === ImageActionTypes.applyTransform) {
-            const awaitable = new Awaitable<CalledActionResult, any>(v => v);
-            const transform = (this.contentNode as ContentNode<ImageActionContentType["image:applyTransform"]>).getContent()[1];
-            state.animateImage(Image.EventTypes["event:image.applyTransform"], this.callee, [
-                transform
-            ], () => {
-                awaitable.resolve({
-                    type: this.type,
-                    node: this.contentNode?.child || null,
-                });
-            });
-            return awaitable;
         } else if (this.type === ImageActionTypes.init) {
+            if (this.callee.initiated) {
+                return super.executeAction(state);
+            }
+            this.callee.initiated = true;
             const awaitable = new Awaitable<CalledActionResult, any>(v => v);
             const transform = new Transform<ImageTransformProps>([{
                 props: this.callee.state,
