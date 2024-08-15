@@ -20,11 +20,11 @@ const Context = createContext<null | ThemeContextType>(null);
 export function AspectRatioProvider({children}: {
     children: React.ReactNode
 }) {
-    const [theme, setTheme] = useState(DefaultValue);
+    const [ratio, setRatio] = useState(DefaultValue);
 
     return (
         <>
-            <Context.Provider value={{ratio: theme, setRatio: setTheme}}>
+            <Context.Provider value={{ratio: ratio, setRatio: setRatio}}>
                 {children}
             </Context.Provider>
         </>

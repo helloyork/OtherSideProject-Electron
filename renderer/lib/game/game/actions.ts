@@ -1,7 +1,7 @@
 import {ContentNode} from "@lib/game/game/save/rollback";
 import {Awaitable} from "@lib/util/data";
-import {CommonImage} from "@lib/game/game/show";
-import {Transform, TransformNameSpace} from "@lib/game/game/elements/transform";
+import {Background, CommonImage} from "@lib/game/game/show";
+import {Transform} from "@lib/game/game/elements/transform/transform";
 import {Image} from "@lib/game/game/elements/image";
 import {LogicAction} from "@lib/game/game/logicAction";
 import {Action} from "@lib/game/game/action";
@@ -15,6 +15,9 @@ import type {CalledActionResult} from "@lib/game/game/gameTypes";
 import {GameState} from "@lib/ui/components/player/gameState";
 import {Sound} from "@lib/game/game/elements/sound";
 import {Control} from "@lib/game/game/elements/control";
+import {TransformDefinitions} from "@lib/game/game/elements/transform/type";
+import {ITransition} from "@lib/game/game/elements/transition/type";
+import ImageTransformProps = TransformDefinitions.ImageTransformProps;
 
 export class TypedAction<
     ContentType extends Record<string, any>,
@@ -67,12 +70,19 @@ export const SceneActionTypes = {
     action: "scene:action",
     setBackground: "scene:setBackground",
     sleep: "scene:sleep",
+    setTransition: "scene:setTransition",
+    applyTransition: "scene:applyTransition",
+    init: "scene:init",
 } as const;
 export type SceneActionContentType = {
     [K in typeof SceneActionTypes[keyof typeof SceneActionTypes]]:
     K extends typeof SceneActionTypes["action"] ? Scene :
-        K extends typeof SceneActionTypes["sleep"] ? Promise<any> :
-            any;
+        K extends typeof SceneActionTypes["sleep"] ? number | Promise<any> | Awaitable<any, any> :
+            K extends typeof SceneActionTypes["setBackground"] ? [Background["background"]] :
+                K extends typeof SceneActionTypes["setTransition"] ? [ITransition] :
+                    K extends typeof SceneActionTypes["applyTransition"] ? [ITransition] :
+                        K extends typeof SceneActionTypes["init"] ? [] :
+                        any;
 }
 
 export class SceneAction<T extends typeof SceneActionTypes[keyof typeof SceneActionTypes]>
@@ -84,19 +94,50 @@ export class SceneAction<T extends typeof SceneActionTypes[keyof typeof SceneAct
             state.setScene(this.callee);
             return super.executeAction(state);
         } else if (this.type === SceneActionTypes.setBackground) {
-            return new Awaitable<CalledActionResult, any>(v => v);
+            this.callee.state.background = (this.contentNode as ContentNode<SceneActionContentType["scene:setBackground"]>).getContent()[0];
+            return super.executeAction(state);
         } else if (this.type === SceneActionTypes.sleep) {
             const awaitable = new Awaitable<CalledActionResult, any>(v => v);
-            const content = (this.contentNode as ContentNode<Promise<any>>).getContent();
-            content.then(() => {
+            const content = (this.contentNode as ContentNode<number | Promise<any> | Awaitable<any, any>>).getContent();
+            const wait = new Promise<void>(resolve => {
+                if (typeof content === "number") {
+                    setTimeout(() => {
+                        resolve();
+                    }, content);
+                } else if (Awaitable.isAwaitable(content)) {
+                    content.then(resolve);
+                } else {
+                    content.then(resolve);
+                }
+            });
+            wait.then(() => {
                 awaitable.resolve({
-                    type: this.type as any,
+                    type: this.type,
                     node: this.contentNode.child
                 });
             });
             return awaitable;
+        } else if (this.type === SceneActionTypes.setTransition) {
+            this.callee.events.emit(
+                "event:scene.setTransition",
+                (this.contentNode as ContentNode<SceneActionContentType["scene:setTransition"]>).getContent()[0]
+            );
+            return super.executeAction(state);
+        } else if (this.type === SceneActionTypes.applyTransition) {
+            const awaitable = new Awaitable<CalledActionResult, any>(v => v);
+            const transition = (this.contentNode as ContentNode<SceneActionContentType["scene:applyTransition"]>).getContent()[0];
+            transition.start(() => {
+                awaitable.resolve({
+                    type: this.type,
+                    node: this.contentNode.child
+                });
+                state.stage.next();
+            });
+            return awaitable;
+        } else if (this.type === SceneActionTypes.init) {
+            state.addSrc(this.callee.srcManager);
+            return super.executeAction(state);
         }
-
     }
 }
 
@@ -123,14 +164,16 @@ export const ImageActionTypes = {
     show: "image:show",
     hide: "image:hide",
     applyTransform: "image:applyTransform",
+    init: "image:init",
 } as const;
 export type ImageActionContentType = {
     [K in typeof ImageActionTypes[keyof typeof ImageActionTypes]]:
     K extends "image:setSrc" ? [string] :
-        K extends "image:setPosition" ? [CommonImage["position"], Transform<TransformNameSpace.ImageTransformProps>] :
-            K extends "image:show" ? [void, Transform<TransformNameSpace.ImageTransformProps>] :
-                K extends "image:hide" ? [void, Transform<TransformNameSpace.ImageTransformProps>] :
-                    K extends "image:applyTransform" ? [void, Transform<TransformNameSpace.ImageTransformProps>] :
+        K extends "image:setPosition" ? [CommonImage["position"], Transform<TransformDefinitions.ImageTransformProps>] :
+            K extends "image:show" ? [void, Transform<TransformDefinitions.ImageTransformProps>] :
+                K extends "image:hide" ? [void, Transform<TransformDefinitions.ImageTransformProps>] :
+                    K extends "image:applyTransform" ? [void, Transform<TransformDefinitions.ImageTransformProps>, string] :
+                        K extends "image:init" ? [] :
                         any;
 }
 
@@ -148,10 +191,14 @@ export class ImageAction<T extends typeof ImageActionTypes[keyof typeof ImageAct
         if (this.type === ImageActionTypes.setSrc) {
             this.callee.state.src = (this.contentNode as ContentNode<ImageActionContentType["image:setSrc"]>).getContent()[0];
             return super.executeAction(state);
-        } else if (this.type === ImageActionTypes.show) {
+        } else if ([
+            ImageActionTypes.show,
+            ImageActionTypes.hide,
+            ImageActionTypes.applyTransform
+        ].includes(this.type)) {
             const awaitable = new Awaitable<CalledActionResult, any>(v => v);
             const transform = (this.contentNode as ContentNode<ImageActionContentType["image:show"]>).getContent()[1];
-            state.animateImage(Image.EventTypes["event:image.show"], this.callee, [
+            state.animateImage(Image.EventTypes["event:image.applyTransform"], this.callee, [
                 transform
             ], () => {
                 this.callee.state.display = true;
@@ -161,22 +208,20 @@ export class ImageAction<T extends typeof ImageActionTypes[keyof typeof ImageAct
                 });
             })
             return awaitable;
-        } else if (this.type === ImageActionTypes.hide) {
+        } else if (this.type === ImageActionTypes.init) {
+            if (this.callee.initiated) {
+                return super.executeAction(state);
+            }
+            this.callee.initiated = true;
             const awaitable = new Awaitable<CalledActionResult, any>(v => v);
-            const transform = (this.contentNode as ContentNode<ImageActionContentType["image:hide"]>).getContent()[1];
-            state.animateImage(Image.EventTypes["event:image.hide"], this.callee, [
-                transform
-            ], () => {
-                this.callee.state.display = false;
-                awaitable.resolve({
-                    type: this.type,
-                    node: this.contentNode?.child || null,
-                });
+            const transform = new Transform<ImageTransformProps>([{
+                props: this.callee.state,
+                options: {
+                    duration: 0,
+                }
+            }], {
+                sync: true
             });
-            return awaitable;
-        } else if (this.type === ImageActionTypes.applyTransform) {
-            const awaitable = new Awaitable<CalledActionResult, any>(v => v);
-            const transform = (this.contentNode as ContentNode<ImageActionContentType["image:applyTransform"]>).getContent()[1];
             state.animateImage(Image.EventTypes["event:image.applyTransform"], this.callee, [
                 transform
             ], () => {
@@ -298,7 +343,7 @@ export class SoundAction<T extends typeof SoundActionTypes[keyof typeof SoundAct
                         src: this.callee.config.src,
                         loop: this.callee.config.loop,
                         volume: this.callee.config.volume,
-                        autoplay: true,
+                        autoplay: false,
                     })
                 )
             }
@@ -344,7 +389,7 @@ export type ControlActionContentType = {
             K extends "control:any" ? [LogicAction.Actions[]] :
                 K extends "control:all" ? [LogicAction.Actions[]] :
                     K extends "control:parallel" ? [LogicAction.Actions[]] :
-                    any;
+                        any;
 }
 
 export class ControlAction<T extends typeof ControlActionTypes[keyof typeof ControlActionTypes]>

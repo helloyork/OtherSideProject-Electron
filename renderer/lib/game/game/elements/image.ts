@@ -1,12 +1,13 @@
 import type {CommonImage, CommonImagePosition, StaticImageData} from "../show";
-import {deepMerge, DeepPartial, EventDispatcher} from "@lib/util/data";
+import {deepMerge, DeepPartial, EventDispatcher, getCallStack} from "@lib/util/data";
 import {ContentNode} from "../save/rollback";
 import {HistoryData} from "../save/transaction";
 import {Game} from "@lib/game/game/game";
-import {Transform, TransformNameSpace} from "./transform";
+import {Transform} from "./transform/transform";
 import {ImageAction} from "@lib/game/game/actions";
 import {Actionable} from "@lib/game/game/actionable";
-import ImageTransformProps = TransformNameSpace.ImageTransformProps;
+import {TransformDefinitions} from "@lib/game/game/elements/transform/type";
+import ImageTransformProps = TransformDefinitions.ImageTransformProps;
 
 export type ImageConfig = {
     src: string | StaticImageData;
@@ -28,9 +29,9 @@ const ImageTransactionTypes = {
 } as const;
 
 export type ImageEventTypes = {
-    "event:image.show": [Transform<TransformNameSpace.ImageTransformProps>];
-    "event:image.hide": [Transform<TransformNameSpace.ImageTransformProps>];
-    "event:image.applyTransform": [Transform<TransformNameSpace.ImageTransformProps>];
+    "event:image.show": [Transform<TransformDefinitions.ImageTransformProps>];
+    "event:image.hide": [Transform<TransformDefinitions.ImageTransformProps>];
+    "event:image.applyTransform": [Transform<TransformDefinitions.ImageTransformProps>];
 };
 
 export class Image extends Actionable<typeof ImageTransactionTypes> {
@@ -47,15 +48,13 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
         rotation: 0,
         opacity: 0,
     };
-    public static staticImageDataToSrc(image: StaticImageData | string): string {
-        return typeof image === "string" ? image : image.src;
-    }
     name: string;
     config: ImageConfig;
     state: ImageConfig;
     declare actions: ImageAction<any>[];
     id: null | number | string;
     events: EventDispatcher<ImageEventTypes> = new EventDispatcher();
+    initiated: boolean = false;
 
     constructor(name: string, config: DeepPartial<ImageConfig> = {}) {
         super();
@@ -69,29 +68,17 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
         this.init();
     }
 
-    init() {
-        const transform = new Transform<ImageTransformProps>([
-            {
-                props: {
-                    opacity: this.config.opacity,
-                    scale: this.config.scale,
-                    rotation: this.config.rotation,
-                    position: this.config.position
-                },
-                options: {
-                    duration: 0,
-                }
-            }
-        ]);
-        this.actions.push(new ImageAction<typeof ImageAction.ActionTypes.applyTransform>(
+    public static staticImageDataToSrc(image: StaticImageData | string): string {
+        return typeof image === "string" ? image : image.src;
+    }
+
+    private init() {
+        this.actions.push(new ImageAction<typeof ImageAction.ActionTypes.init>(
             this,
-            ImageAction.ActionTypes.applyTransform,
+            ImageAction.ActionTypes.init,
             new ContentNode(
                 Game.getIdManager().getStringId()
-            ).setContent([
-                void 0,
-                transform
-            ])
+            )
         ));
         return this;
     }
@@ -147,7 +134,8 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
                 Game.getIdManager().getStringId()
             ).setContent([
                 void 0,
-                transform
+                transform,
+                getCallStack()
             ])
         );
         this.actions.push(action);
@@ -158,9 +146,9 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
      * 让图片显示，如果图片已显示，则不会有任何效果
      */
     public show(): this;
-    public show(options: Transform<TransformNameSpace.ImageTransformProps>): this;
-    public show(options: Partial<TransformNameSpace.CommonTransformProps>): this;
-    public show(options?: Transform<TransformNameSpace.ImageTransformProps> | Partial<TransformNameSpace.CommonTransformProps>): this {
+    public show(options: Transform<TransformDefinitions.ImageTransformProps>): this;
+    public show(options: Partial<TransformDefinitions.CommonTransformProps>): this;
+    public show(options?: Transform<TransformDefinitions.ImageTransformProps> | Partial<TransformDefinitions.CommonTransformProps>): this {
         this.transaction
             .startTransaction()
             .push({
@@ -195,9 +183,9 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
      * 让图片隐藏，如果图片已隐藏，则不会有任何效果
      */
     public hide(): this;
-    public hide(transform: Transform<TransformNameSpace.ImageTransformProps>): this;
-    public hide(transform: Partial<TransformNameSpace.CommonTransformProps>): this;
-    public hide(transform?: Transform<TransformNameSpace.ImageTransformProps> | Partial<TransformNameSpace.CommonTransformProps>): this {
+    public hide(transform: Transform<TransformDefinitions.ImageTransformProps>): this;
+    public hide(transform: Partial<TransformDefinitions.CommonTransformProps>): this;
+    public hide(transform?: Transform<TransformDefinitions.ImageTransformProps> | Partial<TransformDefinitions.CommonTransformProps>): this {
         this.transaction
             .startTransaction()
             .push({

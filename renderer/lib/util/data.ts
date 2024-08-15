@@ -128,7 +128,7 @@ export function toHex(hex: { r: number; g: number; b: number; a?: number } | str
 export type EventTypes = {
     [key: string]: any[];
 }
-type EventListener<T extends any[]> = (...args: T) => void | Promise<any>;
+export type EventListener<T extends any[]> = (...args: T) => void | Promise<any>;
 
 export class EventDispatcher<T extends EventTypes, Type extends T & {
     "event:EventDispatcher.register": [keyof EventTypes, EventListener<any>];
@@ -158,6 +158,14 @@ export class EventDispatcher<T extends EventTypes, Type extends T & {
         this.events[event].forEach(listener => {
             listener(...args);
         });
+    }
+
+    public once<K extends keyof Type>(event: K, listener: EventListener<Type[K]>): EventListener<Type[K]> {
+        const onceListener: EventListener<Type[K]> = (...args) => {
+            listener(...args);
+            this.off(event, onceListener);
+        };
+        return this.on(event, onceListener);
     }
 
     public async any<K extends keyof T>(event: K, ...args: T[K]): Promise<any> {
@@ -191,5 +199,12 @@ export class EventDispatcher<T extends EventTypes, Type extends T & {
         await Promise.all(promises);
         return void 0;
     }
+}
 
+export function getCallStack(): string {
+    const stack = new Error().stack;
+    if (!stack) {
+        return "";
+    }
+    return stack;
 }

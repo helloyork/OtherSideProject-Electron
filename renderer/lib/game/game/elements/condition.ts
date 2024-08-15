@@ -15,7 +15,7 @@ interface LambdaCtx {
     resolve: (value?: any) => void;
 }
 
-type LambdaHandler = (ctx: LambdaCtx) => ScriptCleaner;
+type LambdaHandler = (ctx: LambdaCtx) => ScriptCleaner | void;
 
 export class Lambda {
     handler: LambdaHandler;
@@ -26,7 +26,7 @@ export class Lambda {
 
     evaluate({gameState}: { gameState: GameState }): {
         value: any;
-        cleaner: ScriptCleaner;
+        cleaner: ScriptCleaner | void;
     } {
         let value: any;
         let cleaner = this.handler(this.getCtx((v) => value = v, {gameState}));

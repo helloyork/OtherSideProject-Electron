@@ -7,6 +7,7 @@ import {Image, ImageEventTypes} from "@lib/game/game/elements/image";
 import {Scene} from "@lib/game/game/elements/scene";
 import {Sound} from "@lib/game/game/elements/sound";
 import * as Howler from "howler";
+import {SrcManager} from "@lib/game/game/elements/srcManager";
 
 type Clickable<T, U = undefined> = {
     action: T;
@@ -26,6 +27,11 @@ export type PlayerState = {
     scene: Scene | null;
     history: CalledActionResult[];
     sounds: Sound[];
+    src: {
+        "image": string[];
+        "audio": Sound[];
+        "video": string[];
+    };
 };
 export type PlayerAction = CalledActionResult;
 
@@ -46,6 +52,11 @@ export class GameState {
         scene: null,
         history: [],
         sounds: [],
+        src: {
+            [SrcManager.SrcTypes.image]: [],
+            [SrcManager.SrcTypes.video]: [],
+            [SrcManager.SrcTypes.audio]: [],
+        }
     };
     currentHandling: CalledActionResult | null = null;
     stage: StageUtils;
@@ -67,7 +78,7 @@ export class GameState {
             case "condition:action":
                 break;
         }
-        this.stage.forceUpdate();
+        console.log("[handle]", action); // @debug
         return this;
     }
 
@@ -97,12 +108,6 @@ export class GameState {
         this.stage.forceUpdate();
     }
 
-    addSound(sound: Sound) {
-        if (this.state.sounds.includes(sound)) return;
-        this.state.sounds.push(sound);
-        this.stage.forceUpdate();
-    }
-
     playSound(howl: Howler.Howl, onEnd?: () => void) {
         howl.play();
         const events = [
@@ -125,6 +130,19 @@ export class GameState {
 
     animateImage<T extends keyof ImageEventTypes>(type: T, target: Image, args: ImageEventTypes[T], onEnd: () => void) {
         return this.anyEvent(type, target, onEnd, ...args);
+    }
+
+    addSrc(src: SrcManager) {
+        const newSrc = {
+            [SrcManager.SrcTypes.image]: [],
+            [SrcManager.SrcTypes.audio]: [],
+            [SrcManager.SrcTypes.video]: [],
+        };
+        src.getSrc().forEach(s => {
+            newSrc[s.type].push(s.src);
+        });
+        this.state.src = newSrc;
+        return this;
     }
 
     private anyEvent(type: any, target: any, onEnd: () => void, ...args: any[]) {

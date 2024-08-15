@@ -12,7 +12,7 @@ export interface ScriptCtx {
     gameState: GameState;
 }
 
-type ScriptRun = (ctx: ScriptCtx) => ScriptCleaner;
+type ScriptRun = (ctx: ScriptCtx) => ScriptCleaner | void;
 export type ScriptCleaner = () => void;
 
 const ScriptTransactionTypes = {
@@ -31,7 +31,7 @@ export class Script extends Actionable<typeof ScriptTransactionTypes> {
     execute({gameState}: { gameState: GameState }): void {
         this.cleaner = this.handler(this.getCtx({
             gameState
-        }));
+        })) || null;
     }
 
     getCtx({gameState}: { gameState: GameState }): ScriptCtx {
