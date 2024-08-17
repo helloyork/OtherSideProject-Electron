@@ -8,6 +8,7 @@ import {Image} from "../elements/image";
 import {Transform} from "@lib/game/game/elements/transform/transform";
 import {Sound} from "@lib/game/game/elements/sound";
 import {Control} from "@lib/game/game/elements/control";
+import {Utils} from "./Utils";
 
 export {
     Character,
@@ -23,4 +24,5 @@ export {
     Transform,
     Sound,
     Control,
+    Utils,
 };

@@ -53,12 +53,12 @@ export class CharacterAction<T extends typeof CharacterActionTypes[keyof typeof 
         if (this.type === CharacterActionTypes.say) {
             const awaitable = new Awaitable<CalledActionResult, any>(v => v);
             const sentence = (this.contentNode as ContentNode<Sentence>).getContent();
-            state.createSay(this.contentNode.id, sentence, () => {
+            state.createText(this.contentNode.id, sentence, () => {
                 awaitable.resolve({
                     type: this.type as any,
                     node: this.contentNode.child
                 });
-            });
+            }).then();
             return awaitable;
         }
         return super.executeAction(state);
@@ -73,6 +73,7 @@ export const SceneActionTypes = {
     setTransition: "scene:setTransition",
     applyTransition: "scene:applyTransition",
     init: "scene:init",
+    exit: "scene:exit",
 } as const;
 export type SceneActionContentType = {
     [K in typeof SceneActionTypes[keyof typeof SceneActionTypes]]:
@@ -82,6 +83,7 @@ export type SceneActionContentType = {
                 K extends typeof SceneActionTypes["setTransition"] ? [ITransition] :
                     K extends typeof SceneActionTypes["applyTransition"] ? [ITransition] :
                         K extends typeof SceneActionTypes["init"] ? [] :
+                            K extends typeof SceneActionTypes["exit"] ? [] :
                         any;
 }
 
@@ -91,7 +93,6 @@ export class SceneAction<T extends typeof SceneActionTypes[keyof typeof SceneAct
 
     public executeAction(state: GameState): CalledActionResult | Awaitable<CalledActionResult, any> {
         if (this.type === SceneActionTypes.action) {
-            state.setScene(this.callee);
             return super.executeAction(state);
         } else if (this.type === SceneActionTypes.setBackground) {
             this.callee.state.background = (this.contentNode as ContentNode<SceneActionContentType["scene:setBackground"]>).getContent()[0];
@@ -135,7 +136,14 @@ export class SceneAction<T extends typeof SceneActionTypes[keyof typeof SceneAct
             });
             return awaitable;
         } else if (this.type === SceneActionTypes.init) {
-            state.addSrc(this.callee.srcManager);
+            state
+                .registerSrcManager(this.callee.srcManager)
+                .addScene(this.callee);
+            return super.executeAction(state);
+        } else if (this.type === SceneActionTypes.exit) {
+            state
+                .offSrcManager(this.callee.srcManager)
+                .popScene();
             return super.executeAction(state);
         }
     }
@@ -181,11 +189,10 @@ export class ImageAction<T extends typeof ImageActionTypes[keyof typeof ImageAct
     extends TypedAction<ImageActionContentType, T, Image> {
     static ActionTypes = ImageActionTypes;
 
-    // @todo: 简化
     public executeAction(state: GameState): CalledActionResult | Awaitable<CalledActionResult, any> {
         if (this.callee.id === null) {
             this.callee.setId(state.clientGame.game.getLiveGame().idManager.getStringId());
-            state.addImage(this.callee);
+            state.createImage(this.callee);
             state.stage.forceUpdate();
         }
         if (this.type === ImageActionTypes.setSrc) {
@@ -305,7 +312,7 @@ export class MenuAction<T extends typeof MenuActionTypes[keyof typeof MenuAction
         const awaitable = new Awaitable<CalledActionResult, CalledActionResult>(v => v);
         const menu = this.contentNode.getContent() as MenuData;
 
-        state.createMenu(menu.prompt, menu.choices, v => {
+        state.createMenu(menu, v => {
             let lastChild = state.clientGame.game.getLiveGame().currentAction.contentNode.child;
             if (lastChild) {
                 v.action[v.action.length - 1]?.contentNode.addChild(lastChild);

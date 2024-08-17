@@ -2,7 +2,7 @@ import {CalledActionResult} from "@lib/game/game/gameTypes";
 import {ClientGame} from "@lib/game/game";
 import {EventDispatcher} from "@lib/util/data";
 import {Character, Sentence} from "@lib/game/game/elements/text";
-import {Choice} from "@lib/game/game/elements/menu";
+import {Choice, MenuData} from "@lib/game/game/elements/menu";
 import {Image, ImageEventTypes} from "@lib/game/game/elements/image";
 import {Scene} from "@lib/game/game/elements/scene";
 import {Sound} from "@lib/game/game/elements/sound";
@@ -14,24 +14,20 @@ type Clickable<T, U = undefined> = {
     onClick: U extends undefined ? () => void : (arg0: U) => void;
 };
 export type PlayerState = {
-    say: Clickable<{
+    history: CalledActionResult[];
+    sounds: Sound[];
+    scenes: Scene[];
+    texts: Map<Scene, Clickable<{
         character: Character;
         sentence: Sentence;
         id: string;
-    }>[];
-    menu: Clickable<{
+    }>[]>;
+    menus: Map<Scene, Clickable<{
         prompt: Sentence;
         choices: Choice[];
-    }, Choice>[];
-    images: Image[];
-    scene: Scene | null;
-    history: CalledActionResult[];
-    sounds: Sound[];
-    src: {
-        "image": string[];
-        "audio": Sound[];
-        "video": string[];
-    };
+    }, Choice>[]>;
+    images: Map<Scene, Image[]>;
+    srcManagers: SrcManager[];
 };
 export type PlayerAction = CalledActionResult;
 
@@ -41,32 +37,89 @@ interface StageUtils {
     dispatch: (action: PlayerAction) => void;
 }
 
-type GameStateEvents = {};
+type GameStateEvents = {
+    "event:state.imageLoaded": [];
+};
 
 export class GameState {
-    static EventTypes: { [K in keyof GameStateEvents]: K } = {};
+    static EventTypes: { [K in keyof GameStateEvents]: K } = {
+        "event:state.imageLoaded": "event:state.imageLoaded",
+    };
     state: PlayerState = {
-        say: [],
-        menu: [],
-        images: [],
-        scene: null,
         history: [],
         sounds: [],
-        src: {
-            [SrcManager.SrcTypes.image]: [],
-            [SrcManager.SrcTypes.video]: [],
-            [SrcManager.SrcTypes.audio]: [],
-        }
+        scenes: [],
+        texts: new Map<Scene, Clickable<{
+            character: Character;
+            sentence: Sentence;
+            id: string;
+        }>[]>(),
+        menus: new Map<Scene, Clickable<{
+            prompt: Sentence;
+            choices: Choice[];
+        }, Choice>[]>(),
+        images: new Map<Scene, Image[]>(),
+        srcManagers: [],
     };
     currentHandling: CalledActionResult | null = null;
     stage: StageUtils;
     clientGame: ClientGame;
-    events: EventDispatcher<GameStateEvents>;
+    public readonly events: EventDispatcher<GameStateEvents>;
 
     constructor(clientGame: ClientGame, stage: StageUtils) {
         this.stage = stage;
         this.clientGame = clientGame;
         this.events = new EventDispatcher();
+    }
+
+    public addScene(scene: Scene): this {
+        this.state.scenes.push(scene);
+        this.setElements(scene);
+        return this;
+    }
+
+    public popScene(): this {
+        const scene = this.state.scenes.pop();
+        if (!scene) return this;
+        this.removeElements(scene);
+        return this;
+    }
+
+    private getElementMap() {
+        return {
+            "texts": this.state.texts,
+            "menus": this.state.menus,
+            "images": this.state.images,
+        };
+    }
+
+    private setElements(scene: Scene): this {
+        const elements = this.getElementMap();
+        for (const [key, value] of Object.entries(elements)) {
+            if (!value.has(scene)) {
+                value.set(scene, []);
+            }
+        }
+        return this;
+    }
+
+    private removeElements(scene: Scene): this {
+        const elements = this.getElementMap();
+        for (const [key, value] of Object.entries(elements)) {
+            if (value.has(scene)) {
+                value.delete(scene);
+            }
+        }
+        return this;
+    }
+
+    public getLastScene(): Scene | null {
+        return this.state.scenes[this.state.scenes.length - 1] || null;
+    }
+
+    public sceneExists(scene?: Scene): boolean {
+        if (!scene) return !!this.getLastScene();
+        return this.state.scenes.includes(scene);
     }
 
     handle(action: PlayerAction): this {
@@ -82,30 +135,32 @@ export class GameState {
         return this;
     }
 
-    createSay(id: string, sentence: Sentence, afterClick?: () => void) {
-        return this.createWaitableAction(this.state.say, {
+    public createText(id: string, sentence: Sentence, afterClick?: () => void, scene?: Scene) {
+        const targetScene = scene || this.getLastScene();
+        if (!this.state.texts.has(targetScene)) {
+            throw new Error("Scene not found");
+        }
+        return this.createWaitableAction(this.state.texts.get(targetScene), {
             character: sentence.character,
             sentence,
             id
         }, afterClick);
     }
 
-    createMenu(prompt: Sentence, choices: Choice[], afterChoose?: (choice: Choice) => void) {
-        return this.createWaitableAction(this.state.menu, {
-            prompt,
-            choices
-        }, afterChoose);
+    public createMenu(menu: MenuData, afterChoose?: (choice: Choice) => void, scene?: Scene) {
+        const targetScene = scene || this.getLastScene();
+        if (!this.state.menus.has(targetScene)) {
+            throw new Error("Scene not found");
+        }
+        return this.createWaitableAction(this.state.menus.get(targetScene), menu, afterChoose);
     }
 
-    addImage(image: Image) {
-        if (this.state.images.includes(image)) return;
-        this.state.images.push(image);
-        this.stage.forceUpdate();
-    }
-
-    setScene(scene: Scene) {
-        this.state.scene = scene;
-        this.stage.forceUpdate();
+    public createImage(image: Image, scene?: Scene) {
+        const targetScene = scene || this.getLastScene();
+        if (!this.state.images.has(targetScene)) {
+            throw new Error("Scene not found");
+        }
+        this.state.images.get(targetScene).push(image);
     }
 
     playSound(howl: Howler.Howl, onEnd?: () => void) {
@@ -132,17 +187,14 @@ export class GameState {
         return this.anyEvent(type, target, onEnd, ...args);
     }
 
-    addSrc(src: SrcManager) {
-        const newSrc = {
-            [SrcManager.SrcTypes.image]: [],
-            [SrcManager.SrcTypes.audio]: [],
-            [SrcManager.SrcTypes.video]: [],
-        };
-        src.getSrc().forEach(s => {
-            newSrc[s.type].push(s.src);
-        });
-        this.state.src = newSrc;
+    public registerSrcManager(srcManager: SrcManager) {
+        this.state.srcManagers.push(srcManager);
         return this;
+    }
+
+    public offSrcManager(srcManager: SrcManager) {
+        this.state.srcManagers = this.state.srcManagers.filter(s => s !== srcManager);
+        return this
     }
 
     private anyEvent(type: any, target: any, onEnd: () => void, ...args: any[]) {

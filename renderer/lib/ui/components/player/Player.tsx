@@ -11,7 +11,7 @@ import {default as StageImage} from "./elements/Image";
 import {Story} from "@/lib/game/game/elements/story";
 import {GameState, PlayerAction} from "@lib/ui/components/player/gameState";
 import {cloneDeep} from "lodash";
-import {Preload} from "@lib/ui/elements/player/Preload";
+import {PreloadedProvider} from "@lib/ui/providers/preloaded";
 
 function handleAction(state: GameState, action: PlayerAction) {
     return state.handle(action);
@@ -66,44 +66,48 @@ export default function Player({
 
     return (
         <>
-            <Preload state={state} />
-            {state.state.scene && (
-                <StageScene scene={state.state.scene}/>
-            )}
-            {
-                state.state.images.map((image) => {
-                    return (
-                        <StageImage key={image.id} image={image} state={state}/>
-                    )
-                })
-            }
-            {
-                state.state.say.filter(a => a.action.sentence.state.display).map((action) => {
-                    return (
-                        <Say key={action.action.id} action={action.action} onClick={
-                            () => {
-                                action.onClick();
-                                next();
-                            }
-                        }/>
-                    )
-                })
-            }
-            {
-                state.state.menu.map((action, i) => {
-                    return (
-                        <div key={i}>
-                            {
-                                <Menu prompt={action.action.prompt} choices={action.action.choices}
-                                      afterChoose={(choice) => {
-                                          action.onClick(choice);
-                                          next();
-                                      }}/>
-                            }
-                        </div>
-                    )
-                })
-            }
+            <PreloadedProvider>
+                {
+                    state.state.scenes.map((scene) => {
+                        return (
+                            <StageScene key={scene.id} state={state} scene={scene}>
+                                {
+                                    state.state.images.get(scene).map((image) => {
+                                        return (
+                                            <StageImage key={image.id} image={image} state={state}/>
+                                        )
+                                    })
+                                }
+                                {
+                                    state.state.texts.get(scene).map((action) => {
+                                        return (
+                                            <Say key={action.action.id} action={action.action} onClick={() => {
+                                                action.onClick();
+                                                next();
+                                            }}/>
+                                        )
+                                    })
+                                }
+                                {
+                                    state.state.menus.get(scene).map((action, i) => {
+                                        return (
+                                            <div key={i}>
+                                                {
+                                                    <Menu prompt={action.action.prompt} choices={action.action.choices}
+                                                          afterChoose={(choice) => {
+                                                              action.onClick(choice);
+                                                              next();
+                                                          }}/>
+                                                }
+                                            </div>
+                                        )
+                                    })
+                                }
+                            </StageScene>
+                        )
+                    })
+                }
+            </PreloadedProvider>
         </>
     )
 }

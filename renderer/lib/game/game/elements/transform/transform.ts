@@ -228,7 +228,7 @@ export class Transform<T extends TransformDefinitions.Types> {
     }
 
     propToCSS(state: GameState, prop: DeepPartial<T>): DOMKeyframesDefinition {
-        const {invertY, invertX} = state.state.scene.config;
+        const {invertY, invertX} = state.getLastScene()?.config || {}
         const FieldHandlers: Record<string, (v: any) => any> = {
             "position": (value: CommonImage["position"]) => Transform.positionToCSS(value, invertY, invertX),
             "backgroundColor": (value: Background["background"]) => Transform.backgroundToCSS(value),
@@ -250,7 +250,7 @@ export class Transform<T extends TransformDefinitions.Types> {
     }
 
     propToTransformCSS(state: GameState, prop: DeepPartial<T>): string {
-        const {invertY, invertX} = state.state.scene.config;
+        const {invertY, invertX} = state.getLastScene().config || {};
         const Transforms = [
             `translate(${invertX ? "" : "-"}50%, ${invertY ? "" : "-"}50%)`,
             (prop["scale"] !== undefined) && `scale(${prop["scale"]})`,

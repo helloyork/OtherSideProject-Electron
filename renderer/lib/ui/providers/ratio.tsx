@@ -32,7 +32,7 @@ export function AspectRatioProvider({children}: {
 }
 
 export function useAspectRatio(): ThemeContextType {
-    if (!Context) throw new Error("useAspectRatio must be used within a ThemeProvider");
+    if (!Context) throw new Error("useAspectRatio must be used within a AspectRatioProvider");
     return useContext(Context) as ThemeContextType;
 }
 

@@ -17,10 +17,14 @@ export type SceneConfig = {
     invertX?: boolean;
 } & Background;
 
+// @todo: scene生命周期管理
+
 export type SceneEventTypes = {
     "event:scene.setTransition": [ITransition];
     "event:scene.remove": [];
     "event:scene.applyTransition": [ITransition];
+    "event:scene.load": [],
+    "event:scene.unload": [],
 }
 
 export class Scene extends Constructable<
@@ -32,6 +36,8 @@ export class Scene extends Constructable<
         "event:scene.setTransition": "event:scene.setTransition",
         "event:scene.remove": "event:scene.remove",
         "event:scene.applyTransition": "event:scene.applyTransition",
+        "event:scene.load": "event:scene.load",
+        "event:scene.unload": "event:scene.unload",
     }
     static defaultConfig: SceneConfig = {
         background: null,
@@ -52,14 +58,28 @@ export class Scene extends Constructable<
         this.name = name;
         this.config = deepMerge<SceneConfig>(Scene.defaultConfig, config);
         this.state = deepMerge<SceneConfig>({}, this.config);
-
-        this.init();
     }
 
     static backgroundToSrc(background: Background["background"]) {
         return Transform.isStaticImageData(background) ? background.src : (
             background["url"] || null
         );
+    }
+
+    public active(): this {
+        this.init();
+        return this;
+    }
+
+    public exit(): this {
+        this._actions.push(new SceneAction(
+            this,
+            "scene:exit",
+            new ContentNode(
+                Game.getIdManager().getStringId(),
+            ).setContent([])
+        ));
+        return this;
     }
 
     public setSceneBackground(background: Background["background"]) {
@@ -116,7 +136,7 @@ export class Scene extends Constructable<
         return this;
     }
 
-    init() {
+    private init() {
         this._actions.push(new SceneAction(
             this,
             "scene:init",
