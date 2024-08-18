@@ -1,8 +1,9 @@
+"use client";
+
 import {useEffect, useState} from 'react';
 import {Scene as GameScene, SceneEventTypes} from "../../elements/scene";
 import {ITransition, TransitionEventTypes} from "./type";
 import {EventListener} from "@lib/util/data";
-import Isolated from "@lib/ui/elements/isolated";
 import Background from "@lib/ui/elements/Background";
 
 export default function Transition({scene, props}: { scene: GameScene, props: Record<string, any> }) {

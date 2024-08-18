@@ -11,7 +11,10 @@ import {default as StageImage} from "./elements/Image";
 import {Story} from "@/lib/game/game/elements/story";
 import {GameState, PlayerAction} from "@lib/ui/components/player/gameState";
 import {cloneDeep} from "lodash";
-import {Preload} from "@lib/ui/elements/player/Preload";
+import {PreloadedProvider} from "@lib/ui/providers/preloaded";
+import {SrcManager} from "@lib/game/game/elements/srcManager";
+import {Image} from "@lib/game/game/elements/image";
+import clsx from "clsx";
 
 function handleAction(state: GameState, action: PlayerAction) {
     return state.handle(action);
@@ -23,7 +26,6 @@ export default function Player({
     story: Story;
 }>) {
     const [, forceUpdate] = useReducer((x) => x + 1, 0);
-    const [lastUpdated, setLastUpdated] = useState(Date.now());
     const {game} = useGame();
     const [state, dispatch] = useReducer(handleAction, new GameState(game, {
         forceUpdate,
@@ -35,11 +37,7 @@ export default function Player({
     }, [story]);
 
     function next() {
-        console.log("Triggering next, last updated", ( // @debug
-            Date.now() - lastUpdated
-        ), "ms ago");
-        setLastUpdated(Date.now());
-        let now = Date.now();
+        console.time("Next");
 
         let exited = false;
         while (!exited) {
@@ -55,7 +53,7 @@ export default function Player({
         }
         state.stage.forceUpdate();
 
-        console.log("Next took", Date.now() - now, "ms");
+        console.timeEnd("Next");
     }
 
     useEffect(() => {
@@ -66,44 +64,48 @@ export default function Player({
 
     return (
         <>
-            <Preload state={state} />
-            {state.state.scene && (
-                <StageScene scene={state.state.scene}/>
-            )}
-            {
-                state.state.images.map((image) => {
-                    return (
-                        <StageImage key={image.id} image={image} state={state}/>
-                    )
-                })
-            }
-            {
-                state.state.say.filter(a => a.action.sentence.state.display).map((action) => {
-                    return (
-                        <Say key={action.action.id} action={action.action} onClick={
-                            () => {
-                                action.onClick();
-                                next();
-                            }
-                        }/>
-                    )
-                })
-            }
-            {
-                state.state.menu.map((action, i) => {
-                    return (
-                        <div key={i}>
-                            {
-                                <Menu prompt={action.action.prompt} choices={action.action.choices}
-                                      afterChoose={(choice) => {
-                                          action.onClick(choice);
-                                          next();
-                                      }}/>
-                            }
-                        </div>
-                    )
-                })
-            }
+            <PreloadedProvider>
+                {
+                    state.state.scenes.map((scene) => {
+                        return (
+                            <StageScene key={scene.id} state={state} scene={scene}>
+                                {
+                                    (console.log("loaded images: ", state.state.images.get(scene).length), state.state.images.get(scene).map((image) => {
+                                        return (
+                                            <StageImage key={image.id} image={image} state={state}/>
+                                        )
+                                    }))
+                                }
+                                {
+                                    state.state.texts.get(scene).map((action) => {
+                                        return (
+                                            <Say key={action.action.id} action={action.action} onClick={() => {
+                                                action.onClick();
+                                                next();
+                                            }}/>
+                                        )
+                                    })
+                                }
+                                {
+                                    state.state.menus.get(scene).map((action, i) => {
+                                        return (
+                                            <div key={i}>
+                                                {
+                                                    <Menu prompt={action.action.prompt} choices={action.action.choices}
+                                                          afterChoose={(choice) => {
+                                                              action.onClick(choice);
+                                                              next();
+                                                          }}/>
+                                                }
+                                            </div>
+                                        )
+                                    })
+                                }
+                            </StageScene>
+                        )
+                    })
+                }
+            </PreloadedProvider>
         </>
     )
 }

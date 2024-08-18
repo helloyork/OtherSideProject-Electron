@@ -76,6 +76,10 @@ export class Sound extends Actionable {
         return this;
     }
 
+    getSrc() {
+        return this.config.src;
+    }
+
     $setHowl(howl: Howler.Howl) {
         this.state.playing = howl;
     }

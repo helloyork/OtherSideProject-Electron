@@ -3,11 +3,12 @@ import {
     Condition,
     Control, Image,
     Lambda,
-    Menu, Scene,
+    Menu,
     Script,
     Sentence,
     Story,
     Transform,
+    Utils,
     Word
 } from "@lib/game/game/common/core";
 import {GameState, LiveGame} from "@lib/game/game/common/game";
@@ -46,6 +47,11 @@ const fadeInTransition = new Fade(2000, "in");
 // @todo: 包装一下转场
 
 const scene1Actions = scene1.action([
+    scene1.activate().toActions(),
+
+    image1.init().toActions(),
+    image2.init().toActions(),
+
     image1.show({
         ease: "circOut",
         duration: 0.5,
@@ -170,12 +176,19 @@ const scene1Actions = scene1.action([
         })
         .toActions(),
     character2.say("游戏结束！")
-        .toActions()
+        .toActions(),
+    scene1.deactivate().toActions()
 ]);
 
 scene1.srcManager.register(sound1)
-    .register(mainMenuBackground)
-    .register(mainMenuBackground2)
+    .register(new Image("_", {
+        src: mainMenuBackground
+    }))
+    .register(new Image("_", {
+        src: mainMenuBackground2
+    }))
+    .register(image1)
+    .register(image2)
 
 function isNumberCorrect(gameState: GameState, number: number) {
     const namespace =

@@ -8,10 +8,13 @@ import {ImageAction} from "@lib/game/game/actions";
 import {Actionable} from "@lib/game/game/actionable";
 import {TransformDefinitions} from "@lib/game/game/elements/transform/type";
 import ImageTransformProps = TransformDefinitions.ImageTransformProps;
+import {Utils} from "@lib/game/game/common/Utils";
+import React from "react";
 
 export type ImageConfig = {
     src: string | StaticImageData;
     display: boolean;
+    cache: boolean;
 } & CommonImage;
 
 export const ImagePosition: {
@@ -47,6 +50,7 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
         scale: 1,
         rotation: 0,
         opacity: 0,
+        cache: false,
     };
     name: string;
     config: ImageConfig;
@@ -55,6 +59,7 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
     id: null | number | string;
     events: EventDispatcher<ImageEventTypes> = new EventDispatcher();
     initiated: boolean = false;
+    ref: React.RefObject<HTMLImageElement> | undefined = undefined;
 
     constructor(name: string, config: DeepPartial<ImageConfig> = {}) {
         super();
@@ -65,14 +70,17 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
         this.id = null;
 
         this.checkConfig();
-        this.init();
     }
 
     public static staticImageDataToSrc(image: StaticImageData | string): string {
         return typeof image === "string" ? image : image.src;
     }
 
-    private init() {
+    public init() {
+        return this._init();
+    }
+
+    private _init() {
         this.actions.push(new ImageAction<typeof ImageAction.ActionTypes.init>(
             this,
             ImageAction.ActionTypes.init,
@@ -250,5 +258,25 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
         return new Transform<ImageTransformProps>(this.state, {
             duration: 0,
         });
+    }
+
+    toHTMLElementProps(): React.DetailedHTMLProps<React.ImgHTMLAttributes<HTMLImageElement>, HTMLImageElement> {
+        return {
+            src: Utils.srcToString(this.config.src),
+            width: this.state.width,
+            height: this.state.height,
+            style: {
+                position: 'absolute',
+            }
+        };
+    }
+
+    setScope(scope: React.RefObject<HTMLImageElement>): this {
+        this.ref = scope;
+        return this;
+    }
+
+    getScope(): React.RefObject<HTMLImageElement> {
+        return this.ref;
     }
 }
