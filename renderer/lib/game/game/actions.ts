@@ -116,6 +116,7 @@ export class SceneAction<T extends typeof SceneActionTypes[keyof typeof SceneAct
                     type: this.type,
                     node: this.contentNode.child
                 });
+                state.stage.next();
             });
             return awaitable;
         } else if (this.type === SceneActionTypes.setTransition) {
@@ -136,10 +137,19 @@ export class SceneAction<T extends typeof SceneActionTypes[keyof typeof SceneAct
             });
             return awaitable;
         } else if (this.type === SceneActionTypes.init) {
+            const awaitable = new Awaitable<CalledActionResult, any>(v => v);
             state
                 .registerSrcManager(this.callee.srcManager)
                 .addScene(this.callee);
-            return super.executeAction(state);
+
+            this.callee.events.once("event:scene.mount", () => {
+                awaitable.resolve({
+                    type: this.type,
+                    node: this.contentNode.child
+                });
+                state.stage.next();
+            });
+            return awaitable;
         } else if (this.type === SceneActionTypes.exit) {
             state
                 .offSrcManager(this.callee.srcManager)
@@ -190,32 +200,12 @@ export class ImageAction<T extends typeof ImageActionTypes[keyof typeof ImageAct
     static ActionTypes = ImageActionTypes;
 
     public executeAction(state: GameState): CalledActionResult | Awaitable<CalledActionResult, any> {
-        if (this.callee.id === null) {
-            this.callee.setId(state.clientGame.game.getLiveGame().idManager.getStringId());
-            state.createImage(this.callee);
-            state.stage.forceUpdate();
-        }
-        if (this.type === ImageActionTypes.setSrc) {
-            this.callee.state.src = (this.contentNode as ContentNode<ImageActionContentType["image:setSrc"]>).getContent()[0];
-            return super.executeAction(state);
-        } else if ([
-            ImageActionTypes.show,
-            ImageActionTypes.hide,
-            ImageActionTypes.applyTransform
-        ].includes(this.type)) {
-            const awaitable = new Awaitable<CalledActionResult, any>(v => v);
-            const transform = (this.contentNode as ContentNode<ImageActionContentType["image:show"]>).getContent()[1];
-            state.animateImage(Image.EventTypes["event:image.applyTransform"], this.callee, [
-                transform
-            ], () => {
-                this.callee.state.display = true;
-                awaitable.resolve({
-                    type: this.type,
-                    node: this.contentNode?.child || null,
-                });
-            })
-            return awaitable;
-        } else if (this.type === ImageActionTypes.init) {
+        if (this.type === ImageActionTypes.init) {
+            if (this.callee.id === null) {
+                this.callee.setId(state.clientGame.game.getLiveGame().idManager.getStringId());
+                state.createImage(this.callee);
+                state.stage.forceUpdate();
+            }
             if (this.callee.initiated) {
                 return super.executeAction(state);
             }
@@ -237,6 +227,32 @@ export class ImageAction<T extends typeof ImageActionTypes[keyof typeof ImageAct
                     node: this.contentNode?.child || null,
                 });
             });
+            return awaitable;
+        }
+
+        if (!this.callee.id) {
+            throw new Error("Image is not initiated, please call \"image.init()\" first.");
+        }
+
+        if (this.type === ImageActionTypes.setSrc) {
+            this.callee.state.src = (this.contentNode as ContentNode<ImageActionContentType["image:setSrc"]>).getContent()[0];
+            return super.executeAction(state);
+        } else if ([
+            ImageActionTypes.show,
+            ImageActionTypes.hide,
+            ImageActionTypes.applyTransform
+        ].includes(this.type)) {
+            const awaitable = new Awaitable<CalledActionResult, any>(v => v);
+            const transform = (this.contentNode as ContentNode<ImageActionContentType["image:show"]>).getContent()[1];
+            state.animateImage(Image.EventTypes["event:image.applyTransform"], this.callee, [
+                transform
+            ], () => {
+                this.callee.state.display = true;
+                awaitable.resolve({
+                    type: this.type,
+                    node: this.contentNode?.child || null,
+                });
+            })
             return awaitable;
         }
     }

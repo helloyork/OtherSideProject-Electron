@@ -14,6 +14,7 @@ import React from "react";
 export type ImageConfig = {
     src: string | StaticImageData;
     display: boolean;
+    cache: boolean;
 } & CommonImage;
 
 export const ImagePosition: {
@@ -49,6 +50,7 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
         scale: 1,
         rotation: 0,
         opacity: 0,
+        cache: false,
     };
     name: string;
     config: ImageConfig;
@@ -68,14 +70,17 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
         this.id = null;
 
         this.checkConfig();
-        this.init();
     }
 
     public static staticImageDataToSrc(image: StaticImageData | string): string {
         return typeof image === "string" ? image : image.src;
     }
 
-    private init() {
+    public init() {
+        return this._init();
+    }
+
+    private _init() {
         this.actions.push(new ImageAction<typeof ImageAction.ActionTypes.init>(
             this,
             ImageAction.ActionTypes.init,
@@ -261,7 +266,7 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
             width: this.state.width,
             height: this.state.height,
             style: {
-                position: 'absolute'
+                position: 'absolute',
             }
         };
     }

@@ -1,7 +1,6 @@
-import {NextApiHandler} from "next";
 import {Constants} from "@lib/api/config";
 
-const GET: NextApiHandler = async (req, res) => {
+const GET = (async (req, res) => {
     const url = new URL(`${req.url}`, `http://${process.env.HOST ?? 'localhost'}:${process.env.PORT ?? 8888}`);
     const targetUrl = url.searchParams.get(Constants.app.request.cacheableRouteParam);
     if (!targetUrl) {
@@ -23,7 +22,9 @@ const GET: NextApiHandler = async (req, res) => {
         status: response.status,
         headers
     });
-}
+});
+
+export const dynamic = 'force-static';
 
 export {
     GET,

@@ -5,7 +5,7 @@ import {AnimatePresence, motion} from "framer-motion";
 
 import {Scene as GameScene} from "@lib/game/game/elements/scene";
 import {useAspectRatio} from "@/lib/ui/providers/ratio";
-import {useEffect} from "react";
+import React, {useEffect} from "react";
 import Transition from "@lib/game/game/elements/transition/Transition";
 import {SrcManager} from "@lib/game/game/elements/srcManager";
 import {Preload} from "@lib/ui/elements/player/Preload";
@@ -21,9 +21,16 @@ export default function Scene({
     children?: React.ReactNode;
 }>) {
     const {ratio} = useAspectRatio();
-    const baseUrl = new URL(window.location.href).origin;
+    const baseUrl = window.location.origin;
     useEffect(() => {
+        scene.events.emit(GameScene.EventTypes["event:scene.mount"]);
+
+        return () => {
+            scene.events.emit(GameScene.EventTypes["event:scene.unmount"]);
+        }
     }, []);
+
+
 
     return (
         <>

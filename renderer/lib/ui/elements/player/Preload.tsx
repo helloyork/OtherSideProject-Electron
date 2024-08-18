@@ -63,7 +63,7 @@ export function Preload({
         const newImages = [];
         src.image.forEach((src: Image) => {
             const cached = SrcManager.cacheablize(Utils.srcToString(src.state.src), window.location.origin);
-            const img = (<Img image={src} />);
+            const img = (<Img image={src} state={state}/>);
             preloaded.add({type: "image", src, preloaded: img});
         });
 

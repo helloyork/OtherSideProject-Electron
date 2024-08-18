@@ -136,11 +136,7 @@ export class GameState {
     }
 
     public createText(id: string, sentence: Sentence, afterClick?: () => void, scene?: Scene) {
-        const targetScene = scene || this.getLastScene();
-        if (!this.state.texts.has(targetScene)) {
-            throw new Error("Scene not found");
-        }
-        return this.createWaitableAction(this.state.texts.get(targetScene), {
+        return this.createWaitableAction(this.state.texts.get(this._getLastSceneIfNot(scene)), {
             character: sentence.character,
             sentence,
             id
@@ -148,19 +144,19 @@ export class GameState {
     }
 
     public createMenu(menu: MenuData, afterChoose?: (choice: Choice) => void, scene?: Scene) {
-        const targetScene = scene || this.getLastScene();
-        if (!this.state.menus.has(targetScene)) {
-            throw new Error("Scene not found");
-        }
-        return this.createWaitableAction(this.state.menus.get(targetScene), menu, afterChoose);
+        return this.createWaitableAction(this.state.menus.get(this._getLastSceneIfNot(scene)), menu, afterChoose);
     }
 
     public createImage(image: Image, scene?: Scene) {
+        this.state.images.get(this._getLastSceneIfNot(scene)).push(image);
+    }
+
+    private _getLastSceneIfNot(scene: Scene) {
         const targetScene = scene || this.getLastScene();
-        if (!this.state.images.has(targetScene)) {
-            throw new Error("Scene not found");
+        if (!targetScene) {
+            throw new Error("Scene not found, please call \"scene.active()\" first.");
         }
-        this.state.images.get(targetScene).push(image);
+        return targetScene;
     }
 
     playSound(howl: Howler.Howl, onEnd?: () => void) {

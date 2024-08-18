@@ -5,6 +5,7 @@ import React, {ImgHTMLAttributes} from "react";
 import {Scene} from "@lib/game/game/elements/scene";
 import Isolated from "@lib/ui/elements/isolated";
 import Background from "@lib/ui/elements/Background";
+import {SrcManager} from "@lib/game/game/elements/srcManager";
 
 
 export type DissolveElementProps = {
@@ -54,6 +55,7 @@ export class Dissolve extends Base<Record<string, any>> implements ITransition<D
     public toElementProps(): {
         [K in 0 | 1]: {
             style: DOMKeyframesDefinition;
+            src?: string;
         }
     } {
         return {
@@ -65,7 +67,7 @@ export class Dissolve extends Base<Record<string, any>> implements ITransition<D
             1: {
                 style: {
                     opacity: 1 - this.state.opacity,
-                }
+                },
             }
         }
     }

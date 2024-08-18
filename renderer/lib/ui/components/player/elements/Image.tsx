@@ -23,15 +23,16 @@ export default function Image({
     const {preloaded} = usePreloaded();
 
     const preloadedImage = preloaded.get<"image">(GameImage.staticImageDataToSrc(image.state.src));
-    image.setScope(scope); // @fixme: 初始图片错位
-    console.log("[Image] Preloaded", image.getScope());
+    image.setScope(scope);
 
     const cloned = useMemo(() => {
         const srcUrl = GameImage.staticImageDataToSrc(image.state.src);
         if (preloadedImage && preloadedImage?.preloaded) {
+            console.log("[Preload] already preloaded", preloadedImage.src, preloadedImage.preloaded); // @debug
             preloadedImage.src.setScope(scope);
             return preloadedImage.preloaded;
         }
+        console.warn("untracked image", srcUrl)
         const props:
             DetailedHTMLProps<ImgHTMLAttributes<HTMLImageElement>, HTMLImageElement> = {
             src: srcUrl,
@@ -81,7 +82,9 @@ export default function Image({
 
     return (
         <div className={
-            clsx("fixed inset-0 flex items-center justify-center z-0")
+            clsx("fixed inset-0 flex items-center justify-center z-0", {
+                "hidden": !image.state.display,
+            })
         } style={{
             width: '100vw',
             height: '100vh',
@@ -91,12 +94,11 @@ export default function Image({
                 width: `${ratio.w}px`,
                 height: `${ratio.h}px`,
                 position: 'relative'
-            }} className={
-                clsx({
-                    "hidden": !image.state.display,
-                })
-            }>
-                {cloned}
+            }}>
+                {cloned || (
+                    <img alt={"image"} src={GameImage.staticImageDataToSrc(image.state.src)} width={image.state.width}
+                         height={image.state.height} style={{position: 'absolute'}} ref={scope}/>
+                )}
             </div>
         </div>
     );

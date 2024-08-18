@@ -43,7 +43,7 @@ export class SrcManager {
         );
 
         const endpoint = base ? new URL(Constants.app.request.cacheableRoute, base) : "";
-        return `${endpoint}${separator}${urlSearchParams.toString()}`;
+        return `${endpoint.toString()}${endpoint.toString().endsWith("/") ? "": "/"}${separator}${urlSearchParams.toString()}`;
     }
 
     register(src: Src): this;

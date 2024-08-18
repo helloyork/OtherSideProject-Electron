@@ -236,7 +236,8 @@ export class Transform<T extends TransformDefinitions.Types> {
             "opacity": (value: number) => ({opacity: value}),
             "scale": () => ({}),
             "rotation": () => ({}),
-            "display": () => ({})
+            "display": () => ({}),
+            "src": () => ({}),
         };
 
         const props = {} as DOMKeyframesDefinition;
