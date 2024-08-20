@@ -66,20 +66,20 @@ export default function Player({
         <>
             <PreloadedProvider>
                 {
-                    state.state.scenes.map((scene) => {
+                    state.getSceneElements().map(({scene, ele}) => {
                         return (
-                            <StageScene key={scene.id} state={state} scene={scene}>
+                            <StageScene key={"scene-" + scene.id} state={state} scene={scene}>
                                 {
-                                    (console.log("loaded images: ", state.state.images.get(scene).length), state.state.images.get(scene).map((image) => {
+                                    (ele.images.map((image) => {
                                         return (
-                                            <StageImage key={image.id} image={image} state={state}/>
+                                            <StageImage key={"image-" + image.id} image={image} state={state}/>
                                         )
                                     }))
                                 }
                                 {
-                                    state.state.texts.get(scene).map((action) => {
+                                    ele.texts.map((action) => {
                                         return (
-                                            <Say key={action.action.id} action={action.action} onClick={() => {
+                                            <Say key={"say-" + action.action.id} action={action.action} onClick={() => {
                                                 action.onClick();
                                                 next();
                                             }}/>
@@ -87,9 +87,9 @@ export default function Player({
                                     })
                                 }
                                 {
-                                    state.state.menus.get(scene).map((action, i) => {
+                                    ele.menus.map((action, i) => {
                                         return (
-                                            <div key={i}>
+                                            <div key={"menu-" + i}>
                                                 {
                                                     <Menu prompt={action.action.prompt} choices={action.action.choices}
                                                           afterChoose={(choice) => {

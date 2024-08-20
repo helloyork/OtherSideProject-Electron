@@ -10,6 +10,7 @@ import {TransformDefinitions} from "@lib/game/game/elements/transform/type";
 import ImageTransformProps = TransformDefinitions.ImageTransformProps;
 import {Utils} from "@lib/game/game/common/Utils";
 import React from "react";
+import {Scene} from "@lib/game/game/elements/scene";
 
 export type ImageConfig = {
     src: string | StaticImageData;
@@ -76,17 +77,34 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
         return typeof image === "string" ? image : image.src;
     }
 
-    public init() {
-        return this._init();
+    public init(scene?: Scene) {
+        return this._init(scene);
     }
 
-    private _init() {
-        this.actions.push(new ImageAction<typeof ImageAction.ActionTypes.init>(
+    public dispose() {
+        return this._dispose();
+    }
+
+    private _dispose() {
+        this.actions.push(new ImageAction<typeof ImageAction.ActionTypes.dispose>(
             this,
-            ImageAction.ActionTypes.init,
+            ImageAction.ActionTypes.dispose,
             new ContentNode(
                 Game.getIdManager().getStringId()
             )
+        ));
+        return this;
+    }
+
+    private _init(scene?: Scene) {
+        this.actions.push(new ImageAction<typeof ImageAction.ActionTypes.init>(
+            this,
+            ImageAction.ActionTypes.init,
+            new ContentNode<[Scene?]>(
+                Game.getIdManager().getStringId()
+            ).setContent([
+                scene
+            ])
         ));
         return this;
     }
@@ -278,5 +296,9 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
 
     getScope(): React.RefObject<HTMLImageElement> {
         return this.ref;
+    }
+
+    copy(): Image {
+        return new Image(this.name, this.config);
     }
 }

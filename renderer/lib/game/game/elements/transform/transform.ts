@@ -251,6 +251,9 @@ export class Transform<T extends TransformDefinitions.Types> {
     }
 
     propToTransformCSS(state: GameState, prop: DeepPartial<T>): string {
+        if (!state.getLastScene()) {
+            throw new Error("No scene found in state, make sure you called \"scene.activate()\" before this method.");
+        }
         const {invertY, invertX} = state.getLastScene().config || {};
         const Transforms = [
             `translate(${invertX ? "" : "-"}50%, ${invertY ? "" : "-"}50%)`,

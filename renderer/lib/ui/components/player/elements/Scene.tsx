@@ -15,10 +15,12 @@ export default function Scene({
                                   scene,
                                   state,
                                   children,
+                                  className
                               }: Readonly<{
     scene: GameScene;
     state: GameState;
     children?: React.ReactNode;
+    className?: string;
 }>) {
     const {ratio} = useAspectRatio();
     const baseUrl = window.location.origin;
@@ -31,9 +33,8 @@ export default function Scene({
     }, []);
 
 
-
     return (
-        <>
+        <div className={className}>
             <Preload state={state} scene={scene}/>
             <AnimatePresence>
                 <motion.div
@@ -53,8 +54,8 @@ export default function Scene({
                         src: SrcManager.cacheablize(GameScene.backgroundToSrc(scene.state.background), baseUrl),
                     }}/>
                 </motion.div>
-                {children}
             </AnimatePresence>
-        </>
+            {children}
+        </div>
     )
 };

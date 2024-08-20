@@ -18,6 +18,7 @@ import {Control} from "@lib/game/game/elements/control";
 import {TransformDefinitions} from "@lib/game/game/elements/transform/type";
 import {ITransition} from "@lib/game/game/elements/transition/type";
 import ImageTransformProps = TransformDefinitions.ImageTransformProps;
+import Actions = LogicAction.Actions;
 
 export class TypedAction<
     ContentType extends Record<string, any>,
@@ -74,6 +75,7 @@ export const SceneActionTypes = {
     applyTransition: "scene:applyTransition",
     init: "scene:init",
     exit: "scene:exit",
+    jumpTo: "scene:jumpTo",
 } as const;
 export type SceneActionContentType = {
     [K in typeof SceneActionTypes[keyof typeof SceneActionTypes]]:
@@ -84,6 +86,7 @@ export type SceneActionContentType = {
                     K extends typeof SceneActionTypes["applyTransition"] ? [ITransition] :
                         K extends typeof SceneActionTypes["init"] ? [] :
                             K extends typeof SceneActionTypes["exit"] ? [] :
+                                K extends typeof SceneActionTypes["jumpTo"] ? [Actions[]] :
                         any;
 }
 
@@ -153,9 +156,19 @@ export class SceneAction<T extends typeof SceneActionTypes[keyof typeof SceneAct
         } else if (this.type === SceneActionTypes.exit) {
             state
                 .offSrcManager(this.callee.srcManager)
-                .popScene();
+                .removeScene(this.callee);
+            return super.executeAction(state);
+        } else if (this.type === SceneActionTypes.jumpTo) {
+            const actions = (this.contentNode as ContentNode<SceneActionContentType["scene:jumpTo"]>).getContent()[0];
+            const current = this.contentNode;
+
+            const future = actions[0]?.contentNode;
+            current.addChild(future);
+
             return super.executeAction(state);
         }
+
+        throw new Error("Unknown scene action type: " + this.type);
     }
 }
 
@@ -183,6 +196,7 @@ export const ImageActionTypes = {
     hide: "image:hide",
     applyTransform: "image:applyTransform",
     init: "image:init",
+    dispose: "image:dispose",
 } as const;
 export type ImageActionContentType = {
     [K in typeof ImageActionTypes[keyof typeof ImageActionTypes]]:
@@ -191,7 +205,8 @@ export type ImageActionContentType = {
             K extends "image:show" ? [void, Transform<TransformDefinitions.ImageTransformProps>] :
                 K extends "image:hide" ? [void, Transform<TransformDefinitions.ImageTransformProps>] :
                     K extends "image:applyTransform" ? [void, Transform<TransformDefinitions.ImageTransformProps>, string] :
-                        K extends "image:init" ? [] :
+                        K extends "image:init" ? [Scene?] :
+                            K extends "image:dispose" ? [] :
                         any;
 }
 
@@ -201,11 +216,20 @@ export class ImageAction<T extends typeof ImageActionTypes[keyof typeof ImageAct
 
     public executeAction(state: GameState): CalledActionResult | Awaitable<CalledActionResult, any> {
         if (this.type === ImageActionTypes.init) {
+            const scene = (this.contentNode as ContentNode<ImageActionContentType["image:init"]>).getContent()[0];
             if (this.callee.id === null) {
                 this.callee.setId(state.clientGame.game.getLiveGame().idManager.getStringId());
-                state.createImage(this.callee);
+                state.createImage(this.callee, scene);
                 state.stage.forceUpdate();
             }
+            // else {
+            //     const lastScene = state.findImage(this.callee);
+            //     if (lastScene) {
+            //         state.disposeImage(this.callee, lastScene);
+            //     }
+            //     state.createImage(this.callee, scene);
+            //     state.stage.forceUpdate();
+            // }
             if (this.callee.initiated) {
                 return super.executeAction(state);
             }
@@ -254,6 +278,9 @@ export class ImageAction<T extends typeof ImageActionTypes[keyof typeof ImageAct
                 });
             })
             return awaitable;
+        } else if (this.type === ImageActionTypes.dispose) {
+            state.disposeImage(this.callee);
+            return super.executeAction(state);
         }
     }
 }
