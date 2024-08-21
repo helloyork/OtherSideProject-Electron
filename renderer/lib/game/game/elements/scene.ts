@@ -30,6 +30,7 @@ export type SceneEventTypes = {
     "event:scene.unload": [],
     "event:scene.mount": [],
     "event:scene.unmount": [],
+    "event:scene.imageLoaded": [],
 };
 
 // @todo: 将只读配置和动态状态分开
@@ -47,6 +48,7 @@ export class Scene extends Constructable<
         "event:scene.unload": "event:scene.unload",
         "event:scene.mount": "event:scene.mount",
         "event:scene.unmount": "event:scene.unmount",
+        "event:scene.imageLoaded": "event:scene.imageLoaded",
     }
     static defaultConfig: SceneConfig = {
         background: null,

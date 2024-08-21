@@ -15,6 +15,7 @@ import {PreloadedProvider} from "@lib/ui/providers/preloaded";
 import {SrcManager} from "@lib/game/game/elements/srcManager";
 import {Image} from "@lib/game/game/elements/image";
 import clsx from "clsx";
+import {Preload} from "@lib/ui/elements/player/Preload";
 
 function handleAction(state: GameState, action: PlayerAction) {
     return state.handle(action);
@@ -65,6 +66,13 @@ export default function Player({
     return (
         <>
             <PreloadedProvider>
+                {
+                    state.state.srcManagers.map((srcManager, i) => {
+                        return (
+                            <Preload key={i} state={state} srcManager={srcManager}/>
+                        )
+                    })
+                }
                 {
                     state.getSceneElements().map(({scene, ele}) => {
                         return (

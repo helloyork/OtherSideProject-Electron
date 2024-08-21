@@ -36,6 +36,7 @@ export type ImageEventTypes = {
     "event:image.show": [Transform<TransformDefinitions.ImageTransformProps>];
     "event:image.hide": [Transform<TransformDefinitions.ImageTransformProps>];
     "event:image.applyTransform": [Transform<TransformDefinitions.ImageTransformProps>];
+    "event:image.mount": [];
 };
 
 export class Image extends Actionable<typeof ImageTransactionTypes> {
@@ -43,6 +44,7 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
         "event:image.show": "event:image.show",
         "event:image.hide": "event:image.hide",
         "event:image.applyTransform": "event:image.applyTransform",
+        "event:image.mount": "event:image.mount",
     }
     static defaultConfig: ImageConfig = {
         src: "",
@@ -175,12 +177,6 @@ export class Image extends Actionable<typeof ImageTransactionTypes> {
     public show(options: Transform<TransformDefinitions.ImageTransformProps>): this;
     public show(options: Partial<TransformDefinitions.CommonTransformProps>): this;
     public show(options?: Transform<TransformDefinitions.ImageTransformProps> | Partial<TransformDefinitions.CommonTransformProps>): this {
-        this.transaction
-            .startTransaction()
-            .push({
-                type: ImageTransactionTypes.show,
-                data: this.config.display
-            }).commit();
         const trans =
             (options instanceof Transform) ? options : new Transform([
                 {

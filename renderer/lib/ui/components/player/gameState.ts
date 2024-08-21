@@ -48,6 +48,7 @@ export class GameState {
     static EventTypes: { [K in keyof GameStateEvents]: K } = {
         "event:state.imageLoaded": "event:state.imageLoaded",
     };
+    static SrcManager = SrcManager;
     state: PlayerState = {
         history: [],
         sounds: [],
@@ -70,6 +71,7 @@ export class GameState {
     }
 
     public addScene(scene: Scene): this {
+        if (this.sceneExists(scene)) return this;
         this.state.elements.push({
             scene,
             ele: this.getElementMap()

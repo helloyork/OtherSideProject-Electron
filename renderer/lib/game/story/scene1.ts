@@ -18,7 +18,9 @@ import type {TransformDefinitions} from "@lib/game/game/common/types";
 import {
     character1,
     character2,
-    image1, image1_2, image1_3,
+    image1,
+    image1_2,
+    image1_3,
     image2,
     mainMenuBackground,
     mainMenuBackground2,
@@ -54,26 +56,43 @@ const scene3 = new Scene("scene3", {
 });
 
 const scene3actions = scene3.action([
-    scene3.activate().toActions(),
+    // scene3.activate().toActions(),
     image1_3.init().toActions(),
-    image1_3.show({
-        ease: "circOut",
-        duration: 0.5,
-        sync: true
-    }).toActions(),
+    // image1_3.show({
+    //     ease: "circOut",
+    //     duration: 0.5,
+    //     sync: true
+    // }).toActions(),
+
     image1_3.applyTransform(new Transform<TransformDefinitions.ImageTransformProps>([
         {
             props: {
-                position: "right"
+                display: true
             },
             options: {
-                duration: 0.1,
+                duration: 0,
+                ease: "easeOut",
+            }
+        },
+    ], {
+        sync: true,
+    })).toActions(),
+    image1_3.applyTransform(new Transform<TransformDefinitions.ImageTransformProps>([
+        {
+            props: {
+                position: "right",
+                opacity: 1,
+                display: true
+            },
+            options: {
+                duration: 2,
                 ease: "easeOut",
             }
         },
     ], {
         sync: true,
         ease: "easeOut",
+        duration: 2
     })).toActions(),
     new Character(null)
         .say("hello")
@@ -88,13 +107,16 @@ const scene2 = new Scene("scene2", {
 });
 
 const scene2actions = scene2.action([
-    scene2.activate().toActions(),
+    // scene2.activate().toActions(),
     image1_2.init().toActions(),
     image1_2.show({
         ease: "circOut",
         duration: 2,
         sync: true
     }).toActions(),
+    new Character(null)
+        .say("hello")
+        .toActions(),
     image1_2.applyTransform(new Transform<TransformDefinitions.ImageTransformProps>([
         {
             props: {
@@ -110,7 +132,6 @@ const scene2actions = scene2.action([
         ease: "easeOut",
     })).toActions(),
     new Character(null)
-        .say("hello")
         .say("world")
         .toActions(),
     image1_2.hide().toActions(),
@@ -188,15 +209,19 @@ const scene1Actions = scene1.action([
         .say("你好！").toActions(),
 
     // 兼容性最高的旧版写法
-    // scene1.applyTransition(fadeOutTransition)
-    //     .setSceneBackground(mainMenuBackground2)
-    //     .applyTransition(fadeInTransition).toActions(),
-    // scene1.applyTransition(new Dissolve(Image.staticImageDataToSrc(mainMenuBackground2), 2000))
-    //     .setSceneBackground(mainMenuBackground2).toActions(),
+    /*
+    scene1.applyTransition(fadeOutTransition)
+        .setSceneBackground(mainMenuBackground2)
+        .applyTransition(fadeInTransition).toActions(),
+    scene1.applyTransition(new Dissolve(Image.staticImageDataToSrc(mainMenuBackground2), 2000))
+        .setSceneBackground(mainMenuBackground2).toActions(),
+    */
 
     // 新版写法
-    // scene1.transitionSceneBackground(scene2, new Dissolve(Image.staticImageDataToSrc(mainMenuBackground2), 2000))
-    //     .toActions(),
+    /*
+    scene1.transitionSceneBackground(scene2, new Dissolve(Image.staticImageDataToSrc(mainMenuBackground2), 2000))
+        .toActions(),
+    */
 
     character1.say("你最近过的怎么样？")
         .toActions(),
@@ -220,6 +245,15 @@ const scene1Actions = scene1.action([
             prompt: "还不错吧"
         })
         .toActions(),
+
+    image1.hide().toActions(),
+
+    scene1.jumpTo(
+        scene2actions,
+        {
+            transition: new Dissolve(mainMenuBackground2, 2000)
+        }
+    ).toActions(),
 
     image1.applyTransform(new Transform<TransformDefinitions.ImageTransformProps>([
         {

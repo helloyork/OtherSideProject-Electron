@@ -145,7 +145,7 @@ export class SceneAction<T extends typeof SceneActionTypes[keyof typeof SceneAct
                 .registerSrcManager(this.callee.srcManager)
                 .addScene(this.callee);
 
-            this.callee.events.once("event:scene.mount", () => {
+            this.callee.events.once("event:scene.imageLoaded", () => {
                 awaitable.resolve({
                     type: this.type,
                     node: this.contentNode.child
@@ -157,7 +157,16 @@ export class SceneAction<T extends typeof SceneActionTypes[keyof typeof SceneAct
             state
                 .offSrcManager(this.callee.srcManager)
                 .removeScene(this.callee);
-            return super.executeAction(state);
+
+            const awaitable = new Awaitable<CalledActionResult, any>(v => v);
+            this.callee.events.once("event:scene.unmount", () => {
+                awaitable.resolve({
+                    type: this.type,
+                    node: this.contentNode.child
+                });
+                state.stage.next();
+            });
+            return awaitable;
         } else if (this.type === SceneActionTypes.jumpTo) {
             const actions = (this.contentNode as ContentNode<SceneActionContentType["scene:jumpTo"]>).getContent()[0];
             const current = this.contentNode;
@@ -243,12 +252,15 @@ export class ImageAction<T extends typeof ImageActionTypes[keyof typeof ImageAct
             }], {
                 sync: true
             });
-            state.animateImage(Image.EventTypes["event:image.applyTransform"], this.callee, [
-                transform
-            ], () => {
-                awaitable.resolve({
-                    type: this.type,
-                    node: this.contentNode?.child || null,
+
+            this.callee.events.once("event:image.mount", () => {
+                state.animateImage(Image.EventTypes["event:image.applyTransform"], this.callee, [
+                    transform
+                ], () => {
+                    awaitable.resolve({
+                        type: this.type,
+                        node: this.contentNode?.child || null,
+                    });
                 });
             });
             return awaitable;
@@ -271,7 +283,6 @@ export class ImageAction<T extends typeof ImageActionTypes[keyof typeof ImageAct
             state.animateImage(Image.EventTypes["event:image.applyTransform"], this.callee, [
                 transform
             ], () => {
-                this.callee.state.display = true;
                 awaitable.resolve({
                     type: this.type,
                     node: this.contentNode?.child || null,
