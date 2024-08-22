@@ -3,11 +3,11 @@
 
 ![logo](./renderer/public/static/images/mewbaka.png)
 
-该项目是[OtherSideProject](https://github.com/MewBaka/OtherSideProject)的衍生项目，使用Electron框架开发。
+该项目是[OtherSideProject](https://github.com/MewBaka/OtherSideProject) Electron版本项目，使用Electron框架开发。  
 
 该仓库专注于Electron版本的开发，如果对主项目存在疑问，请前往对应仓库开启Issue
 
-本仓库剧情更新节奏与主项目一致
+> 本仓库已经和主仓库合并，并且今后所有的更新都会在主仓库上发布
 
 ## 欢迎来到我们的爱发电
 
@@ -45,7 +45,7 @@ https://afdian.com/a/OtherSideProject
 
 ## 主项目：OtherSideProject
 
-使用Renpy开发的版本：[OtherSideProject](https://github.com/MewBaka/OtherSideProject)
+主仓库：[OtherSideProject](https://github.com/MewBaka/OtherSideProject)
 
 点击链接前往：https://github.com/MewBaka/OtherSideProject
 
