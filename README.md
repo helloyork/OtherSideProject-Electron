@@ -3,10 +3,11 @@
 
 ![logo](./renderer/public/static/images/mewbaka.png)
 
-该项目是[OtherSideProject](https://github.com/MewBaka/OtherSideProject) Electron版本项目，使用Electron框架开发。  
+该项目是[OtherSideProject](https://github.com/MewBaka/OtherSideProject) Electron版本项目，使用Electron框架(NarraLeaf)开发。  
 
 该仓库专注于Electron版本的开发，如果对主项目存在疑问，请前往对应仓库开启Issue
 
+> [!IMPORTANT]  
 > 本仓库已经和主仓库合并，并且今后所有的更新都会在主仓库上发布
 
 ## 欢迎来到我们的爱发电
